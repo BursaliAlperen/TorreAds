@@ -2,46 +2,6 @@ import sqlite3
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from flask import Flask, request, jsonify
-from datetime import datetime
-import os
-import json
-
-app = Flask(__name__)
-LOG_FILE = 'user_ads.json'
-DAILY_LIMIT = 1000
-
-def load_logs():
-    if not os.path.exists(LOG_FILE):
-        return {}
-    with open(LOG_FILE, 'r') as f:
-        return json.load(f)
-
-def save_logs(logs):
-    with open(LOG_FILE, 'w') as f:
-        json.dump(logs, f)
-
-@app.route('/api/checkLimit', methods=['POST'])
-def check_limit():
-    token = request.json.get('token')
-    logs = load_logs()
-    today = datetime.utcnow().strftime('%Y-%m-%d')
-
-    count = logs.get(token, {}).get(today, 0)
-    return jsonify({'allowed': count < DAILY_LIMIT})
-
-@app.route('/api/logAdView', methods=['POST'])
-def log_ad_view():
-    token = request.json.get('token')
-    logs = load_logs()
-    today = datetime.utcnow().strftime('%Y-%m-%d')
-
-    if token not in logs:
-        logs[token] = {}
-    logs[token][today] = logs[token].get(today, 0) + 1
-
-    save_logs(logs)
-    return jsonify({'status': 'logged'})
 
 # --- App Configuration ---
 app = Flask(__name__)

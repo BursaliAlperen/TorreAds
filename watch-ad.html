@@ -1,121 +1,213 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🎬 Reklam İzle, Kazan</title>
-  <script src="https://libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
-  <style>
-    /* Stil ayarları */
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reklam İzleniyor...</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            flex-direction: column;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+        }
+        #message-container h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .balance {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .container p {
+            color: #5f6368;
+            line-height: 1.5;
+        }
+        #payment-info {
+            font-size: 0.95rem;
+            margin-top: -1rem;
+            margin-bottom: 1.5rem;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        #message-container a {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: background-color 0.3s;
+            margin: 0.5rem;
+        }
+        #message-container a:hover {
+            background-color: #5a6268;
+        }
+        #message-container a.primary {
+            background-color: #1a73e8;
+        }
+        #message-container a.primary:hover {
+            background-color: #1558b8;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <h1>🎬 Reklam İzle, Kazan!</h1>
-  <button id="watchAdBtn" disabled>Yükleniyor...</button>
-  <div id="status">Reklam altyapısı hazırlanıyor...</div>
 
-  <script>
-    const btn = document.getElementById("watchAdBtn");
-    const status = document.getElementById("status");
+    <div id="ad-container" class="container">
+        <div class="balance">Bakiyeniz: <span class="balance-amount">0.0000</span> TON</div>
+        <div class="loader"></div>
+        <h2>Reklam yükleniyor...</h2>
+        <p>Lütfen bekleyin, ödülünüz işleniyor.</p>
+    </div>
 
-    function waitForSDK(retries = 20, interval = 500) {
-      return new Promise((resolve, reject) => {
-        let attempts = 0;
-        const check = () => {
-          if (typeof show_9441902 === "function") {
-            resolve();
-          } else if (attempts >= retries) {
-            reject("SDK yüklenemedi.");
-          } else {
-            attempts++;
-            setTimeout(check, interval);
-          }
-        };
-        check();
-      });
-    }
+    <div id="message-container" class="container" style="display: none;">
+        <div class="balance">Bakiyeniz: <span class="balance-amount">0.0000</span> TON</div>
+        <h2 id="message-text"></h2>
+        <p id="payment-info" style="display: none;">Ödemelerinizi almak için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
+        <a href="watch-ad.html" class="primary">Yeni Reklam İzle</a>
+        <a href="index.html">Ana Sayfa</a>
+    </div>
 
-    waitForSDK().then(() => {
-      btn.disabled = false;
-      btn.textContent = "🎥 Reklamı İzle";
-      status.textContent = "Reklam izlemeye hazırsınız.";
-    }).catch(() => {
-      btn.disabled = true;
-      btn.textContent = "Yüklenemedi";
-      status.textContent = "❌ Reklam altyapısı yüklenemedi.";
-    });
+    <!-- Monetag SDK. The ad function will be called from our script. -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>
 
-    btn.addEventListener("click", () => {
-      btn.disabled = true;
-      status.textContent = "Reklam gösteriliyor...";
+    <script type="module">
+        // Backend sunucunuzun adresi
+        const API_ENDPOINT = 'http://127.0.0.1:5001/api/reward';
 
-      show_9441902().then(() => {
-        alert("🎉 0.0001 TON kazandınız!");
-        status.textContent = "Tebrikler! Bakiyenize eklendi.";
-      }).catch(() => {
-        status.textContent = "❌ Reklam gösterilemedi.";
-      }).finally(() => {
-        btn.disabled = false;
-        btn.textContent = "🎥 Reklamı İzle";
-      });
-    });
-  <script>
-  function getUserToken() {
-    let token = localStorage.getItem("userToken");
-    if (!token) {
-      token = crypto.randomUUID();
-      localStorage.setItem("userToken", token);
-    }
-    return token;
-  }
+        // Tarayıcıya özgü bir kullanıcı token'ı oluşturur veya alır
+        function getOrSetUserToken() {
+            let token = localStorage.getItem('user_token');
+            if (!token) {
+                token = self.crypto.randomUUID();
+                localStorage.setItem('user_token', token);
+            }
+            return token;
+        }
+        
+        function getBalance() {
+            return parseFloat(localStorage.getItem('user_balance')) || 0;
+        }
 
-  async function canWatchAd() {
-    const res = await fetch('/api/checkLimit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: getUserToken() })
-    });
-    const data = await res.json();
-    return data.allowed;
-  }
+        function updateBalanceDisplay(balance) {
+            document.querySelectorAll('.balance-amount').forEach(el => {
+                el.textContent = balance.toFixed(4);
+            });
+        }
+        
+        function saveBalance(newBalance) {
+            localStorage.setItem('user_balance', newBalance.toFixed(4));
+            updateBalanceDisplay(newBalance);
+        }
 
-  async function logAdView() {
-    await fetch('/api/logAdView', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: getUserToken(), timestamp: Date.now() })
-    });
-  }
+        function showMessage(text, isSuccess) {
+            const adContainer = document.getElementById('ad-container');
+            const messageContainer = document.getElementById('message-container');
+            const messageText = document.getElementById('message-text');
+            const paymentInfo = document.getElementById('payment-info');
 
-  const btn = document.getElementById("watchAdBtn");
-  const status = document.getElementById("status");
+            messageText.textContent = text;
+            messageText.className = isSuccess ? 'success' : 'error';
 
-  canWatchAd().then(allowed => {
-    if (allowed) {
-      btn.disabled = false;
-      status.textContent = "Reklam izlemeye hazırsınız.";
-    } else {
-      btn.disabled = true;
-      status.textContent = "🔁 Günlük izleme limitine ulaşıldı.";
-    }
-  });
+            if (isSuccess) {
+                paymentInfo.style.display = 'block';
+            } else {
+                paymentInfo.style.display = 'none';
+            }
+            
+            adContainer.style.display = 'none';
+            messageContainer.style.display = 'block';
+        }
 
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    status.textContent = "Reklam gösteriliyor...";
+        async function claimReward() {
+            const token = getOrSetUserToken();
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token }),
+                });
 
-    try {
-      await show_9441902(); // Monetag reklam
-      await logAdView(); // İzlemeyi backend'e bildir
-      alert("🎉 0.0001 TON kazandınız!");
-      status.textContent = "Bakiyenize eklendi.";
-    } catch {
-      status.textContent = "❌ Reklam gösterilemedi.";
-    }
+                const result = await response.json();
 
-    btn.disabled = false;
-  });
-</script>
-  </script>
+                if (response.ok && result.success) {
+                    const currentBalance = getBalance();
+                    const newBalance = currentBalance + 0.0001;
+                    saveBalance(newBalance);
+                    showMessage('🎉 0.0001 TON kazandın!', true);
+                } else {
+                    showMessage(result.message || '⚠️ Günlük izleme hakkını doldurdun.', false);
+                }
+            } catch (error) {
+                console.error('API isteği başarısız:', error);
+                showMessage('🚫 Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.', false);
+            }
+        }
+
+        // Sayfa yüklendiğinde işlemleri başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBalanceDisplay(getBalance());
+            // Monetag SDK'sının 'show_9441902' fonksiyonunu çağırarak reklamı göster.
+            // Bu fonksiyon bir Promise döndürür. Reklam başarıyla izlendiğinde .then() bloğu çalışır.
+            if (typeof show_9441902 === 'function') {
+                show_9441902().then(() => {
+                    // Kullanıcı reklamı izledi, şimdi ödülü talep et.
+                    claimReward();
+                }).catch((e) => {
+                    // Reklam gösterilirken bir hata oluştu veya kullanıcı erken kapattı.
+                    console.error('Reklam hatası:', e);
+                    showMessage('🚫 Reklam gösterilemedi veya erken kapatıldı. Ödül kazanmak için reklamı sonuna kadar izlemelisiniz.', false);
+                });
+            } else {
+                // SDK yüklenememiş veya fonksiyonu tanımlamamış.
+                console.error('Monetag SDK fonksiyonu bulunamadı.');
+                showMessage('🚫 Reklam altyapısı yüklenemedi. Lütfen sayfayı yenileyin.', false);
+            }
+        });
+    </script>
+
 </body>
 </html>
