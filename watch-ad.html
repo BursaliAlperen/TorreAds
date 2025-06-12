@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reklam İzleniyor...</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            flex-direction: column;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+        }
+        #message-container h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .container p {
+            color: #5f6368;
+            line-height: 1.5;
+        }
+        #payment-info {
+            font-size: 0.95rem;
+            margin-top: -1rem;
+            margin-bottom: 1.5rem;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        #message-container a {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: background-color 0.3s;
+            margin: 0.5rem;
+        }
+        #message-container a:hover {
+            background-color: #5a6268;
+        }
+        #message-container a.primary {
+            background-color: #1a73e8;
+        }
+        #message-container a.primary:hover {
+            background-color: #1558b8;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ad-container" class="container">
+        <div class="loader"></div>
+        <h2>Reklam yükleniyor...</h2>
+        <p>Lütfen bekleyin, ödülünüz işleniyor.</p>
+    </div>
+
+    <div id="message-container" class="container" style="display: none;">
+        <h2 id="message-text"></h2>
+        <p id="payment-info" style="display: none;">Ödemelerinizi almak için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
+        <a href="watch-ad.html" class="primary">Yeni Reklam İzle</a>
+        <a href="index.html">Ana Sayfa</a>
+    </div>
+
+    <!-- Monetag SDK. Bu reklam genellikle pop-under veya yeni sekme olarak açılır. -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+
+    <script type="module">
+        // Backend sunucunuzun adresi
+        const API_ENDPOINT = 'http://127.0.0.1:5001/api/reward';
+
+        // Tarayıcıya özgü bir kullanıcı token'ı oluşturur veya alır
+        function getOrSetUserToken() {
+            let token = localStorage.getItem('user_token');
+            if (!token) {
+                token = self.crypto.randomUUID();
+                localStorage.setItem('user_token', token);
+            }
+            return token;
+        }
+
+        function showMessage(text, isSuccess) {
+            const adContainer = document.getElementById('ad-container');
+            const messageContainer = document.getElementById('message-container');
+            const messageText = document.getElementById('message-text');
+            const paymentInfo = document.getElementById('payment-info');
+
+            messageText.textContent = text;
+            messageText.className = isSuccess ? 'success' : 'error';
+
+            if (isSuccess) {
+                paymentInfo.style.display = 'block';
+            } else {
+                paymentInfo.style.display = 'none';
+            }
+            
+            adContainer.style.display = 'none';
+            messageContainer.style.display = 'block';
+        }
+
+        async function claimReward() {
+            const token = getOrSetUserToken();
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showMessage('🎉 0.0001 TON kazandın!', true);
+                } else {
+                    showMessage(result.message || '⚠️ Günlük izleme hakkını doldurdun.', false);
+                }
+            } catch (error) {
+                console.error('API isteği başarısız:', error);
+                showMessage('🚫 Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.', false);
+            }
+        }
+
+        // Sayfa yüklendiğinde işlemleri başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            // Monetag reklamının yüklenip görüntülenmesi için kısa bir süre bekle
+            // Bu süre sonunda ödül talebi gönderilir.
+            setTimeout(claimReward, 3000); // 3 saniye bekle
+        });
+    </script>
+
+</body>
+</html>
