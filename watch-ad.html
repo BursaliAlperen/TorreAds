@@ -59,6 +59,63 @@
         btn.textContent = "🎥 Reklamı İzle";
       });
     });
+  <script>
+  function getUserToken() {
+    let token = localStorage.getItem("userToken");
+    if (!token) {
+      token = crypto.randomUUID();
+      localStorage.setItem("userToken", token);
+    }
+    return token;
+  }
+
+  async function canWatchAd() {
+    const res = await fetch('/api/checkLimit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: getUserToken() })
+    });
+    const data = await res.json();
+    return data.allowed;
+  }
+
+  async function logAdView() {
+    await fetch('/api/logAdView', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: getUserToken(), timestamp: Date.now() })
+    });
+  }
+
+  const btn = document.getElementById("watchAdBtn");
+  const status = document.getElementById("status");
+
+  canWatchAd().then(allowed => {
+    if (allowed) {
+      btn.disabled = false;
+      status.textContent = "Reklam izlemeye hazırsınız.";
+    } else {
+      btn.disabled = true;
+      status.textContent = "🔁 Günlük izleme limitine ulaşıldı.";
+    }
+  });
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    status.textContent = "Reklam gösteriliyor...";
+
+    try {
+      await show_9441902(); // Monetag reklam
+      await logAdView(); // İzlemeyi backend'e bildir
+      alert("🎉 0.0001 TON kazandınız!");
+      status.textContent = "Bakiyenize eklendi.";
+    } catch {
+      status.textContent = "❌ Reklam gösterilemedi.";
+    }
+
+    btn.disabled = false;
+  });
+</script>
   </script>
 </body>
 </html>
