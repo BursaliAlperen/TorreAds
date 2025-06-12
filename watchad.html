@@ -13,7 +13,7 @@
       padding: 50px;
     }
     h1 { font-size: 28px; }
-    p { font-size: 18px; margin-bottom: 20px; }
+    p, #balance { font-size: 18px; margin-bottom: 20px; }
     button {
       padding: 12px 25px;
       font-size: 18px;
@@ -36,7 +36,9 @@
 <body>
 
 <h1>🎬 Reklam İzle, 0.0001 TON Kazan</h1>
-<p>Reklamı izledikten sonra bakiyenize otomatik eklenecek.</p>
+<p>Reklamı izleyerek TON kazan!</p>
+
+<p>💰 Bakiye: <span id="balance">0.0000</span> TON</p>
 
 <button id="watchAdBtn" disabled>🔄 Reklam Yükleniyor...</button>
 <div id="status">Lütfen bekleyin...</div>
@@ -44,11 +46,13 @@
 <script>
   const btn = document.getElementById("watchAdBtn");
   const status = document.getElementById("status");
+  const balanceDisplay = document.getElementById("balance");
 
-  // Sayfa URL'sinden UID al
-  const uid = new URLSearchParams(window.location.search).get("uid") || "anon";
+  // localStorage'dan mevcut bakiyeyi al
+  let balance = parseFloat(localStorage.getItem("balance") || "0");
+  balanceDisplay.textContent = balance.toFixed(4);
 
-  // SDK hazır mı diye bekle
+  // SDK hazır mı kontrol et
   function waitForSDK(retries = 20, delay = 500) {
     return new Promise((resolve, reject) => {
       let attempt = 0;
@@ -65,11 +69,10 @@
     .then(() => {
       btn.disabled = false;
       btn.textContent = "🎥 Reklamı İzle";
-      status.textContent = "Reklam hazır. İzlemek için butona tıkla.";
+      status.textContent = "Reklam hazır.";
     })
     .catch(err => {
       status.textContent = err;
-      console.error(err);
     });
 
   btn.addEventListener("click", () => {
@@ -77,21 +80,13 @@
     status.textContent = "Reklam başlatılıyor...";
 
     show_9441902().then(() => {
-      status.textContent = "🎉 0.0001 TON kazandınız! Bakiyenize ekleniyor...";
-
-      // Sunucuya POST at (örnek endpoint)
-      fetch("https://senin-api.com/api/odul", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: uid, miktar: 0.0001 })
-      }).then(() => {
-        status.textContent = "✅ Ödül bakiyeye başarıyla eklendi.";
-      }).catch(() => {
-        status.textContent = "⚠️ Ödül verildi ama sunucuya bildirilemedi.";
-      });
-
+      // Reklam izlendiyse ödül ver
+      balance += 0.0001;
+      localStorage.setItem("balance", balance.toFixed(4));
+      balanceDisplay.textContent = balance.toFixed(4);
+      status.textContent = "🎉 0.0001 TON bakiyene eklendi!";
     }).catch(() => {
-      status.textContent = "❌ Reklam gösterilemedi. Tekrar deneyin.";
+      status.textContent = "❌ Reklam gösterilemedi.";
     }).finally(() => {
       btn.disabled = false;
       btn.textContent = "🎥 Reklamı İzle";
