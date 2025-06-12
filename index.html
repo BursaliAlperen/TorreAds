@@ -1,167 +1,410 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Watch Ads, Earn TON</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Reklam İzle, Kazan!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!--
+        [GELİŞTİRİCİ NOTU]
+        Bu dosya, istenen sistemin çalışan bir ön-yüz (frontend) prototipidir.
+        Gerçek bir Telegram botu ve arka-uç (backend) sunucusu gereklidir.
+        Aşağıda Flask (Python) ile yazılabilecek örnek bir backend kodu bulunmaktadır.
+    -->
+    <!--
+    --- Backend (app.py) & requirements.txt ---
 
-    #balance-container {
-      margin: 40px 0;
-    }
+    Aşağıda Flask ve Redis kullanarak `app.py` için kavramsal bir örnek bulunmaktadır.
+    Bu kod, ön-yüzden gelen ödül taleplerini işler, günlük limiti kontrol eder ve Telegram botu aracılığıyla ödülü gönderir.
 
-    .balance-label {
-      font-size: 18px;
-      color: #555;
-    }
+    --- app.py (Örnek Flask Kodu) ---
+    
+    from flask import Flask, request, jsonify
+    from datetime import datetime
+    import redis
+    import os
+    import requests
 
-    #balance {
-      font-size: 36px;
-      font-weight: bold;
-      color: #111;
-    }
+    app = Flask(__name__)
+    
+    # Redis'e bağlanın. Üretim ortamında bu bilgileri environment variables'dan alın.
+    try:
+        redis_client = redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), port=6379, decode_responses=True)
+        redis_client.ping()
+        print("Connected to Redis successfully!")
+    except redis.exceptions.ConnectionError as e:
+        print(f"Could not connect to Redis: {e}")
+        redis_client = None
 
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background: #22c55e;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
+    # Telegram Bot Token'ınızı environment variable olarak ayarlayın.
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+    DAILY_LIMIT = 5
 
-    #ad-modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-      display: none;
-    }
+    # Bu, HTML sayfasının çağıracağı API endpoint'idir.
+    @app.route('/api/reward', methods=['POST'])
+    def grant_reward():
+        if not redis_client:
+            return jsonify({"error": "Database connection failed"}), 500
 
-    #ad-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      width: 300px;
-    }
+        data = request.json
+        user_id = data.get('user_id')
 
-    #progress-bar {
-      background: #ddd;
-      width: 100%;
-      height: 10px;
-      border-radius: 5px;
-      margin-top: 15px;
-    }
+        if not user_id:
+            return jsonify({"error": "User ID is required"}), 400
 
-    #progress-bar-inner {
-      background: #22c55e;
-      height: 100%;
-      width: 0%;
-      border-radius: 5px;
-      transition: width 0.2s;
-    }
+        # Günlük limiti kontrol etmek için Redis kullanın.
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        redis_key = f"ad_watch:{user_id}:{today_str}"
 
-    #close-ad-btn {
-      margin-top: 20px;
-      display: none;
-    }
+        current_count = redis_client.get(redis_key)
+        if current_count and int(current_count) >= DAILY_LIMIT:
+            return jsonify({"error": "Daily limit reached", "count": int(current_count)}), 429 # Too Many Requests
 
-    #transactions {
-      margin-top: 30px;
-    }
+        # Sayacı artırın ve anahtarın süresini 24 saat olarak ayarlayın.
+        new_count = redis_client.incr(redis_key)
+        if new_count == 1:
+            redis_client.expire(redis_key, 86400)
 
-    ul {
-      list-style: none;
-      padding: 0;
-      color: #444;
-    }
-  </style>
+        # --- Telegram Bot API üzerinden ödülü gönder ---
+        message = f"Tebrikler! Bir reklam izleyerek 1 jeton kazandınız. 🪙\n\nBugün kullandığınız hak: {new_count}/{DAILY_LIMIT}"
+        telegram_api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": user_id,
+            "text": message
+        }
+        
+        try:
+            # Gerçek bir uygulamada bu işlemi asenkron yapmak (örn: Celery) daha iyidir.
+            response = requests.post(telegram_api_url, json=payload, timeout=5)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to send message to Telegram: {e}")
+            # Hata durumunda işlemi geri alabilirsiniz. Örn: redis_client.decr(redis_key)
+            return jsonify({"error": "Failed to send Telegram message"}), 500
+        
+        print(f"Sent reward to user {user_id}. New count: {new_count}")
+
+        return jsonify({"success": True, "new_count": new_count})
+
+    if __name__ == '__main__':
+        # Üretim ortamında Gunicorn gibi bir WSGI sunucusu kullanın.
+        app.run(host='0.0.0.0', port=5001, debug=True)
+
+    --- requirements.txt ---
+    Flask
+    redis
+    requests
+    gunicorn # (Üretim için)
+    -->
+
+    <!-- Monetag SDK (istek üzerine eklendi) -->
+    <!-- Bu prototipte reklamın gerçekten gösterilmesi yerine simülasyon yapılmıştır. -->
+    <!-- Gerçek uygulamada aşağıdaki satırın yorumunu kaldırın. -->
+    <!-- <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902' async></script> -->
+
+    <style>
+        :root {
+            --primary-color: #2AABEE;
+            --secondary-color: #FFFFFF;
+            --background-color: #f0f4f7;
+            --text-color: #3e4a61;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            color: var(--text-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            background-color: var(--secondary-color);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px var(--shadow-color);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 1px solid #e6e9ec;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            font-weight: 800;
+            margin: 0;
+            color: #1c2733;
+        }
+
+        p {
+            font-size: 1em;
+            line-height: 1.6;
+            margin: 0;
+            max-width: 90%;
+        }
+
+        .button {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(42, 171, 238, 0.4);
+        }
+        
+        .button:active {
+            transform: translateY(-1px);
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .button.success {
+            background-color: var(--success-color);
+        }
+
+        .button.success:hover {
+             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .coin-icon {
+            width: 80px;
+            height: 80px;
+            animation: float 3s ease-in-out infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .message {
+            font-weight: 700;
+        }
+
+        .message.error {
+            color: var(--error-color);
+        }
+    </style>
 </head>
 <body>
-
-  <h1>🎥 TorreADS</h1>
-  <p>Earn TON by watching ads</p>
-
-  <div id="balance-container">
-    <div class="balance-label">Your Balance:</div>
-    <div id="balance">0.0000 TON</div>
-  </div>
-
-  <button id="watch-ad-btn">▶ Watch Ad & Earn</button>
-
-  <div id="ad-modal">
-    <div id="ad-content">
-      <p>Watching Ad...</p>
-      <img src="https://via.placeholder.com/250x120?text=Advertisement" alt="Ad" />
-      <div id="progress-bar">
-        <div id="progress-bar-inner"></div>
-      </div>
-      <button id="close-ad-btn">✅ Claim Reward & Close</button>
+    <div class="container">
+        <div id="app">
+            <!-- İçerik JavaScript tarafından dinamik olarak yüklenecek -->
+        </div>
     </div>
-  </div>
 
-  <div id="transactions">
-    <h3>Transaction History</h3>
-    <ul id="transaction-list">
-      <li class="empty-state">No transactions yet.</li>
-    </ul>
-  </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = document.getElementById('app');
+            const DAILY_LIMIT = 5;
+            // Gerçek senaryoda bu bilgiyi botunuzun ayarlarından almalısınız.
+            const TELEGRAM_BOT_USERNAME = "your_bot_name";
 
-  <!-- Güvenli reklam scripti -->
-  <script src="https://fpyf8.com/88/tag.min.js" data-zone="151707" async data-cfasync="false"></script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
 
-  <script>
-    const watchAdBtn = document.getElementById('watch-ad-btn');
-    const adModal = document.getElementById('ad-modal');
-    const progressBar = document.getElementById('progress-bar-inner');
-    const closeAdBtn = document.getElementById('close-ad-btn');
-    const balanceSpan = document.getElementById('balance');
-    const transactionList = document.getElementById('transaction-list');
+            // Basit durum yönetimi
+            const state = {
+                userId: userId,
+                status: 'loading', // loading, ad_ready, claiming, success, limit_reached, error
+                adWatchCount: 0,
+            };
 
-    watchAdBtn.addEventListener('click', () => {
-      adModal.style.display = 'flex';
-      closeAdBtn.style.display = 'none';
-      progressBar.style.width = '0%';
+            const render = () => {
+                app.innerHTML = ''; // Önceki içeriği temizle
+                let content = '';
+                switch (state.status) {
+                    case 'loading':
+                        content = `
+                            <div class="loader"></div>
+                            <h1>Reklam Yükleniyor...</h1>
+                            <p>Lütfen bekleyin, ödülünüz hazırlanıyor.</p>
+                        `;
+                        break;
+                    case 'ad_ready':
+                        content = `
+                            <img src="coin.png" alt="Jeton" class="coin-icon">
+                            <h1>Reklamı İzlediniz!</h1>
+                            <p>Ödülünüzü almak için butona tıklayın.</p>
+                            <button id="claimButton" class="button">Ödülü Al (+1 Jeton)</button>
+                        `;
+                        break;
+                    case 'claiming':
+                         content = `
+                            <div class="loader"></div>
+                            <h1>Ödül Talep Ediliyor...</h1>
+                            <p>İşleminiz doğrulanıyor, lütfen bekleyin.</p>
+                        `;
+                        break;
+                    case 'success':
+                        content = `
+                            <img src="coin.png" alt="Jeton" class="coin-icon">
+                            <h1>Tebrikler!</h1>
+                            <p>Ödülünüz Telegram hesabınıza gönderildi. Bugün ${state.adWatchCount}/${DAILY_LIMIT} hakkınızı kullandınız.</p>
+                            <a href="tg://resolve?domain=${TELEGRAM_BOT_USERNAME}" class="button success">Telegram'a Geri Dön</a>
+                        `;
+                        break;
+                    case 'limit_reached':
+                        content = `
+                            <img src="coin.png" alt="Jeton" class="coin-icon" style="filter: grayscale(1);">
+                            <h1>Limit Doldu!</h1>
+                            <p class="message error">Bugünlük reklam izleme limitinize ulaştınız. Lütfen yarın tekrar deneyin.</p>
+                             <a href="tg://resolve?domain=${TELEGRAM_BOT_USERNAME}" class="button">Telegram'a Geri Dön</a>
+                        `;
+                        break;
+                    case 'error':
+                         content = `
+                            <h1>Hata!</h1>
+                            <p class="message error">Geçersiz kullanıcı. Lütfen bu sayfayı Telegram botu üzerinden açtığınızdan emin olun.</p>
+                            <p style="font-size:0.8em; color: #888;">URL'de ?user_id=12345 gibi bir parametre olmalıdır.</p>
+                            <a href="tg://resolve?domain=${TELEGRAM_BOT_USERNAME}" class="button">Bota Dön</a>
+                         `;
+                        break;
+                }
+                app.innerHTML = content;
+                if(state.status === 'ad_ready') {
+                    document.getElementById('claimButton').addEventListener('click', handleClaim);
+                }
+            };
 
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 1;
-        progressBar.style.width = progress + '%';
-        if (progress >= 100) {
-          clearInterval(interval);
-          closeAdBtn.style.display = 'block';
-        }
-      }, 50);
-    });
+            const getTodayString = () => {
+                return new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatı
+            };
 
-    closeAdBtn.addEventListener('click', () => {
-      adModal.style.display = 'none';
-      let current = parseFloat(balanceSpan.textContent);
-      let updated = (current + 0.0001).toFixed(4);
-      balanceSpan.textContent = updated + ' TON';
+            // Backend mantığını localStorage ile simüle etme
+            const checkUserLimit = () => {
+                try {
+                    const userData = JSON.parse(localStorage.getItem(state.userId)) || {};
+                    const today = getTodayString();
 
-      const newItem = document.createElement('li');
-      newItem.textContent = `+0.0001 TON - Ad watched - ${new Date().toLocaleString()}`;
-      if (transactionList.querySelector('.empty-state')) {
-        transactionList.innerHTML = '';
-      }
-      transactionList.appendChild(newItem);
-    });
-  </script>
+                    if (userData.date !== today) {
+                        return { canWatch: true, count: 0 };
+                    }
+                    if (userData.count >= DAILY_LIMIT) {
+                        return { canWatch: false, count: userData.count };
+                    }
+                    return { canWatch: true, count: userData.count };
+                } catch (e) {
+                    console.error("localStorage okunamadı:", e);
+                    return { canWatch: true, count: 0 }; // Güvenli varsayım
+                }
+            };
 
+            const recordAdWatch = () => {
+                try {
+                    const today = getTodayString();
+                    const userData = JSON.parse(localStorage.getItem(state.userId)) || { date: today, count: 0 };
+                    
+                    if (userData.date !== today) {
+                        userData.date = today;
+                        userData.count = 0;
+                    }
+
+                    userData.count++;
+                    state.adWatchCount = userData.count;
+                    localStorage.setItem(state.userId, JSON.stringify(userData));
+                } catch(e) {
+                     console.error("localStorage'a yazılamadı:", e);
+                }
+            };
+
+            const handleClaim = async () => {
+                state.status = 'claiming';
+                render();
+
+                // Backend'e API çağrısını simüle etme
+                // Gerçek senaryoda burada fetch() ile backend'e POST isteği atılır.
+                // Örn: await fetch('/api/reward', { method: 'POST', ... });
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Bu kontrol normalde backend'de yapılır, burada simüle ediyoruz.
+                recordAdWatch();
+                state.status = 'success';
+                render();
+            };
+
+            // --- Ana Uygulama Mantığı ---
+            const init = () => {
+                if (!state.userId) {
+                    state.status = 'error';
+                    render();
+                    return;
+                }
+
+                const limitCheck = checkUserLimit();
+                state.adWatchCount = limitCheck.count;
+
+                if (!limitCheck.canWatch) {
+                    state.status = 'limit_reached';
+                    render();
+                    return;
+                }
+                
+                state.status = 'loading';
+                render();
+
+                // Bir reklamın "izlenmesi" için geçen süreyi simüle etme
+                setTimeout(() => {
+                    state.status = 'ad_ready';
+                    render();
+                }, 2500); // 2.5 saniyelik reklam simülasyonu
+            };
+
+            init();
+        });
+    </script>
 </body>
 </html>
