@@ -24,6 +24,16 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             max-width: 90%;
             width: 400px;
+            position: relative;
+        }
+        .balance {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
         h1 {
             color: #1a73e8;
@@ -61,10 +71,18 @@
 </head>
 <body>
     <div class="container">
+        <div class="balance">Bakiyeniz: <span id="balance-amount">0.0000</span> TON</div>
         <h1>Reklam İzle, Ödül Kazan!</h1>
         <p>Ödül kazanmak için aşağıdaki butona tıklayarak bir reklam izleyin.</p>
         <p class="reward-info">Reklam başına <b>0.0001 TON</b> kazanın.<br>Ödeme için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
         <a href="watch-ad.html" class="watch-button">Reklam İzle</a>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const balanceElement = document.getElementById('balance-amount');
+            const balance = parseFloat(localStorage.getItem('user_balance')) || 0;
+            balanceElement.textContent = balance.toFixed(4);
+        });
+    </script>
 </body>
 </html>

@@ -32,6 +32,15 @@
             margin-bottom: 1.5rem;
             font-size: 1.5rem;
         }
+        .balance {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
         .container p {
             color: #5f6368;
             line-height: 1.5;
@@ -85,20 +94,22 @@
 <body>
 
     <div id="ad-container" class="container">
+        <div class="balance">Bakiyeniz: <span class="balance-amount">0.0000</span> TON</div>
         <div class="loader"></div>
         <h2>Reklam yükleniyor...</h2>
         <p>Lütfen bekleyin, ödülünüz işleniyor.</p>
     </div>
 
     <div id="message-container" class="container" style="display: none;">
+        <div class="balance">Bakiyeniz: <span class="balance-amount">0.0000</span> TON</div>
         <h2 id="message-text"></h2>
         <p id="payment-info" style="display: none;">Ödemelerinizi almak için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
         <a href="watch-ad.html" class="primary">Yeni Reklam İzle</a>
         <a href="index.html">Ana Sayfa</a>
     </div>
 
-    <!-- Monetag SDK. Bu reklam genellikle pop-under veya yeni sekme olarak açılır. -->
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+    <!-- Monetag SDK. The ad function will be called from our script. -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>
 
     <script type="module">
         // Backend sunucunuzun adresi
@@ -112,6 +123,21 @@
                 localStorage.setItem('user_token', token);
             }
             return token;
+        }
+        
+        function getBalance() {
+            return parseFloat(localStorage.getItem('user_balance')) || 0;
+        }
+
+        function updateBalanceDisplay(balance) {
+            document.querySelectorAll('.balance-amount').forEach(el => {
+                el.textContent = balance.toFixed(4);
+            });
+        }
+        
+        function saveBalance(newBalance) {
+            localStorage.setItem('user_balance', newBalance.toFixed(4));
+            updateBalanceDisplay(newBalance);
         }
 
         function showMessage(text, isSuccess) {
@@ -148,6 +174,9 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
+                    const currentBalance = getBalance();
+                    const newBalance = currentBalance + 0.0001;
+                    saveBalance(newBalance);
                     showMessage('🎉 0.0001 TON kazandın!', true);
                 } else {
                     showMessage(result.message || '⚠️ Günlük izleme hakkını doldurdun.', false);
@@ -160,9 +189,23 @@
 
         // Sayfa yüklendiğinde işlemleri başlat
         document.addEventListener('DOMContentLoaded', () => {
-            // Monetag reklamının yüklenip görüntülenmesi için kısa bir süre bekle
-            // Bu süre sonunda ödül talebi gönderilir.
-            setTimeout(claimReward, 3000); // 3 saniye bekle
+            updateBalanceDisplay(getBalance());
+            // Monetag SDK'sının 'show_9441902' fonksiyonunu çağırarak reklamı göster.
+            // Bu fonksiyon bir Promise döndürür. Reklam başarıyla izlendiğinde .then() bloğu çalışır.
+            if (typeof show_9441902 === 'function') {
+                show_9441902().then(() => {
+                    // Kullanıcı reklamı izledi, şimdi ödülü talep et.
+                    claimReward();
+                }).catch((e) => {
+                    // Reklam gösterilirken bir hata oluştu veya kullanıcı erken kapattı.
+                    console.error('Reklam hatası:', e);
+                    showMessage('🚫 Reklam gösterilemedi veya erken kapatıldı. Ödül kazanmak için reklamı sonuna kadar izlemelisiniz.', false);
+                });
+            } else {
+                // SDK yüklenememiş veya fonksiyonu tanımlamamış.
+                console.error('Monetag SDK fonksiyonu bulunamadı.');
+                showMessage('🚫 Reklam altyapısı yüklenemedi. Lütfen sayfayı yenileyin.', false);
+            }
         });
     </script>
 
