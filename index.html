@@ -1,158 +1,239 @@
-<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>🎬 Reklam İzle, Ödül Kazan</title>
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reklam İzle - Ödül Kazan</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             text-align: center;
-            padding: 50px;
-            background: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            position: relative;
         }
         .balance {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            background-color: #e8f0fe;
             color: #1a73e8;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
-        button {
-            padding: 12px 25px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 10px;
+        h1 {
+            color: #1a73e8;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            font-size: 1.1rem;
+            color: #5f6368;
+            margin-bottom: 2rem;
+        }
+        .reward-info {
+            font-size: 0.95rem;
+            color: #5f6368;
+            margin-top: -1.5rem;
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+        .watch-button {
+            display: inline-block;
             background-color: #1a73e8;
             color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
             cursor: pointer;
-            transition: background-color 0.3s;
+            border: none;
+            width: 100%;
         }
-        button:disabled {
+        .watch-button:hover:not(:disabled) {
+            background-color: #1558b8;
+            transform: translateY(-2px);
+        }
+        .watch-button:disabled {
             background-color: #a0c3f0;
             cursor: not-allowed;
         }
-        #status {
-            margin-top: 20px;
-            font-weight: bold;
-            height: 1.5em;
+        .message-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+            border: 1px solid transparent;
         }
-        .message-success {
-            color: green;
+        .message-box.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
         }
-        .message-error {
-            color: red;
+        .message-box.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="balance">Bakiyeniz: <span id="balance-amount">0.0000</span> TON</div>
+        <h1>Reklam İzle, Ödül Kazan!</h1>
+        <p>Ödül kazanmak için aşağıdaki butona tıklayarak bir reklam izleyin.</p>
+        <p class="reward-info">Reklam başına <b>0.0001 TON</b> kazanın.<br>Ödeme için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
+        <button id="watch-ad-button" class="watch-button">Reklam İzle</button>
+        <div id="message-box" class="message-box"></div>
+    </div>
 
-<div class="balance">Bakiyeniz: <span id="balance">0.0000</span> TON</div>
-<button id="watchAdBtn" disabled>Reklam Yükleniyor...</button>
-<div id="status"></div>
+    <!-- Monetag SDK -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>
 
-<script>
-  const API_REWARD = 'http://127.0.0.1:5001/api/reward';
-  const API_BALANCE = 'http://127.0.0.1:5001/api/balance';
-  const REWARD_AMOUNT = 0.0001;
+    <script type="module">
+        // --- CONFIGURATION ---
+        const API_ENDPOINT = 'http://127.0.0.1:5001/api/reward';
+        const REWARD_AMOUNT = 0.0001;
 
-  const btn = document.getElementById('watchAdBtn');
-  const status = document.getElementById('status');
-  const balanceDisplay = document.getElementById('balance');
+        // --- DOM ELEMENTS ---
+        const balanceElement = document.getElementById('balance-amount');
+        const watchButton = document.getElementById('watch-ad-button');
+        const messageBox = document.getElementById('message-box');
 
-  function getToken() {
-    let token = localStorage.getItem('user_token');
-    if (!token) {
-      token = crypto.randomUUID();
-      localStorage.setItem('user_token', token);
-    }
-    return token;
-  }
+        // --- UTILITY FUNCTIONS ---
+        function getOrSetUserToken() {
+            let token = localStorage.getItem('user_token');
+            if (!token) {
+                token = self.crypto.randomUUID();
+                localStorage.setItem('user_token', token);
+            }
+            return token;
+        }
 
-  async function fetchBalance() {
-    const token = getToken();
-    try {
-      const res = await fetch(`${API_BALANCE}?token=${token}`);
-      const data = await res.json();
-      if (data.success) {
-        updateBalance(data.balance);
-      }
-    } catch {
-      status.textContent = "Bakiyeniz yüklenemedi.";
-    }
-  }
+        function getBalance() {
+            return parseFloat(localStorage.getItem('user_balance')) || 0;
+        }
 
-  function updateBalance(amount) {
-    balanceDisplay.textContent = amount.toFixed(4);
-    localStorage.setItem('user_balance', amount);
-  }
+        function updateBalanceDisplay() {
+            balanceElement.textContent = getBalance().toFixed(4);
+        }
 
-  function enableButton() {
-    btn.disabled = false;
-    btn.textContent = '🎥 Reklamı İzle';
-    status.textContent = 'Reklam hazır. İzlemek için tıklayın.';
-  }
+        function saveBalance(newBalance) {
+            localStorage.setItem('user_balance', newBalance.toFixed(4));
+            updateBalanceDisplay();
+        }
 
-  function disableButton(msg) {
-    btn.disabled = true;
-    btn.textContent = msg || 'Yükleniyor...';
-  }
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+        }
 
-  async function waitForSDK(retries = 20, delay = 500) {
-    for (let i = 0; i < retries; i++) {
-      if (typeof show_9441902 === 'function') return;
-      await new Promise(r => setTimeout(r, delay));
-    }
-    throw new Error('Reklam SDK yüklenemedi.');
-  }
+        function hideMessage() {
+            messageBox.style.display = 'none';
+        }
 
-  btn.addEventListener('click', async () => {
-    disableButton('Reklam başlatılıyor...');
-    status.textContent = '';
+        // --- CORE LOGIC ---
 
-    try {
-      await waitForSDK();
-      await show_9441902();
+        // Waits for the Monetag SDK function to be available, with a timeout.
+        function checkSdkReady() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 10; // Try 10 times
+                const intervalTime = 500; // every 500ms
 
-      status.textContent = `🎉 ${REWARD_AMOUNT} TON kazandınız! Bakiyenize ekleniyor...`;
-      
-      const token = getToken();
-      const res = await fetch(API_REWARD, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ token }),
-      });
-      const result = await res.json();
+                const intervalId = setInterval(() => {
+                    if (typeof show_9441902 === 'function') {
+                        clearInterval(intervalId);
+                        resolve();
+                    } else {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            clearInterval(intervalId);
+                            reject(new Error('Reklam altyapısı yüklenemedi. Lütfen sayfayı yenileyin.'));
+                        }
+                    }
+                }, intervalTime);
+            });
+        }
 
-      if (res.ok && result.success) {
-        updateBalance(result.balance);
-        status.textContent = `✅ Ödül başarıyla eklendi. Yeni bakiye: ${result.balance.toFixed(4)} TON`;
-        status.className = 'message-success';
-      } else {
-        status.textContent = result.message || 'Ödül verilemedi.';
-        status.className = 'message-error';
-      }
+        // Claims the reward from the backend.
+        async function claimReward() {
+            const token = getOrSetUserToken();
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token }),
+                });
 
-    } catch (err) {
-      console.error(err);
-      status.textContent = err.message || 'Reklam gösterilemedi veya erken kapatıldı.';
-      status.className = 'message-error';
-    } finally {
-      enableButton();
-    }
-  });
+                const result = await response.json();
 
-  // Sayfa yüklendiğinde bakiye getir ve butonu aktif et
-  window.addEventListener('load', async () => {
-    try {
-      await waitForSDK();
-      enableButton();
-      await fetchBalance();
-    } catch (err) {
-      status.textContent = err.message;
-      status.className = 'message-error';
-    }
-  });
-</script>
+                if (response.ok && result.success) {
+                    const currentBalance = getBalance();
+                    const newBalance = currentBalance + REWARD_AMOUNT;
+                    saveBalance(newBalance);
+                    showMessage(`Başarıyla eklendi! Yeni bakiyeniz: ${newBalance.toFixed(4)} TON.`, 'success');
+                } else {
+                    // Show error from server, e.g., "daily limit reached"
+                    showMessage(result.message || 'Ödül alınamadı.', 'error');
+                }
+            } catch (error) {
+                console.error('API request failed:', error);
+                showMessage('Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.', 'error');
+            }
+        }
 
+        // --- EVENT LISTENER ---
+        watchButton.addEventListener('click', async () => {
+            watchButton.disabled = true;
+            watchButton.textContent = 'Reklam Yükleniyor...';
+            hideMessage();
+
+            try {
+                // 1. Wait for SDK to be ready
+                await checkSdkReady();
+
+                // 2. Show the ad. This promise resolves when the user closes the ad.
+                await show_9441902();
+
+                // 3. User watched the ad. Show alert and claim reward.
+                alert(`🎉 ${REWARD_AMOUNT} TON kazandınız!`);
+                await claimReward();
+
+            } catch (error) {
+                // This catches errors from SDK loading or if the ad fails to show/is closed early.
+                console.error('Ad process failed:', error);
+                showMessage(error.message || 'Reklam gösterilemedi veya erken kapatıldı.', 'error');
+            } finally {
+                // 4. Reset the button
+                watchButton.disabled = false;
+                watchButton.textContent = 'Yeni Reklam İzle';
+            }
+        });
+
+        // --- INITIALIZATION ---
+        // Display initial balance when the page loads.
+        updateBalanceDisplay();
+
+    </script>
 </body>
 </html>
