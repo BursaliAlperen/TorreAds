@@ -234,6 +234,25 @@
         // Display initial balance when the page loads.
         updateBalanceDisplay();
 
+        // --- EKLENDİ: Backend'den bakiye çekme ---
+        const API_BALANCE = 'http://127.0.0.1:5001/api/balance';
+
+        async function fetchBalanceFromServer() {
+            const token = getOrSetUserToken();
+            try {
+                const response = await fetch(`${API_BALANCE}?token=${token}`);
+                const data = await response.json();
+                if (data.success && typeof data.balance === 'number') {
+                    saveBalance(data.balance);
+                }
+            } catch (err) {
+                console.warn("Bakiyeyi backend'den çekme hatası:", err);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            fetchBalanceFromServer();
+        });
     </script>
 </body>
 </html>
