@@ -1,89 +1,65 @@
-import sqlite3
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+import sqlite3
 import os
 
-# --- App Configuration ---
 app = Flask(__name__)
-# Geliştirme ortamında tarayıcıdan gelen istekler için CORS'a izin ver
-CORS(app) 
+CORS(app)
 
-# --- Database Configuration ---
 DB_NAME = 'data.db'
 
-def get_db_connection():
-    """Veritabanı bağlantısı oluşturur."""
+def get_db():
     conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row # Sütun adlarıyla erişim için
+    conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    """Veritabanı ve tabloyu oluşturur (eğer yoksa)."""
-    if os.path.exists(DB_NAME):
-        return
-    print(f"'{DB_NAME}' bulunamadı, yeni bir veritabanı oluşturuluyor...")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ad_views (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
-    print("Veritabanı başarıyla oluşturuldu.")
+    if not os.path.exists(DB_NAME):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ad_views (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token TEXT NOT NULL,
+                total_views INTEGER DEFAULT 0
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
-# --- API Endpoints ---
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/api/reward', methods=['POST'])
 def reward():
-    """Kullanıcı token'ını alır ve günlük limiti kontrol ederek ödül verir."""
     data = request.get_json()
-    if not data or 'token' not in data:
-        return jsonify({"success": False, "message": "Geçersiz istek: Token eksik."}), 400
+    token = data.get('token')
 
-    token = data['token']
-    
-    conn = get_db_connection()
+    if not token:
+        return jsonify(success=False, message="❌ Token eksik."), 400
+
+    conn = get_db()
     cursor = conn.cursor()
 
-    # Token için bugünkü izleme sayısını al
-    # SQLite'ta saat dilimini doğru yönetmek için 'localtime' kullanılır
-    query = """
-        SELECT COUNT(id) as today_views
-        FROM ad_views
-        WHERE token = ? AND DATE(timestamp, 'localtime') = DATE('now', 'localtime')
-    """
-    cursor.execute(query, (token,))
-    result = cursor.fetchone()
-    today_views = result['today_views'] if result else 0
+    cursor.execute("SELECT total_views FROM ad_views WHERE token = ?", (token,))
+    row = cursor.fetchone()
 
-    DAILY_LIMIT = 5
-    if today_views >= DAILY_LIMIT:
-        conn.close()
-        return jsonify({
-            "success": False, 
-            "message": "⚠️ Günlük izleme hakkını doldurdun."
-        }), 429 # 429 Too Many Requests
+    if row:
+        total_views = row['total_views']
+        if total_views >= 1000:
+            conn.close()
+            return jsonify(success=False, message="🚫 1000 reklam izleme sınırına ulaştınız."), 403
+        cursor.execute("UPDATE ad_views SET total_views = total_views + 1 WHERE token = ?", (token,))
+    else:
+        cursor.execute("INSERT INTO ad_views (token, total_views) VALUES (?, ?)", (token, 1))
 
-    # Yeni izlemeyi kaydet
-    insert_query = "INSERT INTO ad_views (token) VALUES (?)"
-    cursor.execute(insert_query, (token,))
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "success": True, 
-        "message": "🎉 Ödül kazandın!", 
-        "views_today": today_views + 1
-    })
+    return jsonify(success=True, message="🎉 0.0001 TON kazandınız!")
 
-# --- Main Execution ---
 if __name__ == '__main__':
     init_db()
-    # Geliştirme için debug modunda çalıştır
-    # Üretim ortamında Gunicorn gibi bir WSGI sunucusu kullanılmalıdır.
     app.run(host='0.0.0.0', port=5001, debug=True)
-
-
