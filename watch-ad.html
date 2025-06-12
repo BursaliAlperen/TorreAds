@@ -1,94 +1,121 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Reklam İzle ve Kazan</title>
-<script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
-</head>
-<body style="text-align:center; padding:50px; font-family:sans-serif;">
-
-<h1>🎬 Reklam İzle, Kazan!</h1>
-<button id="watchAdBtn" disabled>🎥 Reklam İzleniyor...</button>
-<p id="status"></p>
-
-<script>
-  // SDK'nın yüklendiğini kontrol eden fonksiyon (promise döner)
-  
-
-// Rewarded Popup
-
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
-        }
-      };
-      check();
-    });
-  }
-
-  const btn = document.getElementById('watchAdBtn');
-  const status = document.getElementById('status');
-
-  // Token oluşturma ve localStorage'da saklama
-  function getUserToken() {
-    let token = localStorage.getItem('userToken');
-    if (!token) {
-      token = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-      localStorage.setItem('userToken', token);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎬 Reklam İzle, Kazan</title>
+  <script src="https://libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      padding: 50px;
     }
-    return token;
-  }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    button {
+      font-size: 18px;
+      padding: 12px 24px;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-  // Butonu aktif hale getir ve reklam izleme fonksiyonunu ata
-  waitForSdkLoaded().then(() => {
-    btn.textContent = "🎥 Reklamı İzle";
-    btn.disabled = false;
-    status.textContent = "Reklam izlemeye hazır.";
-  }).catch(e => {
-    status.textContent = "❌ Reklam altyapısı yüklenemedi. Sayfayı yenileyin.";
-    console.error(e);
-  });
+  <h1>🎬 Reklam İzle, Kazan!</h1>
+  <p>🎥 Reklamı izleyin ve her izleme başına <strong>0.0001 TON</strong> kazanın!</p>
+  <button id="watchAdBtn" disabled>Yükleniyor...</button>
+  <div id="status">Reklam altyapısı hazırlanıyor...</div>
 
-  btn.addEventListener('click', () => {
-    btn.disabled = true;
-    status.textContent = "Reklam yükleniyor...";
-    show_9441902().then(() => {
-      alert("🎉 0.0001 TON kazandınız!");
-      // Ödül kaydı backend'e gönder
-      fetch('/api/reward', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          token: getUserToken(),
-          timestamp: Date.now()
-        })
-      }).then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            status.textContent = `Bakiyeniz: ${data.balance} TON`;
-          } else if (data.status === 'limit_reached') {
-            status.textContent = "Günlük reklam izleme limitine ulaştınız.";
+  <script>
+    const btn = document.getElementById("watchAdBtn");
+    const status = document.getElementById("status");
+
+    // SDK hazır mı kontrol et
+    function waitForSDK(retries = 20, interval = 500) {
+      return new Promise((resolve, reject) => {
+        let tries = 0;
+        const check = () => {
+          if (typeof show_9441902 === "function") {
+            resolve();
+          } else if (tries >= retries) {
+            reject("SDK yüklenemedi");
           } else {
-            status.textContent = "Sunucu hatası.";
+            tries++;
+            setTimeout(check, interval);
           }
-        }).catch(() => {
-          status.textContent = "Sunucuya bağlanılamadı.";
-        }).finally(() => {
-          btn.disabled = false;
-          btn.textContent = "🎥 Reklamı İzle";
-        });
-    }).catch(() => {
-      alert("Reklam gösterilemedi, lütfen tekrar deneyin.");
-      status.textContent = "Reklam yüklenemedi.";
+        };
+        check();
+      });
+    }
+
+    // Token üret/localstorage'a kaydet
+    function getUserToken() {
+      let token = localStorage.getItem("userToken");
+      if (!token) {
+        token = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2);
+        localStorage.setItem("userToken", token);
+      }
+      return token;
+    }
+
+    // SDK'yı bekle
+    waitForSDK().then(() => {
       btn.disabled = false;
       btn.textContent = "🎥 Reklamı İzle";
+      status.textContent = "Reklam izlemeye hazırsınız.";
+    }).catch((err) => {
+      btn.disabled = true;
+      btn.textContent = "Yüklenemedi";
+      status.textContent = "❌ Reklam altyapısı yüklenemedi.";
+      console.error(err);
     });
-  });
-</script>
+
+    // Butona tıklanınca reklam göster
+    btn.addEventListener("click", () => {
+      btn.disabled = true;
+      status.textContent = "Reklam gösteriliyor...";
+
+      show_9441902().then(() => {
+        alert("🎉 0.0001 TON kazandınız!");
+        status.textContent = "Tebrikler! Bakiyenize eklendi.";
+
+        // Backend varsa gönderim (opsiyonel)
+        /*
+        fetch("/api/reward", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            token: getUserToken(),
+            timestamp: Date.now()
+          })
+        });
+        */
+      }).catch(() => {
+        status.textContent = "❌ Reklam gösterilemedi.";
+      }).finally(() => {
+        btn.disabled = false;
+        btn.textContent = "🎥 Reklamı İzle";
+      });
+    });
+  </script>
+
 </body>
-</html></html>
+  </html>
