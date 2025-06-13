@@ -5,15 +5,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const invitedCount = document.getElementById("invited-count");
     const watchAdButton = document.getElementById("watch-ad-button");
     const toastNotification = document.getElementById("toast-notification");
+    const adModal = document.getElementById("ad-modal");
+    const adTimerDisplay = document.getElementById("ad-timer-display");
 
-    // Örnek uid: UUID veya cookie gibi gerçek bir kullanıcı kimliği kullanmalısın
+    // Kullanıcı kimliği (UID) oluştur / al
     let uid = localStorage.getItem("uid");
     if (!uid) {
         uid = Math.random().toString(36).substring(2, 15);
         localStorage.setItem("uid", uid);
     }
 
-    // Referral link oluştur (örnek)
+    // Davet linki oluştur
     const referralLink = `${window.location.origin}?ref=${uid}`;
     referralLinkInput.value = referralLink;
 
@@ -23,180 +25,67 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Davet linki kopyalandı!");
     });
 
-    function showToast(message) {
+    function showToast(message, success = true) {
         toastNotification.textContent = message;
-        toastNotification.classList.add("toast-visible");
+        toastNotification.className = success ? "toast-visible success" : "toast-visible";
         setTimeout(() => {
-            toastNotification.classList.remove("toast-visible");
+            toastNotification.className = toastNotification.className.replace("toast-visible", "").trim();
         }, 3000);
     }
 
     function fetchBalance() {
         fetch(`/api/bakiye/${uid}`)
-            .then((res) => res.json())
-            .then((data) => {
+            .then(res => res.json())
+            .then(data => {
                 balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
-            });
-    }
-
-    fetchBalance();
-
-    watchAdButton.addEventListener("click", () => {
-        watchAdButton.disabled = true;
-        // Ad SDK reklam gösterme örneği
-        window.show_9441902('pop')
-            .then(() => {
-                // Ödülü API'ye gönder
-                fetch("/api/odul", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ uid: uid, miktar: 0.0001 }),
-                })
-                    .then((res) => res.json())
-                    .then((data) => {
-                        fetchBalance();
-                        showToast("Ödülünüz hesabınıza eklendi!");
-                        watchAdButton.disabled = false;
-                    });
+                invitedCount.textContent = `${data.davet_sayisi || 0} kişi`;
             })
             .catch(() => {
-                showToast("Reklam gösterilemedi.");
-                watchAdButton.disabled = false;
-                const watchAdButton = document.getElementById("watch-ad-button");
-const adModal = document.getElementById("ad-modal");
-const adTimerDisplay = document.getElementById("ad-timer-display");
-const toast = document.getElementById("toast-notification");
+                showToast("Bakiye alınamadı.", false);
+            });
+    }
 
-watchAdButton.addEventListener("click", () => {
-    // Reklam modalını göster
-    adModal.classList.remove("modal-hidden");
-    
-    let countdown = 20;
-    adTimerDisplay.textContent = countdown;
-    
-    const timer = setInterval(() => {
-        countdown--;
-        adTimerDisplay.textContent = countdown;
-        if (countdown <= 0) {
-            clearInterval(timer);
+    function rewardUser() {
+        fetch("/api/odul", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid: uid, miktar: 0.0001 }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                balanceDisplay.textContent = data.yeni_bakiye.toFixed(4) + " TON";
+                showToast("🎉 0.0001 TON ödül eklendi!");
+            })
+            .catch(() => {
+                showToast("Ödül verirken hata oluştu.", false);
+            });
+    }
+
+    watchAdButton.addEventListener("click", async () => {
+        watchAdButton.disabled = true;
+        adModal.classList.remove("modal-hidden");
+
+        try {
+            await show_9441902("pop"); // Reklam gösterme SDK çağrısı
+            let countdown = 19;
+            adTimerDisplay.textContent = countdown;
+
+            const timer = setInterval(() => {
+                countdown--;
+                adTimerDisplay.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    adModal.classList.add("modal-hidden");
+                    rewardUser();
+                    watchAdButton.disabled = false;
+                }
+            }, 1000);
+        } catch (e) {
             adModal.classList.add("modal-hidden");
-            toast.textContent = "Tebrikler! 0.0001 TON kazandınız.";
-            toast.classList.add("toast-visible", "success");
-            
-            // Ödül işlemini burada API ile yap
-            fetch("/api/odul", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ uid: "kullaniciID", miktar: 0.0001 })
-            }).then(res => res.json()).then(data => {
-                document.getElementById("balance-display").textContent = data.yeni_bakiye.toFixed(4) + " TON";
-                setTimeout(() => {
-                    toast.classList.remove("toast-visible", "success");
-                }, 3000);
-            }).catch(() => {
-                toast.textContent = "Ödül alınırken hata oluştu.";
-                toast.classList.add("toast-visible");
-                setTimeout(() => {
-                    toast.classList.remove("toast-visible");
-                }, 3000);
-            });
+            watchAdButton.disabled = false;
+            showToast("❌ Reklam gösterilemedi.", false);
         }
-    }, 1000);
-});
-                document.addEventListener("DOMContentLoaded", () => {
-  const watchAdButton = document.getElementById("watch-ad-button");
-  const balanceDisplay = document.getElementById("balance-display");
-  const toast = document.getElementById("toast-notification");
-
-  function showToast(message, success = true) {
-    toast.textContent = message;
-    toast.className = success ? "toast-visible success" : "toast-visible";
-    setTimeout(() => {
-      toast.className = toast.className.replace("toast-visible", "");
-    }, 3000);
-  }
-
-  async function fetchBalance(uid) {
-    try {
-      const res = await fetch(`/api/bakiye/${uid}`);
-      if (!res.ok) throw new Error("Bakiye alınamadı");
-      const data = await res.json();
-      balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function rewardUser(uid, amount) {
-    try {
-      const res = await fetch("/api/odul", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, miktar: amount }),
-      });
-      if (!res.ok) throw new Error("Ödül verilemedi");
-      const data = await res.json();
-      balanceDisplay.textContent = data.yeni_bakiye.toFixed(4) + " TON";
-      showToast("Tebrikler! Ödülünüz eklendi.");
-    } catch (e) {
-      console.error(e);
-      showToast("Ödül verilirken hata oluştu.", false);
-    }
-  }
-
-  let adCooldown = false;
-  const UID = "user123"; // Burayı gerçek kullanıcı UID ile değiştir
-
-  watchAdButton.addEventListener("click", async () => {
-    if (adCooldown) return;
-
-    try {
-      watchAdButton.disabled = true;
-      let count = 20;
-      watchAdButton.textContent = `Reklam izleniyor... ${count}s`;
-
-      await show_9441902("pop"); // Reklamı göster
-
-      // Sayaç başlat
-      const interval = setInterval(() => {
-        count--;
-        if (count <= 0) {
-          clearInterval(interval);
-          watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
-          watchAdButton.disabled = false;
-          rewardUser(UID, 0.0001);
-          adCooldown = false;
-        } else {
-          watchAdButton.textContent = `Reklam izleniyor... ${count}s`;
-        }
-      }, 1000);
-
-      adCooldown = true;
-    } catch (e) {
-      watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
-      watchAdButton.disabled = false;
-      showToast("Reklam gösterilirken hata veya iptal.", false);
-    }
-  });
-
-  // Başlangıçta bakiye göster
-  fetchBalance(UID);
-});
-                
-
-// Rewarded Popup
-
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
-
-        
-            });
     });
+
+    fetchBalance(); // Sayfa yüklendiğinde bakiyeyi getir
 });
