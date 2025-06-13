@@ -58,7 +58,6 @@ async function fetchBalance() {
 }
 
 // Davet edilen kişi sayısını getir (backend'e göre uyarlamalısın)
-// Burada placeholder olarak 0 gösteriliyor, backend desteği gerekir.
 function fetchInvitedCount() {
   // TODO: API varsa getir, yoksa default 0
   invitedCountDisplay.textContent = "0 kişi";
@@ -80,7 +79,7 @@ function startAdTimer(duration = 20) {
       clearInterval(interval);
       adModal.classList.add("modal-hidden");
       watchAdButton.disabled = false;
-      rewardUser(0.0001);
+      rewardUser(0.0001);  // 20 saniye sonra ödül veriliyor
     }
   }, 1000);
 }
@@ -110,7 +109,7 @@ async function rewardUser(amount) {
 async function showRewardedAd() {
   try {
     await show_9441902('pop');
-    // Reklam başarılı izlendi, 20 saniyelik timer başlasın
+    // Reklam başarıyla izlendi, 20 saniyelik timer başlasın
     startAdTimer(20);
   } catch (e) {
     showToast("Reklam oynatılırken hata oluştu!", true);
@@ -127,16 +126,14 @@ watchAdButton.addEventListener("click", () => {
 // Sayfa yüklendiğinde bakiye ve davet edilen kişi sayısını getir
 fetchBalance();
 fetchInvitedCount();
-
-
 // Rewarded Popup
 
 show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
+// user watch ad till the end or close it in interstitial format
+// your code to reward user for rewarded format
 }).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
+// user get error during playing ad
+// do nothing or whatever you want
 })
 
-        
+    
