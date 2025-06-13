@@ -1,65 +1,83 @@
-const watchAdBtn = document.getElementById('watch-ad-button');
-const balanceDisplay = document.getElementById('balance-display');
+document.addEventListener("DOMContentLoaded", () => {
+  const watchAdButton = document.getElementById("watch-ad-button");
+  const balanceDisplay = document.getElementById("balance-display");
+  const referralLinkInput = document.getElementById("referral-link");
+  const copyButton = document.getElementById("copy-button");
+  const invitedCount = document.getElementById("invited-count");
 
-let adDuration = 20; // saniye
+  // Referral UID'yi URL'den al
+  const urlParams = new URLSearchParams(window.location.search);
+  const uid = urlParams.get("uid") || "anonymous";
+  
+  // Davet linkini ayarla
+  const baseUrl = window.location.origin + window.location.pathname;
+  const referralUrl = `${baseUrl}?uid=${encodeURIComponent(uid)}`;
+  referralLinkInput.value = referralUrl;
 
-function updateBalance(newBalance) {
-  balanceDisplay.textContent = newBalance.toFixed(4) + " TON";
-}
+  // Copy butonu
+  copyButton.addEventListener("click", () => {
+    referralLinkInput.select();
+    document.execCommand("copy");
+    alert("Davet linki kopyalandı!");
+  });
 
-function showToast(message, success = true) {
-  const toast = document.getElementById('toast-notification');
-  toast.textContent = message;
-  toast.className = success ? 'toast-visible success' : 'toast-visible';
-  setTimeout(() => {
-    toast.className = '';
-  }, 3000);
-}
-
-watchAdBtn.addEventListener('click', () => {
-  watchAdBtn.disabled = true;
-  let originalText = watchAdBtn.textContent;
-  watchAdBtn.textContent = `Reklam izleniyor... ${adDuration}s`;
-
-  let countdown = adDuration;
-  const timer = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      watchAdBtn.textContent = `Reklam izleniyor... ${countdown}s`;
-    } else {
-      clearInterval(timer);
-      watchAdBtn.textContent = originalText;
-      watchAdBtn.disabled = false;
-    }
-  }, 1000);
-
-  // Reklam gösterme - sdk fonksiyonu
-  show_9441902('pop').then(() => {
-    // Reklam başarıyla izlendi, ödül verme kısmı:
-    // Backend'e POST isteği ile ödül verelim
-
-    fetch('/api/odul', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid: 'user1', miktar: 0.0001 })  // uid dinamik olmalı, örnek user1
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.yeni_bakiye !== undefined) {
-        updateBalance(data.yeni_bakiye);
-        showToast('Tebrikler! 0.0001 TON kazandınız.');
-      } else {
-        showToast('Bakiye güncellenemedi.', false);
-      }
+  // Mevcut bakiyeyi API'den al (örnek)
+  fetch(`/api/bakiye/${encodeURIComponent(uid)}`)
+    .then((res) => res.json())
+    .then((data) => {
+      balanceDisplay.textContent = `${data.bakiye.toFixed(4)} TON`;
     })
     .catch(() => {
-      showToast('Sunucu hatası, tekrar deneyin.', false);
+      balanceDisplay.textContent = "0.0000 TON";
     });
 
-  }).catch(() => {
-    clearInterval(timer);
-    watchAdBtn.textContent = originalText;
-    watchAdBtn.disabled = false;
-    showToast('Reklam yüklenemedi veya izlendi.', false);
+  invitedCount.textContent = "0 kişi"; // Bu backend'e göre güncellenmeli
+
+  watchAdButton.addEventListener("click", () => {
+    watchAdButton.disabled = true;
+
+    show_9441902("pop")
+      .then(() => {
+        // Reklam izlendi, şimdi 20 saniyelik bekleme başlasın
+        let timeLeft = 20;
+        const buttonText = watchAdButton.querySelector(".button-text");
+        const timerSpan = watchAdButton.querySelector(".button-timer");
+        
+        buttonText.style.display = "none";
+        timerSpan.style.display = "inline";
+        timerSpan.textContent = `${timeLeft} sn`;
+
+        const interval = setInterval(() => {
+          timeLeft--;
+          timerSpan.textContent = `${timeLeft} sn`;
+          if (timeLeft <= 0) {
+            clearInterval(interval);
+            timerSpan.style.display = "none";
+            buttonText.style.display = "inline";
+
+            // Süre bitti, ödülü ver
+            fetch("/api/odul", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uid, miktar: 0.0001 }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                balanceDisplay.textContent = `${data.yeni_bakiye.toFixed(4)} TON`;
+                alert("20 saniye tamamlandı, ödül hesabınıza eklendi!");
+                watchAdButton.disabled = false;
+              })
+              .catch(() => {
+                alert("Ödül güncellenirken hata oluştu.");
+                watchAdButton.disabled = false;
+              });
+          }
+        }, 1000);
+      })
+      .catch((err) => {
+        console.error("Reklam oynatma hatası:", err);
+        alert("Reklam oynatılırken hata oluştu. Lütfen tekrar deneyin.");
+        watchAdButton.disabled = false;
+      });
   });
 });
