@@ -1,69 +1,64 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify, g
 import sqlite3
+import os
+
+DATABASE = os.getenv("DATABASE_PATH", "balances.db")
 
 app = Flask(__name__)
-CORS(app)
 
-DB_PATH = 'veritabani.db'
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
+        )
+        db.commit()
+    return db
 
-def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                uid TEXT PRIMARY KEY,
-                balance REAL DEFAULT 0
-            )
-        ''')
-        conn.commit()
-
-init_db()
-
-@app.route("/api/bakiye/<uid>")
-def bakiye(uid):
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
-        c.execute("SELECT balance FROM users WHERE uid = ?", (uid,))
-        row = c.fetchone()
-        if row:
-            return jsonify({"bakiye": row[0]})
-        else:
-            c.execute("INSERT INTO users (uid, balance) VALUES (?, 0)", (uid,))
-            conn.commit()
-            return jsonify({"bakiye": 0})
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
 
 @app.route("/api/odul", methods=["POST"])
 def odul():
-    data = request.get_json()
+    data = request.get_json(force=True)
     uid = data.get("uid")
     miktar = float(data.get("miktar", 0))
-
     if not uid or miktar <= 0:
-        return jsonify({"error": "Geçersiz veri"}), 400
+        return jsonify(error="Geçersiz veri"), 400
 
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
-        c.execute("SELECT balance FROM users WHERE uid = ?", (uid,))
-        row = c.fetchone()
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if row:
+        yeni_bakiye = row[0] + miktar
+        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
+    else:
+        yeni_bakiye = miktar
+        cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
+    db.commit()
+    return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
 
-        if row:
-            yeni_bakiye = row[0] + miktar
-            c.execute("UPDATE users SET balance = ? WHERE uid = ?", (yeni_bakiye, uid))
-        else:
-            yeni_bakiye = miktar
-            c.execute("INSERT INTO users (uid, balance) VALUES (?, ?)", (uid, yeni_bakiye))
+@app.route("/api/bakiye/<uid>")
+def bakiye(uid):
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    bakiye = row[0] if row else 0
+    return jsonify(uid=uid, bakiye=bakiye)
 
-        conn.commit()
-        return jsonify({"success": True, "yeni_bakiye": yeni_bakiye})
+@app.route("/")
+def index():
+    return jsonify(ok=True, timestamp=time_now())
 
-@app.route("/api/sifirla/<uid>", methods=["POST"])
-def sifirla(uid):
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
-        c.execute("UPDATE users SET balance = 0 WHERE uid = ?", (uid,))
-        conn.commit()
-        return jsonify({"success": True, "yeni_bakiye": 0})
+def time_now():
+    from datetime import datetime
+    return datetime.utcnow().isoformat() + "Z"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=False)
