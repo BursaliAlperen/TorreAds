@@ -1,131 +1,109 @@
-// Helper: UID oluştur (basit, 16 karakterlik random string)
-function generateUID() {
-  return 'xxxxxxxxyxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-const referralLinkInput = document.getElementById("referral-link");
-const copyButton = document.getElementById("copy-button");
+// Global değişkenler
 const balanceDisplay = document.getElementById("balance-display");
+const referralLinkInput = document.getElementById("referral-link");
 const invitedCountDisplay = document.getElementById("invited-count");
 const watchAdButton = document.getElementById("watch-ad-button");
 const toast = document.getElementById("toast-notification");
-const adModal = document.getElementById("ad-modal");
-const adTimerDisplay = document.getElementById("ad-timer-display");
 
+// Kullanıcı ID’si oluştur ve sakla
 let uid = localStorage.getItem("uid");
 if (!uid) {
-  uid = generateUID();
+  uid = "user-" + Math.random().toString(36).slice(2, 10);
   localStorage.setItem("uid", uid);
 }
 
-// Telegram bot referral link oluştur
-const referralLink = `https://t.me/TorreAds_Bot?start=${uid}`;
-referralLinkInput.value = referralLink;
-
-// Copy butonu işlemi
-copyButton.addEventListener("click", () => {
-  referralLinkInput.select();
-  referralLinkInput.setSelectionRange(0, 99999); // Mobil için
-  navigator.clipboard.writeText(referralLinkInput.value).then(() => {
-    showToast("Davet linki kopyalandı!");
-  }).catch(() => {
-    showToast("Kopyalama başarısız oldu!", true);
+// Referans parametresi varsa backend'e bildir
+const urlParams = new URLSearchParams(window.location.search);
+const referrer = urlParams.get("ref");
+if (referrer && referrer !== uid) {
+  fetch("/api/set_referrer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid, referrer }),
   });
-});
+}
 
-// Toast mesaj gösterme fonksiyonu
-function showToast(message, isError = false) {
+// Referral link oluştur
+referralLinkInput.value = `${window.location.origin}?ref=${uid}`;
+
+// Kopyalama fonksiyonu
+document.getElementById("copy-button").onclick = () => {
+  referralLinkInput.select();
+  document.execCommand("copy");
+  showToast("Davet linki kopyalandı!");
+};
+
+// Toast göster
+function showToast(message, duration = 3000) {
   toast.textContent = message;
-  toast.className = isError ? "toast-visible error" : "toast-visible success";
+  toast.classList.add("toast-visible");
   setTimeout(() => {
-    toast.className = toast.className.replace("toast-visible", "");
-  }, 2500);
+    toast.classList.remove("toast-visible");
+  }, duration);
 }
 
-// Kullanıcının bakiyesini getir
-async function fetchBalance() {
-  try {
-    const res = await fetch(`/api/bakiye/${uid}`);
-    const data = await res.json();
-    balanceDisplay.textContent = `${data.bakiye.toFixed(4)} TON`;
-  } catch {
-    balanceDisplay.textContent = `0.0000 TON`;
-  }
-}
-
-// Davet edilen kişi sayısını getir (backend'e göre uyarlamalısın)
-function fetchInvitedCount() {
-  // TODO: API varsa getir, yoksa default 0
-  invitedCountDisplay.textContent = "0 kişi";
-}
-
-// 20 saniyelik reklam bekletme fonksiyonu
-function startAdTimer(duration = 20) {
-  let timeLeft = duration;
-  adTimerDisplay.textContent = timeLeft;
-  adModal.classList.remove("modal-hidden");
-
-  watchAdButton.disabled = true;
-
-  const interval = setInterval(() => {
-    timeLeft--;
-    adTimerDisplay.textContent = timeLeft;
-
-    if (timeLeft <= 0) {
-      clearInterval(interval);
-      adModal.classList.add("modal-hidden");
-      watchAdButton.disabled = false;
-      rewardUser(0.0001);  // 20 saniye sonra ödül veriliyor
-    }
-  }, 1000);
-}
-
-// Kullanıcıya ödül verme işlemi (backend API çağrısı)
-async function rewardUser(amount) {
-  try {
-    const res = await fetch("/api/odul", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, miktar: amount })
+// Bakiye ve davet sayısını güncelle
+function updateBalance() {
+  fetch(`/api/bakiye/${uid}`)
+    .then((res) => res.json())
+    .then((data) => {
+      balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
+      invitedCountDisplay.textContent = data.referrals + " kişi";
     });
-    const data = await res.json();
-
-    if (res.ok) {
-      balanceDisplay.textContent = `${data.yeni_bakiye.toFixed(4)} TON`;
-      showToast(`Tebrikler! ${amount} TON kazandınız.`);
-    } else {
-      showToast(data.error || "Ödül alınamadı!", true);
-    }
-  } catch {
-    showToast("Sunucu hatası!", true);
-  }
 }
 
-// Reklam izleme fonksiyonu ve reklam SDK'sı entegrasyonu
-async function showRewardedAd() {
-  try {
-    await show_9441902('pop');
-    // Reklam başarıyla izlendi, 20 saniyelik timer başlasın
-    startAdTimer(20);
-  } catch (e) {
-    showToast("Reklam oynatılırken hata oluştu!", true);
-    watchAdButton.disabled = false;
-  }
-}
+updateBalance();
 
-// Butona tıklanınca reklam başlat
+// Reklam izleme ve ödül verme
+
 watchAdButton.addEventListener("click", () => {
   watchAdButton.disabled = true;
-  showRewardedAd();
-});
+  watchAdButton.querySelector(".button-text").textContent =
+    "Reklam izleniyor... Lütfen bekleyin";
 
-// Sayfa yüklendiğinde bakiye ve davet edilen kişi sayısını getir
-fetchBalance();
-fetchInvitedCount();
+  // 20 saniyelik sayıcı
+  let countdown = 20;
+  const timerSpan = watchAdButton.querySelector(".button-timer");
+  timerSpan.style.display = "inline";
+  timerSpan.textContent = `${countdown}s`;
+
+  const interval = setInterval(() => {
+    countdown--;
+    timerSpan.textContent = `${countdown}s`;
+    if (countdown <= 0) {
+      clearInterval(interval);
+      timerSpan.style.display = "none";
+
+      // Reklam gösterimi (libtl reklam sdk)
+      show_9441902("pop")
+        .then(() => {
+          // Ödülü backend'e bildir
+          fetch("/api/odul", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid, miktar: 0.0001 }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.error) {
+                showToast("Tebrikler! 0.0001 TON kazandınız.");
+                updateBalance();
+              } else {
+                showToast("Bir hata oluştu. Lütfen tekrar deneyin.");
+              }
+            });
+        })
+        .catch(() => {
+          showToast("Reklam oynatılamadı.");
+        })
+        .finally(() => {
+          watchAdButton.disabled = false;
+          watchAdButton.querySelector(".button-text").textContent =
+            "Reklam İzle & 0.0001 TON Kazan";
+        });
+    }
+  }, 1000);
+});
 // Rewarded Popup
 
 show_9441902('pop').then(() => {
@@ -136,4 +114,4 @@ show_9441902('pop').then(() => {
 // do nothing or whatever you want
 })
 
-    
+          
