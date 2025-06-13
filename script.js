@@ -1,123 +1,107 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const balanceDisplay = document.getElementById("balance-display");
-    const referralLinkInput = document.getElementById("referral-link");
-    const copyButton = document.getElementById("copy-button");
-    const invitedCount = document.getElementById("invited-count");
-    const watchAdButton = document.getElementById("watch-ad-button");
-    const toastNotification = document.getElementById("toast-notification");
+// Buton ve diğer elementleri seç
+const watchAdButton = document.getElementById('watch-ad-button');
+const balanceDisplay = document.getElementById('balance-display');
+const adModal = document.getElementById('ad-modal');
+const adTimerDisplay = document.getElementById('ad-timer-display');
+const toastNotification = document.getElementById('toast-notification');
+const copyButton = document.getElementById('copy-button');
+const referralLinkInput = document.getElementById('referral-link');
 
-    // Örnek uid: UUID veya cookie gibi gerçek bir kullanıcı kimliği kullanmalısın
-    let uid = localStorage.getItem("uid");
-    if (!uid) {
-        uid = Math.random().toString(36).substring(2, 15);
-        localStorage.setItem("uid", uid);
-    }
+let balance = 0.0;
+let countdownInterval;
 
-    // Referral link oluştur (örnek)
-    const referralLink = `${window.location.origin}?ref=${uid}`;
-    referralLinkInput.value = referralLink;
-
-    copyButton.addEventListener("click", () => {
-        referralLinkInput.select();
-        document.execCommand("copy");
-        showToast("Davet linki kopyalandı!");
+// Ödülü güncelleyen fonksiyon (örnek API çağrısı, backend ile uyumlu hale getir)
+function updateBalance(uid, amount) {
+  return fetch('/api/odul', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid, miktar: amount }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.yeni_bakiye !== undefined) {
+        balance = data.yeni_bakiye;
+        balanceDisplay.textContent = `${balance.toFixed(4)} TON`;
+        showToast('Ödül başarıyla eklendi!', true);
+      } else if (data.error) {
+        showToast(`Hata: ${data.error}`, false);
+      }
+    })
+    .catch(() => {
+      showToast('Sunucu hatası, lütfen tekrar deneyin.', false);
     });
+}
 
-    function showToast(message) {
-        toastNotification.textContent = message;
-        toastNotification.classList.add("toast-visible");
-        setTimeout(() => {
-            toastNotification.classList.remove("toast-visible");
-        }, 3000);
+// Toast gösterme fonksiyonu
+function showToast(message, success = true) {
+  toastNotification.textContent = message;
+  toastNotification.className = '';
+  toastNotification.classList.add(success ? 'toast-visible' : 'toast-visible');
+  if (success) toastNotification.classList.add('success');
+
+  setTimeout(() => {
+    toastNotification.classList.remove('toast-visible', 'success');
+  }, 3000);
+}
+
+// 20 saniyelik geri sayım fonksiyonu
+function startAdCountdown() {
+  let timeLeft = 20;
+  adTimerDisplay.textContent = timeLeft;
+  adModal.classList.remove('modal-hidden');
+
+  countdownInterval = setInterval(() => {
+    timeLeft -= 1;
+    adTimerDisplay.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      adModal.classList.add('modal-hidden');
+      watchAdButton.disabled = false;
+      // Ödül verme işlemi burada çağrılabilir
+      updateBalance('user123', 0.0001); // user id ve miktar burada gerçek verilerle değiştirilmeli
     }
+  }, 1000);
+}
 
-    function fetchBalance() {
-        fetch(`/api/bakiye/${uid}`)
-            .then((res) => res.json())
-            .then((data) => {
-                balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
-            });
-    }
+// Reklam izleme butonu tıklama olayı
+watchAdButton.addEventListener('click', () => {
+  watchAdButton.disabled = true;
 
-    fetchBalance();
-
-    watchAdButton.addEventListener("click", () => {
-        watchAdButton.disabled = true;
-        // Ad SDK reklam gösterme örneği
-        window.show_9441902('pop')
-            .then(() => {
-                // Ödülü API'ye gönder
-                fetch("/api/odul", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ uid: uid, miktar: 0.0001 }),
-                })
-                    .then((res) => res.json())
-                    .then((data) => {
-                        fetchBalance();
-                        showToast("Ödülünüz hesabınıza eklendi!");
-                        watchAdButton.disabled = false;
-                    });
-            })
-            .catch(() => {
-                showToast("Reklam gösterilemedi.");
-                watchAdButton.disabled = false;
-                const watchAdButton = document.getElementById("watch-ad-button");
-const adModal = document.getElementById("ad-modal");
-const adTimerDisplay = document.getElementById("ad-timer-display");
-const toast = document.getElementById("toast-notification");
-
-watchAdButton.addEventListener("click", () => {
-    // Reklam modalını göster
-    adModal.classList.remove("modal-hidden");
-    
-    let countdown = 20;
-    adTimerDisplay.textContent = countdown;
-    
-    const timer = setInterval(() => {
-        countdown--;
-        adTimerDisplay.textContent = countdown;
-        if (countdown <= 0) {
-            clearInterval(timer);
-            adModal.classList.add("modal-hidden");
-            toast.textContent = "Tebrikler! 0.0001 TON kazandınız.";
-            toast.classList.add("toast-visible", "success");
-            
-            // Ödül işlemini burada API ile yap
-            fetch("/api/odul", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ uid: "kullaniciID", miktar: 0.0001 })
-            }).then(res => res.json()).then(data => {
-                document.getElementById("balance-display").textContent = data.yeni_bakiye.toFixed(4) + " TON";
-                setTimeout(() => {
-                    toast.classList.remove("toast-visible", "success");
-                }, 3000);
-            }).catch(() => {
-                toast.textContent = "Ödül alınırken hata oluştu.";
-                toast.classList.add("toast-visible");
-                setTimeout(() => {
-                    toast.classList.remove("toast-visible");
-                }, 3000);
-            });
-        }
-    }, 1000);
+  // Reklamı göster (libtl reklam SDK)
+  show_9441902('pop')
+    .then(() => {
+      // Reklam başarıyla izlendiğinde sayaç başlat
+      startAdCountdown();
+    })
+    .catch((err) => {
+      console.error('Reklam hatası:', err);
+      showToast('Reklam gösterilirken bir hata oluştu.', false);
+      watchAdButton.disabled = false;
+    });
 });
-                
 
-// Rewarded Popup
+// Kopyala butonu işlevi
+copyButton.addEventListener('click', () => {
+  referralLinkInput.select();
+  referralLinkInput.setSelectionRange(0, 99999); // mobil için
+  navigator.clipboard.writeText(referralLinkInput.value).then(() => {
+    showToast('Davet linki kopyalandı!', true);
+  });
+});
 
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
+// Sayfa yüklendiğinde referral linkini ayarla (örnek)
+window.addEventListener('load', () => {
+  const uid = 'user123'; // Gerçek kullanıcı ID'si burada olmalı
+  referralLinkInput.value = `${window.location.origin}/?ref=${uid}`;
 
-        
-            });
+  // Kullanıcının bakiye bilgisini backend'den çekip göster
+  fetch(`/api/bakiye/${uid}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.bakiye !== undefined) {
+        balance = data.bakiye;
+        balanceDisplay.textContent = `${balance.toFixed(4)} TON`;
+      }
     });
 });
