@@ -46,12 +46,20 @@
       status.textContent = err;
     });
 
+  // 18 saniyelik bekleme fonksiyonu
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     status.textContent = "Reklam başlatılıyor...";
 
     try {
       await show_9441902();
+
+      status.textContent = "18 saniye bekleniyor...";
+      await delay(18000);  // 18 saniye bekle
 
       // Reklam tamamlandı, backend'e bildir
       const res = await fetch("/api/reward", {
@@ -75,8 +83,8 @@
       btn.textContent = "🎥 Reklamı İzle";
     }
   });
-        </script>
-        
+    </script>
+    
 
 // Rewarded Popup
 
