@@ -1,73 +1,75 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TorreAds - TON Ödül Kazan</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
+  <meta charset="UTF-8">
+  <title>Ton Coin Bakiye</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f4f4f4;
+    }
+    #balance {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+    }
+    #countdown {
+      font-size: 20px;
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
 <body>
 
-<div id="app-container">
-  <header>
-    <img src="coin.png" alt="TON Coin" class="header-coin">
-    <h1>TorreAds</h1>
-  </header>
+  <div id="balance">Bakiyeniz: <span id="tonBalance">0</span> TON</div>
 
-  <main id="main-card">
-    <div class="balance-section">
-      <p>Mevcut Bakiyeniz</p>
-      <h2 id="balance-display">0.0000 TON</h2>
-    </div>
+  <button onclick="watchAd()">🎥 Reklam İzle</button>
+  <div id="countdown"></div>
 
-    <div class="info-section">
-      <h3>Davet Linkiniz</h3>
-      <div class="referral-box">
-        <input type="text" id="referral-link" readonly>
-        <button id="copy-button">Kopyala</button>
-      </div>
-      <p class="referral-info">Davet linkinden giriş yapan bir kullanıcıdan hayat boyu %100 ödül alırsınız.</p>
-    </div>
+  <!-- Reklam SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
 
-    <div class="info-section">
-      <h3>Davet Edilen Kişi Sayısı</h3>
-      <p id="invited-count">0 kişi</p>
-    </div>
+  <script>
+    let balance = 0;
 
-    <a href="https://t.me/TorreAds_Bot/TorreAds" target="_blank" rel="noopener noreferrer" id="telegram-button">
-      <svg class="telegram-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 2L11 13"/>
-        <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-      </svg>
-      <span>Telegram'da Devam Et</span>
-    </a>
+    function watchAd() {
+      const countdown = document.getElementById("countdown");
+      countdown.innerText = "Reklam yükleniyor...";
 
-    <button id="watch-ad-button">
-      <span class="button-text">Reklam İzle & 0.0001 TON Kazan</span>
-      <span class="button-timer" style="display: none;"></span>
-    </button>
+      // Reklamı göster
+      show_9441902('pop').then(() => {
+        // Reklam tamamlandı
+        let counter = 19;
+        countdown.innerText = "Reklam tamamlandı: " + counter + " saniye";
 
-    <p class="withdrawal-info">Minimum çekim miktarı <strong>0.75 TON</strong>’dur. Düşük miktarlar reddedilecektir.</p>
-  </main>
-</div>
+        const interval = setInterval(() => {
+          counter--;
+          countdown.innerText = "Reklam sonrası bekleme: " + counter + " saniye";
+          if (counter <= 0) {
+            clearInterval(interval);
+            countdown.innerText = "0.0002 TON kazandınız!";
+            balance += 0.0002;
+            document.getElementById("tonBalance").innerText = balance.toFixed(4);
+          }
+        }, 1000);
+      }).catch(e => {
+        countdown.innerText = "Reklam oynatılamadı. Lütfen tekrar deneyin.";
+        console.error("Reklam hatası:", e);
+      });
+    }
+  </script>
 
-<div id="ad-modal" class="modal-hidden">
-  <div class="modal-content">
-    <h3>Reklam Oynatılıyor...</h3>
-    <p>Lütfen ödülünüz için bekleyin.</p>
-    <div class="spinner"></div>
-    <div id="ad-timer-display">19</div>
-  </div>
-</div>
-
-<div id="toast-notification" class="toast-hidden"></div>
-
-<script src="script.js"></script>
 </body>
-    </html>
+</html>
