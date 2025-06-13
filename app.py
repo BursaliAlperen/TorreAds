@@ -80,3 +80,54 @@ def get_balance():
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5001, debug=True)
+from flask import Flask, request, jsonify, send_from_directory from datetime import datetime import sqlite3 import os
+
+app = Flask(name, static_folder='public')
+
+DATABASE = 'data.db' REWARD_AMOUNT = 0.0001
+
+def init_db(): with sqlite3.connect(DATABASE) as conn: c = conn.cursor() c.execute(''' CREATE TABLE IF NOT EXISTS users ( token TEXT PRIMARY KEY, balance REAL DEFAULT 0, last_claim TEXT, ref_by TEXT ) ''') conn.commit()
+
+init_db()
+
+def get_user(token): with sqlite3.connect(DATABASE) as conn: c = conn.cursor() c.execute("SELECT token, balance, last_claim, ref_by FROM users WHERE token = ?", (token,)) return c.fetchone()
+
+def create_user(token, ref_by=None): with sqlite3.connect(DATABASE) as conn: c = conn.cursor() c.execute("INSERT INTO users (token, balance, ref_by) VALUES (?, ?, ?)", (token, 0, ref_by)) conn.commit()
+
+def update_balance(token, amount): with sqlite3.connect(DATABASE) as conn: c = conn.cursor() c.execute("UPDATE users SET balance = balance + ? WHERE token = ?", (amount, token)) conn.commit()
+
+def update_claim_date(token): today = datetime.utcnow().strftime("%Y-%m-%d") with sqlite3.connect(DATABASE) as conn: c = conn.cursor() c.execute("UPDATE users SET last_claim = ? WHERE token = ?", (today, token)) conn.commit()
+
+def claimed_today(last_claim): return last_claim == datetime.utcnow().strftime("%Y-%m-%d")
+
+@app.route('/api/reward', methods=['POST']) def reward(): data = request.json token = data.get('token') ref_by = data.get('referrer')
+
+if not token:
+    return jsonify({'success': False, 'message': 'Token gerekli'}), 400
+
+user = get_user(token)
+if not user:
+    if ref_by == token:
+        ref_by = None
+    create_user(token, ref_by)
+    user = get_user(token)
+
+_, balance, last_claim, user_ref_by = user
+
+if claimed_today(last_claim):
+    return jsonify({'success': False, 'message': 'Bugün zaten ödül aldınız'}), 403
+
+update_balance(token, REWARD_AMOUNT)
+update_claim_date(token)
+
+if user_ref_by:
+    update_balance(user_ref_by, REWARD_AMOUNT)
+
+return jsonify({'success': True})
+
+@app.route('/api/balance/<token>', methods=['GET']) def get_balance(token): user = get_user(token) if user: return jsonify({'balance': round(user[1], 4)}) return jsonify({'error': 'Kullanıcı bulunamadı'}), 404
+
+@app.route('/', defaults={'path': 'index.html'}) @app.route('/path:path') def serve_static(path): return send_from_directory('public', path)
+
+if name == 'main': app.run(debug=True)
+
