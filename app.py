@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, g
 import sqlite3
 import os
+from datetime import datetime
 
 DATABASE = os.getenv("DATABASE_PATH", "balances.db")
 
@@ -9,7 +10,7 @@ app = Flask(__name__)
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(DATABASE, check_same_thread=False)
         db.execute(
             "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
         )
@@ -26,7 +27,11 @@ def close_connection(exception):
 def odul():
     data = request.get_json(force=True)
     uid = data.get("uid")
-    miktar = float(data.get("miktar", 0))
+    try:
+        miktar = float(data.get("miktar", 0))
+    except (TypeError, ValueError):
+        return jsonify(error="Miktar geçerli bir sayı olmalı"), 400
+
     if not uid or miktar <= 0:
         return jsonify(error="Geçersiz veri"), 400
 
@@ -41,7 +46,7 @@ def odul():
         yeni_bakiye = miktar
         cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
     db.commit()
-    return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
+    return jsonify(success=True, message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
 
 @app.route("/api/bakiye/<uid>")
 def bakiye(uid):
@@ -49,15 +54,17 @@ def bakiye(uid):
     cur = db.cursor()
     cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
     row = cur.fetchone()
-    bakiye = row[0] if row else 0
-    return jsonify(uid=uid, bakiye=bakiye)
+    if row:
+        bakiye = row[0]
+        return jsonify(success=True, uid=uid, bakiye=bakiye)
+    else:
+        return jsonify(error="Kullanıcı bulunamadı"), 404
 
 @app.route("/")
 def index():
     return jsonify(ok=True, timestamp=time_now())
 
 def time_now():
-    from datetime import datetime
     return datetime.utcnow().isoformat() + "Z"
 
 if __name__ == "__main__":
