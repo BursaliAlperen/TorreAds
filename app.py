@@ -1,68 +1,104 @@
-from flask import Flask, request, jsonify, g
-import sqlite3
-import os
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎬 Reklam İzle, Kazan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 { font-size: 28px; }
+    p, #balance { font-size: 18px; margin-bottom: 20px; }
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-DATABASE = os.getenv("DATABASE_PATH", "balances.db")
+<h1>🎬 Reklam İzle, 0.0001 TON Kazan</h1>
+<p>💰 Bakiye: <span id="balance">0.0000</span> TON</p>
 
-app = Flask(__name__)
+<button id="watchAdBtn">🎥 Reklamı İzle</button>
+<div id="status">Hazır</div>
 
-def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.execute(
-            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
-        )
-        db.commit()
-    return db
+<script>
+  const btn = document.getElementById("watchAdBtn");
+  const status = document.getElementById("status");
+  const balanceDisplay = document.getElementById("balance");
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, "_database", None)
-    if db is not None:
-        db.close()
+  // Kullanıcı kimliği (uid)
+  let uid = localStorage.getItem("uid");
+  if (!uid) {
+    uid = crypto.randomUUID(); // Tarayıcıda benzersiz kimlik oluştur
+    localStorage.setItem("uid", uid);
+  }
 
-@app.route("/api/odul", methods=["POST"])
-def odul():
-    data = request.get_json(force=True)
-    uid = data.get("uid")
-    miktar = float(data.get("miktar", 0))
-    if not uid or miktar <= 0:
-        return jsonify(error="Geçersiz veri"), 400
+  // Bakiyeyi güncelle
+  function fetchBalance() {
+    fetch(`/api/bakiye/${uid}`)
+      .then(res => res.json())
+      .then(data => {
+        balanceDisplay.textContent = parseFloat(data.bakiye).toFixed(4);
+      });
+  }
 
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
-    row = cur.fetchone()
-    if row:
-        yeni_bakiye = row[0] + miktar
-        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
-    else:
-        yeni_bakiye = miktar
-        cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
-    db.commit()
-    return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
+  fetchBalance(); // Sayfa açıldığında bakiyeyi getir
 
-@app.route("/api/bakiye/<uid>")
-def bakiye(uid):
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
-    row = cur.fetchone()
-    bakiye = row[0] if row else 0
-    return jsonify(uid=uid, bakiye=bakiye)
+  btn.addEventListener("click", () => {
+    btn.disabled = true;
+    let countdown = 18;
+    status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
 
-@app.route("/")
-def index():
-    return jsonify(ok=True, timestamp=time_now())
+    const interval = setInterval(() => {
+      countdown--;
+      status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        
+        // Ödül ver: 0.0001 TON
+        fetch("/api/odul", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            uid: uid,
+            miktar: 0.0001
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          fetchBalance();
+          status.textContent = `🎉 0.0001 TON kazandınız! Yeni bakiye: ${data.yeni_bakiye.toFixed(4)}`;
+        })
+        .catch(() => {
+          status.textContent = "❌ Ödül alınamadı!";
+        })
+        .finally(() => {
+          btn.disabled = false;
+        });
+      }
+    }, 1000);
+  });
+</script>
 
-def time_now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+</body>
+</html>
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
-    
 
 // Rewarded Popup
 
