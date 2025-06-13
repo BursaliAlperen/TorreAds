@@ -1,117 +1,102 @@
-// Global değişkenler
-const balanceDisplay = document.getElementById("balance-display");
-const referralLinkInput = document.getElementById("referral-link");
-const invitedCountDisplay = document.getElementById("invited-count");
-const watchAdButton = document.getElementById("watch-ad-button");
-const toast = document.getElementById("toast-notification");
-
-// Kullanıcı ID’si oluştur ve sakla
 let uid = localStorage.getItem("uid");
-if (!uid) {
-  uid = "user-" + Math.random().toString(36).slice(2, 10);
-  localStorage.setItem("uid", uid);
-}
-
-// Referans parametresi varsa backend'e bildir
 const urlParams = new URLSearchParams(window.location.search);
 const referrer = urlParams.get("ref");
-if (referrer && referrer !== uid) {
-  fetch("/api/set_referrer", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid, referrer }),
-  });
+
+// Yeni kullanıcıya UID ver ve referrer bilgisini gönder
+if (!uid) {
+  uid = "user-" + Math.random().toString(36).substring(2, 10);
+  localStorage.setItem("uid", uid);
+
+  if (referrer && referrer !== uid) {
+    fetch("/api/set_referrer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, referrer }),
+    });
+  }
 }
 
-// Referral link oluştur
-referralLinkInput.value = `${window.location.origin}?ref=${uid}`;
+// UI Elemanlarını al
+const balanceDisplay = document.getElementById("balance-display");
+const referralInput = document.getElementById("referral-link");
+const invitedCount = document.getElementById("invited-count");
+const copyButton = document.getElementById("copy-button");
+const watchAdButton = document.getElementById("watch-ad-button");
+const adModal = document.getElementById("ad-modal");
+const adTimerDisplay = document.getElementById("ad-timer-display");
+const toast = document.getElementById("toast-notification");
+
+// Kullanıcının linkini göster
+referralInput.value = `${window.location.origin}?ref=${uid}`;
 
 // Kopyalama fonksiyonu
-document.getElementById("copy-button").onclick = () => {
-  referralLinkInput.select();
+copyButton.addEventListener("click", () => {
+  referralInput.select();
   document.execCommand("copy");
-  showToast("Davet linki kopyalandı!");
-};
+  showToast("Link kopyalandı!", "success");
+});
 
-// Toast göster
-function showToast(message, duration = 3000) {
-  toast.textContent = message;
-  toast.classList.add("toast-visible");
-  setTimeout(() => {
-    toast.classList.remove("toast-visible");
-  }, duration);
-}
-
-// Bakiye ve davet sayısını güncelle
+// Bakiye ve davet sayısını al
 function updateBalance() {
   fetch(`/api/bakiye/${uid}`)
-    .then((res) => res.json())
-    .then((data) => {
-      balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
-      invitedCountDisplay.textContent = data.referrals + " kişi";
+    .then(res => res.json())
+    .then(data => {
+      balanceDisplay.textContent = `${data.bakiye.toFixed(4)} TON`;
+      invitedCount.textContent = `${data.referrals} kişi`;
     });
 }
 
-updateBalance();
-
-// Reklam izleme ve ödül verme
-
+// Reklam İzle Butonu
 watchAdButton.addEventListener("click", () => {
   watchAdButton.disabled = true;
-  watchAdButton.querySelector(".button-text").textContent =
-    "Reklam izleniyor... Lütfen bekleyin";
+  adModal.classList.remove("modal-hidden");
+  let timeLeft = 20;
+  adTimerDisplay.textContent = timeLeft;
 
-  // 20 saniyelik sayıcı
-  let countdown = 20;
-  const timerSpan = watchAdButton.querySelector(".button-timer");
-  timerSpan.style.display = "inline";
-  timerSpan.textContent = `${countdown}s`;
-
-  const interval = setInterval(() => {
-    countdown--;
-    timerSpan.textContent = `${countdown}s`;
-    if (countdown <= 0) {
-      clearInterval(interval);
-      timerSpan.style.display = "none";
-
-      // Reklam gösterimi (libtl reklam sdk)
-      show_9441902("pop")
-        .then(() => {
-          // Ödülü backend'e bildir
-          fetch("/api/odul", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid, miktar: 0.0001 }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (!data.error) {
-                showToast("Tebrikler! 0.0001 TON kazandınız.");
-                updateBalance();
-              } else {
-                showToast("Bir hata oluştu. Lütfen tekrar deneyin.");
-              }
-            });
-        })
-        .catch(() => {
-          showToast("Reklam oynatılamadı.");
-        })
-        .finally(() => {
-          watchAdButton.disabled = false;
-          watchAdButton.querySelector(".button-text").textContent =
-            "Reklam İzle & 0.0001 TON Kazan";
-        });
+  const timer = setInterval(() => {
+    timeLeft--;
+    adTimerDisplay.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      adModal.classList.add("modal-hidden");
+      rewardUser();
     }
   }, 1000);
+
+  // Reklamı başlat (popup göster)
+  show_9441902("pop").then(() => {
+    // Reklam başarıyla oynatıldı
+  }).catch(e => {
+    console.error("Reklam gösterilemedi:", e);
+  });
 });
-// Rewarded Popup
 
-show_9441902('pop').then(() => {
-// user watch ad till the end or close it in interstitial format
-// your code to reward user for rewarded format
-}).catch(e => {
-// user get error during playing ad
-// do nothing or whatever you want
-})
+// Ödül ekleme
+function rewardUser() {
+  fetch("/api/kazandir", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast("0.0001 TON eklendi!", "success");
+        updateBalance();
+        watchAdButton.disabled = false;
+      }
+    });
+}
 
-          
+// Bildirim
+function showToast(message, type) {
+  toast.textContent = message;
+  toast.className = "";
+  toast.classList.add("toast-visible", type);
+  setTimeout(() => {
+    toast.classList.remove("toast-visible");
+  }, 3000);
+}
+
+// İlk yüklemede verileri getir
+updateBalance();
