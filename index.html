@@ -236,5 +236,129 @@
         updateBalanceDisplay();
 
     </script>
+    <button id="watchAdBtn" disabled>🎥 Reklam İzle</button>
+<button id="withdrawBtn" disabled>💸 Çekim Talebi Gönder</button>
+<div id="status"></div>
+<div>Bakiyeniz: <span id="balance">0.0000</span> TON</div>
+
+<script>
+  const watchBtn = document.getElementById("watchAdBtn");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+  const status = document.getElementById("status");
+  const balanceDisplay = document.getElementById("balance");
+
+  let userToken = localStorage.getItem("userToken") || null;
+
+  // İlk kullanıcı ve bakiye yükleme fonksiyonu (örnek)
+  async function loadUser() {
+    if (!userToken) {
+      // Token yoksa oluştur, kaydet vb. (burada örnek random UUID)
+      userToken = crypto.randomUUID();
+      localStorage.setItem("userToken", userToken);
+    }
+    // Backend'den bakiye çekme kodu buraya
+    // Örneğin /api/user endpoint'i oluşturulmalı (sen yapmışsın muhtemelen)
+    try {
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ userToken })
+      });
+      const data = await res.json();
+      if (data.balance !== undefined) {
+        balanceDisplay.textContent = parseFloat(data.balance).toFixed(4);
+      }
+    } catch {
+      status.textContent = "Kullanıcı verisi yüklenemedi.";
+    }
+  }
+
+  // Reklam SDK hazır mı kontrol
+  function waitForSDK() {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 20;
+      const interval = setInterval(() => {
+        if (typeof show_9441902 === "function") {
+          clearInterval(interval);
+          resolve();
+        } else if (attempts++ > maxAttempts) {
+          clearInterval(interval);
+          reject("Reklam SDK yüklenemedi.");
+        }
+      }, 500);
+    });
+  }
+
+  // Reklam izleme işlemi
+  async function watchAd() {
+    watchBtn.disabled = true;
+    status.textContent = "Reklam oynatılıyor...";
+    try {
+      await show_9441902();
+
+      // Reklam izlendi, ödül al
+      const res = await fetch("/api/reward", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ userToken })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        balanceDisplay.textContent = parseFloat(data.newBalance).toFixed(4);
+        status.textContent = "🎉 0.0001 TON eklendi!";
+        withdrawBtn.disabled = false; // Çekim talebi butonu aktif olabilir
+      } else {
+        status.textContent = "Ödül alınamadı: " + (data.error || "Bilinmeyen hata");
+      }
+    } catch {
+      status.textContent = "Reklam gösterilemedi.";
+    } finally {
+      watchBtn.disabled = false;
+    }
+  }
+
+  // Çekim talebi işlemi
+  async function requestWithdraw() {
+    withdrawBtn.disabled = true;
+    status.textContent = "Çekim talebi gönderiliyor...";
+    try {
+      const res = await fetch("/api/request_withdraw", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ userToken })
+      });
+      const data = await res.json();
+      if (data.success) {
+        balanceDisplay.textContent = "0.0000";
+        status.textContent = "Çekim talebi gönderildi. Telegram’dan onay bekleyin.";
+        withdrawBtn.disabled = true; // Bakiye sıfırlandığı için çekim kapatılabilir
+      } else {
+        status.textContent = "Çekim başarısız: " + (data.error || "Bilinmeyen hata");
+        withdrawBtn.disabled = false;
+      }
+    } catch {
+      status.textContent = "Sunucu hatası oluştu.";
+      withdrawBtn.disabled = false;
+    }
+  }
+
+  // İlk yükleme
+  window.addEventListener("load", async () => {
+    await loadUser();
+
+    try {
+      await waitForSDK();
+      watchBtn.disabled = false;
+      status.textContent = "Reklam hazır.";
+    } catch (e) {
+      status.textContent = e;
+    }
+  });
+
+  watchBtn.addEventListener("click", watchAd);
+  withdrawBtn.addEventListener("click", requestWithdraw);
+</script>
 </body>
 </html>
