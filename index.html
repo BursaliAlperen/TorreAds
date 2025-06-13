@@ -1,77 +1,116 @@
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TorreAds - TON Ödül Kazan</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TorreAds - TON Ödül Kazan</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f0f0f0; }
+  #balance-display { font-size: 2em; margin-bottom: 20px; }
+  #watch-ad-button { padding: 15px 30px; font-size: 18px; cursor: pointer; }
+  .toast-visible { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #4caf50; color: white; padding: 10px 20px; border-radius: 5px; opacity: 1; transition: opacity 0.5s; }
+  .toast-hidden { opacity: 0; }
+</style>
 </head>
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
 <body>
 
-    <div id="app-container">
-        <header>
-            <img src="coin.png" alt="TON Coin" class="header-coin">
-            <h1>TorreAds</h1>
-        </header>
+  <h1>TorreAds - TON Ödül Kazan</h1>
+  <div>Mevcut Bakiyeniz:</div>
+  <div id="balance-display">0.0000 TON</div>
 
-        <main id="main-card">
-            <div class="balance-section">
-                <p>Mevcut Bakiyeniz</p>
-                <h2 id="balance-display">0.0000 TON</h2>
-            </div>
+  <button id="watch-ad-button">Reklam İzle & 0.0001 TON Kazan</button>
 
-            <div class="info-section">
-                <h3>Davet Linkiniz</h3>
-                <div class="referral-box">
-                    <input type="text" id="referral-link" readonly>
-                    <button id="copy-button">Kopyala</button>
-                </div>
-            </div>
+  <div id="toast" class="toast-hidden"></div>
 
-            <div class="info-section">
-                <h3>Davet Edilen Kişi Sayısı</h3>
-                <p id="invited-count">0 kişi</p>
-            </div>
+  <!-- Reklam SDK -->
+  <script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
 
-            <button id="watch-ad-button">
-                <span class="button-text">Reklam İzle & 0.0001 TON Kazan</span>
-                <span class="button-timer" style="display: none;"></span>
-            </button>
+  <script>
+    const watchAdButton = document.getElementById("watch-ad-button");
+    const balanceDisplay = document.getElementById("balance-display");
+    const toast = document.getElementById("toast");
 
-            <p class="withdrawal-info">Çekim talepleri için <a href="https://t.me/torreads" target="_blank" rel="noopener noreferrer">@torreads</a>'e Telegram'dan ekran görüntüsü (SS) atmanız ve cüzdan adresinizi yollamanız yeterlidir.</p>
-        </main>
-    </div>
+    // Kullanıcı id simülasyonu
+    const uid = localStorage.getItem("uid") || (function(){
+      const id = Math.random().toString(36).substring(2,15);
+      localStorage.setItem("uid", id);
+      return id;
+    })();
 
-    <div id="ad-modal" class="modal-hidden">
-        <div class="modal-content">
-            <h3>Reklam Oynatılıyor...</h3>
-            <p>Lütfen ödülünüz için bekleyin.</p>
-            <div class="video-placeholder">
-                <div class="spinner"></div>
-                <p>Video içeriği burada gösterilir.</p>
-            </div>
-            <div id="ad-timer-display">18</div>
-        </div>
-    </div>
+    // Bakiye güncelleme fonksiyonu
+    async function fetchBalance() {
+      try {
+        const res = await fetch(`/api/bakiye/${uid}`);
+        if(!res.ok) throw new Error("Bakiye alınamadı");
+        const data = await res.json();
+        balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
+      } catch(e) {
+        console.error(e);
+      }
+    }
 
-    <div id="toast-notification" class="toast-hidden"></div>
-    
-    <script src="script.js">
-      
+    // Ödül ekleme fonksiyonu
+    async function rewardUser(amount) {
+      try {
+        const res = await fetch("/api/odul", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid: uid, miktar: amount }),
+        });
+        if(!res.ok) throw new Error("Ödül verilemedi");
+        const data = await res.json();
+        balanceDisplay.textContent = data.yeni_bakiye.toFixed(4) + " TON";
+        showToast("Tebrikler! 0.0001 TON hesabınıza eklendi.");
+      } catch(e) {
+        console.error(e);
+        showToast("Ödül eklenirken hata oluştu.", true);
+      }
+    }
 
-// Rewarded Popup
+    function showToast(message, error = false) {
+      toast.textContent = message;
+      toast.style.backgroundColor = error ? "#e53935" : "#4caf50";
+      toast.classList.remove("toast-hidden");
+      toast.classList.add("toast-visible");
+      setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        toast.classList.add("toast-hidden");
+      }, 3000);
+    }
 
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
+    watchAdButton.addEventListener("click", async () => {
+      watchAdButton.disabled = true;
 
-        
-    </script>
+      try {
+        // Reklamı göster
+        await show_9441902('pop');
+
+        // 18 saniyelik sayaç
+        let counter = 18;
+        watchAdButton.textContent = `Lütfen bekleyin... ${counter}s`;
+
+        const interval = setInterval(() => {
+          counter--;
+          if (counter <= 0) {
+            clearInterval(interval);
+            watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
+            watchAdButton.disabled = false;
+            rewardUser(0.0001);
+          } else {
+            watchAdButton.textContent = `Lütfen bekleyin... ${counter}s`;
+          }
+        }, 1000);
+      } catch(e) {
+        showToast("Reklam gösterilirken hata veya iptal edildi.", true);
+        watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
+        watchAdButton.disabled = false;
+      }
+    });
+
+    // Sayfa açıldığında bakiye çek
+    fetchBalance();
+  </script>
+
 </body>
 </html>
