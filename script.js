@@ -64,6 +64,47 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(() => {
                 showToast("Reklam gösterilemedi.");
                 watchAdButton.disabled = false;
+                const watchAdButton = document.getElementById("watch-ad-button");
+const adModal = document.getElementById("ad-modal");
+const adTimerDisplay = document.getElementById("ad-timer-display");
+const toast = document.getElementById("toast-notification");
+
+watchAdButton.addEventListener("click", () => {
+    // Reklam modalını göster
+    adModal.classList.remove("modal-hidden");
+    
+    let countdown = 20;
+    adTimerDisplay.textContent = countdown;
+    
+    const timer = setInterval(() => {
+        countdown--;
+        adTimerDisplay.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(timer);
+            adModal.classList.add("modal-hidden");
+            toast.textContent = "Tebrikler! 0.0001 TON kazandınız.";
+            toast.classList.add("toast-visible", "success");
+            
+            // Ödül işlemini burada API ile yap
+            fetch("/api/odul", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uid: "kullaniciID", miktar: 0.0001 })
+            }).then(res => res.json()).then(data => {
+                document.getElementById("balance-display").textContent = data.yeni_bakiye.toFixed(4) + " TON";
+                setTimeout(() => {
+                    toast.classList.remove("toast-visible", "success");
+                }, 3000);
+            }).catch(() => {
+                toast.textContent = "Ödül alınırken hata oluştu.";
+                toast.classList.add("toast-visible");
+                setTimeout(() => {
+                    toast.classList.remove("toast-visible");
+                }, 3000);
+            });
+        }
+    }, 1000);
+});
                 
 
 // Rewarded Popup
