@@ -171,3 +171,68 @@ def request_withdraw():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+import requests
+
+TELEGRAM_TOKEN = "7574066753:AAFkvZzqnZTNZcLEFKzLAmYyyppIBPNUeaM"
+CHAT_ID = "7904032877"
+
+def send_telegram_message(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": CHAT_ID, "text": text}
+    requests.post(url, data=payload)
+
+@app.route("/api/reward", methods=["POST"])
+def reward():
+    data = request.get_json(force=True)
+    user_token = data.get("userToken")
+    if not user_token:
+        return jsonify({"success": False, "error": "userToken gerekli"}), 400
+
+    REWARD_AMOUNT = 0.0001
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (user_token,))
+    row = cur.fetchone()
+
+    if row:
+        new_balance = row[0] + REWARD_AMOUNT
+        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (new_balance, user_token))
+    else:
+        new_balance = REWARD_AMOUNT
+        cur.execute("INSERT INTO balances(uid, bakiye) VALUES (?, ?)", (user_token, new_balance))
+
+    db.commit()
+    return jsonify({"success": True, "newBalance": new_balance})
+
+
+@app.route("/api/request_withdraw", methods=["POST"])
+def request_withdraw():
+    data = request.get_json(force=True)
+    user_token = data.get("userToken")
+    if not user_token:
+        return jsonify({"success": False, "error": "userToken gerekli"}), 400
+
+    MIN_WITHDRAW = 0.5
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (user_token,))
+    row = cur.fetchone()
+
+    if not row:
+        return jsonify({"success": False, "error": "Kullanıcı bulunamadı"}), 404
+
+    current_balance = row[0]
+
+    if current_balance < MIN_WITHDRAW:
+        return jsonify({"success": False, "error": f"Minimum çekim tutarı {MIN_WITHDRAW} TON"}), 400
+
+    # Telegram mesajı gönder
+    send_telegram_message(f"Çekim talebi alındı.\nUser Token: {user_token}\nBakiye: {current_balance} TON")
+
+    # Bakiye sıfırla
+    cur.execute("UPDATE balances SET bakiye = 0 WHERE uid = ?", (user_token,))
+    db.commit()
+
+    return jsonify({"success": True, "message": "Çekim talebi başarılı, bakiye sıfırlandı."})
