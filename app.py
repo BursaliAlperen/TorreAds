@@ -10,9 +10,9 @@ def get_db():
     db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-        db.execute(
-            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
-        )
+        db.row_factory = sqlite3.Row
+        db.execute("CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)")
+        db.execute("CREATE TABLE IF NOT EXISTS referrals (uid TEXT PRIMARY KEY, referrer TEXT)")
         db.commit()
     return db
 
@@ -35,7 +35,7 @@ def odul():
     cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
     row = cur.fetchone()
     if row:
-        yeni_bakiye = row[0] + miktar
+        yeni_bakiye = row["bakiye"] + miktar
         cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
     else:
         yeni_bakiye = miktar
@@ -49,29 +49,52 @@ def bakiye(uid):
     cur = db.cursor()
     cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
     row = cur.fetchone()
-    bakiye = row[0] if row else 0
+    bakiye = row["bakiye"] if row else 0
     return jsonify(uid=uid, bakiye=bakiye)
+
+@app.route("/api/kazandir", methods=["POST"])
+def kazandir():
+    data = request.get_json(force=True)
+    uid = data.get("uid")
+    referrer = data.get("referrer")
+    miktar = 0.0001
+    if not uid:
+        return jsonify(success=False, error="UID eksik"), 400
+
+    db = get_db()
+    cur = db.cursor()
+
+    # Bakiye güncelle
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if row:
+        yeni_bakiye = row["bakiye"] + miktar
+        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
+    else:
+        yeni_bakiye = miktar
+        cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
+
+    # Referans kaydet (ilk kez kayıtlanıyorsa)
+    if referrer and uid != referrer:
+        cur.execute("SELECT * FROM referrals WHERE uid = ?", (uid,))
+        if not cur.fetchone():
+            cur.execute("INSERT INTO referrals(uid, referrer) VALUES(?, ?)", (uid, referrer))
+
+            # Referans bakiyesini de artır
+            cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (referrer,))
+            ref_row = cur.fetchone()
+            if ref_row:
+                ref_bakiye = ref_row["bakiye"] + miktar
+                cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (ref_bakiye, referrer))
+            else:
+                cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (referrer, miktar))
+
+    db.commit()
+    return jsonify(success=True, uid=uid, yeni_bakiye=yeni_bakiye)
 
 @app.route("/")
 def index():
-    return jsonify(ok=True, timestamp=time_now())
-
-def time_now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+    return jsonify(ok=True)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
-    
-
-// Rewarded Popup
-
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
-
-        
+    app.run(host="0.0.0.0", port=8000)
