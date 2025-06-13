@@ -1,64 +1,51 @@
-from flask import Flask, request, jsonify, g
-import sqlite3
+from flask import Flask, jsonify, request, send_from_directory, render_template_string
 import os
-
-DATABASE = os.getenv("DATABASE_PATH", "balances.db")
 
 app = Flask(__name__)
 
-def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.execute(
-            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
-        )
-        db.commit()
-    return db
+# Basit veri yapısı (örnek, gerçek projede DB gerekir)
+users = {
+    "user1": {
+        "balance": 0.0,
+        "referrals": 0,
+        "referral_link": "http://localhost:5000/?ref=user1"
+    }
+}
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, "_database", None)
-    if db is not None:
-        db.close()
-
-@app.route("/api/odul", methods=["POST"])
-def odul():
-    data = request.get_json(force=True)
-    uid = data.get("uid")
-    miktar = float(data.get("miktar", 0))
-    if not uid or miktar <= 0:
-        return jsonify(error="Geçersiz veri"), 400
-
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
-    row = cur.fetchone()
-    if row:
-        yeni_bakiye = row[0] + miktar
-        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
-    else:
-        yeni_bakiye = miktar
-        cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
-    db.commit()
-    return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
-
-@app.route("/api/bakiye/<uid>")
-def bakiye(uid):
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
-    row = cur.fetchone()
-    bakiye = row[0] if row else 0
-    return jsonify(uid=uid, bakiye=bakiye)
-
-@app.route("/")
+@app.route('/')
 def index():
-    return jsonify(ok=True, timestamp=time_now())
+    return send_from_directory('static', 'index.html')
 
-def time_now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+@app.route('/style.css')
+def css():
+    return send_from_directory('static', 'style.css')
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+@app.route('/script.js')
+def script():
+    return send_from_directory('static', 'script.js')
+
+@app.route('/api/get_user_data')
+def get_user_data():
+    user_id = request.args.get('user', 'user1')  # Örnek
+    user = users.get(user_id)
+    if user:
+        return jsonify({
+            "balance": user['balance'],
+            "referrals": user['referrals'],
+            "referral_link": user['referral_link']
+        })
+    else:
+        return jsonify({"error": "User not found"}), 404
+
+@app.route('/api/reward', methods=['POST'])
+def reward():
+    user_id = request.json.get('user')
+    amount = request.json.get('amount', 0)
+    if user_id in users:
+        users[user_id]['balance'] += amount
+        return jsonify({"balance": users[user_id]['balance']})
+    else:
+        return jsonify({"error": "User not found"}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
