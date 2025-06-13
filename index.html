@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
     <title>Reklam İzle - Ödül Kazan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
         body {
@@ -36,39 +37,22 @@
             font-weight: 700;
             font-size: 1.1rem;
         }
-        h1 {
-            color: #1a73e8;
-            margin-bottom: 0.5rem;
-        }
-        p {
-            font-size: 1.1rem;
-            color: #5f6368;
-            margin-bottom: 2rem;
-        }
         .reward-info {
             font-size: 0.95rem;
             color: #5f6368;
             margin-top: -1.5rem;
             margin-bottom: 2rem;
-            line-height: 1.4;
         }
         .watch-button {
-            display: inline-block;
             background-color: #1a73e8;
             color: white;
-            padding: 1rem 2rem;
+            padding: 1rem;
             border-radius: 8px;
-            text-decoration: none;
             font-size: 1.2rem;
             font-weight: 700;
-            transition: background-color 0.3s, transform 0.2s;
-            cursor: pointer;
             border: none;
             width: 100%;
-        }
-        .watch-button:hover:not(:disabled) {
-            background-color: #1558b8;
-            transform: translateY(-2px);
+            cursor: pointer;
         }
         .watch-button:disabled {
             background-color: #a0c3f0;
@@ -80,18 +64,14 @@
             border-radius: 8px;
             font-weight: 500;
             display: none;
-            text-align: center;
-            border: 1px solid transparent;
         }
-        .message-box.success {
+        .success {
             background-color: #d4edda;
             color: #155724;
-            border-color: #c3e6cb;
         }
-        .message-box.error {
+        .error {
             background-color: #f8d7da;
             color: #721c24;
-            border-color: #f5c6cb;
         }
     </style>
 </head>
@@ -99,128 +79,117 @@
     <div class="container">
         <div class="balance">Bakiyeniz: <span id="balance-amount">0.0000</span> TON</div>
         <h1>Reklam İzle, Ödül Kazan!</h1>
-        <p>Ödül kazanmak için aşağıdaki butona tıklayarak bir reklam izleyin.</p>
-        <p class="reward-info">Reklam başına <b>0.0001 TON</b> kazanın.<br>Ödeme için Telegram'dan <b>@torreads</b> ile iletişime geçin.</p>
+        <p class="reward-info">Her reklam için <b>0.0001 TON</b> kazanırsınız.<br>Referansınız da kazanır!</p>
         <button id="watch-ad-button" class="watch-button">Reklam İzle</button>
         <div id="message-box" class="message-box"></div>
     </div>
 
-    <!-- Monetag SDK -->
-    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>
-
     <script type="module">
+        const API_URL = "http://127.0.0.1:5001/api/reward";
         const REWARD_AMOUNT = 0.0001;
-        const COOLDOWN_SECONDS = 20;
-        const REWARD_DELAY_SECONDS = 18;
 
-        const balanceElement = document.getElementById('balance-amount');
-        const watchButton = document.getElementById('watch-ad-button');
-        const messageBox = document.getElementById('message-box');
+        const balanceEl = document.getElementById("balance-amount");
+        const watchButton = document.getElementById("watch-ad-button");
+        const messageBox = document.getElementById("message-box");
 
-        function getOrSetUserToken() {
-            let token = localStorage.getItem('user_token');
+        function getToken() {
+            let token = localStorage.getItem("user_token");
             if (!token) {
-                token = self.crypto.randomUUID();
-                localStorage.setItem('user_token', token);
+                token = crypto.randomUUID();
+                localStorage.setItem("user_token", token);
             }
             return token;
         }
 
-        function getBalance() {
-            return parseFloat(localStorage.getItem('user_balance')) || 0;
+        function getReferralCode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) localStorage.setItem("referral_code", ref);
+            return localStorage.getItem("referral_code") || null;
         }
 
-        function saveBalance(newBalance) {
-            localStorage.setItem('user_balance', newBalance.toFixed(4));
-            updateBalanceDisplay();
-        }
-
-        function updateBalanceDisplay() {
-            balanceElement.textContent = getBalance().toFixed(4);
-        }
-
-        function showMessage(text, type) {
-            messageBox.textContent = text;
-            messageBox.className = `message-box ${type}`;
+        function showMessage(text, type = 'success') {
             messageBox.style.display = 'block';
+            messageBox.className = `message-box ${type}`;
+            messageBox.textContent = text;
         }
 
-        function hideMessage() {
-            messageBox.style.display = 'none';
+        function updateBalanceDisplay(amount) {
+            balanceEl.textContent = amount.toFixed(4);
         }
 
-        // SDK hazır mı kontrol eden fonksiyon
-        function checkSdkReady() {
-            return new Promise((resolve, reject) => {
-                let attempts = 0;
-                const maxAttempts = 10;
-                const intervalTime = 500;
-                const intervalId = setInterval(() => {
-                    if (typeof show_9441902 === 'function') {
-                        clearInterval(intervalId);
-                        resolve();
-                    } else {
-                        attempts++;
-                        if (attempts >= maxAttempts) {
-                            clearInterval(intervalId);
-                            reject(new Error('Reklam altyapısı yüklenemedi. Lütfen sayfayı yenileyin.'));
-                        }
-                    }
-                }, intervalTime);
+        async function getBalance() {
+            const res = await fetch(`${API_URL}/balance/${getToken()}`);
+            const data = await res.json();
+            if (res.ok) {
+                updateBalanceDisplay(data.balance);
+            }
+        }
+
+        async function claimReward() {
+            const payload = {
+                token: getToken(),
+                referral_code: getReferralCode()
+            };
+
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                updateBalanceDisplay(data.new_balance);
+                showMessage(`🎉 ${REWARD_AMOUNT} TON kazandınız!`, "success");
+            } else {
+                showMessage(data.message || "Hata oluştu.", "error");
+            }
         }
 
         async function showAdAndReward() {
             watchButton.disabled = true;
-
-            let cooldown = COOLDOWN_SECONDS;
-            watchButton.textContent = `Lütfen ${cooldown} saniye bekleyin...`;
-            hideMessage();
-
-            // 18 saniye sonra ödül eklenecek
-            const rewardTimeout = setTimeout(() => {
-                const currentBalance = getBalance();
-                const newBalance = currentBalance + REWARD_AMOUNT;
-                saveBalance(newBalance);
-                showMessage(`🎉 ${REWARD_AMOUNT.toFixed(4)} TON eklendi! Yeni bakiyeniz: ${newBalance.toFixed(4)} TON.`, 'success');
-            }, REWARD_DELAY_SECONDS * 1000);
-
-            // Buton üzerindeki sayaç her saniye azalacak
-            const intervalId = setInterval(() => {
-                cooldown--;
-                if (cooldown > 0) {
-                    watchButton.textContent = `Lütfen ${cooldown} saniye bekleyin...`;
-                } else {
-                    clearInterval(intervalId);
-                    watchButton.disabled = false;
-                    watchButton.textContent = 'Reklam İzle';
-                    hideMessage();
-                }
-            }, 1000);
+            watchButton.textContent = "Reklam Yükleniyor...";
+            messageBox.style.display = 'none';
 
             try {
-                // SDK hazır mı bekle
-                await checkSdkReady();
+                if (typeof show_9441902 === "function") {
+                    await show_9441902();
+                }
+                watchButton.textContent = "Reklam izleniyor (18sn)...";
 
-                // Reklamı göster (Monetag SDK fonksiyonu)
-                await show_9441902();
+                setTimeout(async () => {
+                    await claimReward();
+                    watchButton.disabled = false;
+                    watchButton.textContent = "Yeni Reklam İzle";
+                }, 18000);
 
-                // Reklam izlenince kullanıcıya kısa mesaj gösterebiliriz
-                // İstersen alert ile de bildirebiliriz, şimdilik yok
-            } catch (error) {
-                clearTimeout(rewardTimeout);
-                clearInterval(intervalId);
+            } catch (err) {
+                console.error(err);
+                showMessage("Reklam gösterilemedi.", "error");
                 watchButton.disabled = false;
-                watchButton.textContent = 'Reklam İzle';
-                showMessage(error.message || 'Reklam gösterilemedi veya erken kapatıldı.', 'error');
+                watchButton.textContent = "Reklam İzle";
             }
         }
 
-        watchButton.addEventListener('click', () => {
-            showAdAndReward();
-        });
-
-        updateBalanceDisplay();
+        watchButton.addEventListener("click", showAdAndReward);
+        getToken();
+        getReferralCode();
+        getBalance();
     </script>
 </body>
+    
+
+// Rewarded Popup
+
+show_9441902('pop').then(() => {
+    // user watch ad till the end or close it in interstitial format
+    // your code to reward user for rewarded format
+}).catch(e => {
+    // user get error during playing ad
+    // do nothing or whatever you want
+})
+
+        
 </html>
