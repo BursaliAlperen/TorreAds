@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, send_file
 import sqlite3
 import os
-
-DATABASE = os.getenv("DATABASE_PATH", "balances.db")
+from datetime import datetime
 
 app = Flask(__name__)
+
+DATABASE = os.getenv("DATABASE_PATH", "balances.db")
 
 def get_db():
     db = getattr(g, "_database", None)
@@ -22,11 +23,19 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+@app.route("/")
+def index():
+    return send_file("index.html")  # Aynı dizinde bulunan HTML dosyasını gönderir
+
 @app.route("/api/odul", methods=["POST"])
 def odul():
     data = request.get_json(force=True)
     uid = data.get("uid")
-    miktar = float(data.get("miktar", 0))
+    try:
+        miktar = float(data.get("miktar", 0))
+    except (TypeError, ValueError):
+        return jsonify(error="Geçersiz miktar"), 400
+
     if not uid or miktar <= 0:
         return jsonify(error="Geçersiz veri"), 400
 
@@ -41,6 +50,7 @@ def odul():
         yeni_bakiye = miktar
         cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
     db.commit()
+
     return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
 
 @app.route("/api/bakiye/<uid>")
@@ -52,13 +62,9 @@ def bakiye(uid):
     bakiye = row[0] if row else 0
     return jsonify(uid=uid, bakiye=bakiye)
 
-@app.route("/")
-def index():
-    return jsonify(ok=True, timestamp=time_now())
-
-def time_now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+@app.route("/api/time")
+def get_time():
+    return jsonify(ok=True, timestamp=datetime.utcnow().isoformat() + "Z")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)
