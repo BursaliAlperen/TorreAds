@@ -105,6 +105,85 @@ watchAdButton.addEventListener("click", () => {
         }
     }, 1000);
 });
+                document.addEventListener("DOMContentLoaded", () => {
+  const watchAdButton = document.getElementById("watch-ad-button");
+  const balanceDisplay = document.getElementById("balance-display");
+  const toast = document.getElementById("toast-notification");
+
+  function showToast(message, success = true) {
+    toast.textContent = message;
+    toast.className = success ? "toast-visible success" : "toast-visible";
+    setTimeout(() => {
+      toast.className = toast.className.replace("toast-visible", "");
+    }, 3000);
+  }
+
+  async function fetchBalance(uid) {
+    try {
+      const res = await fetch(`/api/bakiye/${uid}`);
+      if (!res.ok) throw new Error("Bakiye alınamadı");
+      const data = await res.json();
+      balanceDisplay.textContent = data.bakiye.toFixed(4) + " TON";
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function rewardUser(uid, amount) {
+    try {
+      const res = await fetch("/api/odul", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid, miktar: amount }),
+      });
+      if (!res.ok) throw new Error("Ödül verilemedi");
+      const data = await res.json();
+      balanceDisplay.textContent = data.yeni_bakiye.toFixed(4) + " TON";
+      showToast("Tebrikler! Ödülünüz eklendi.");
+    } catch (e) {
+      console.error(e);
+      showToast("Ödül verilirken hata oluştu.", false);
+    }
+  }
+
+  let adCooldown = false;
+  const UID = "user123"; // Burayı gerçek kullanıcı UID ile değiştir
+
+  watchAdButton.addEventListener("click", async () => {
+    if (adCooldown) return;
+
+    try {
+      watchAdButton.disabled = true;
+      let count = 20;
+      watchAdButton.textContent = `Reklam izleniyor... ${count}s`;
+
+      await show_9441902("pop"); // Reklamı göster
+
+      // Sayaç başlat
+      const interval = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          clearInterval(interval);
+          watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
+          watchAdButton.disabled = false;
+          rewardUser(UID, 0.0001);
+          adCooldown = false;
+        } else {
+          watchAdButton.textContent = `Reklam izleniyor... ${count}s`;
+        }
+      }, 1000);
+
+      adCooldown = true;
+    } catch (e) {
+      watchAdButton.textContent = "Reklam İzle & 0.0001 TON Kazan";
+      watchAdButton.disabled = false;
+      showToast("Reklam gösterilirken hata veya iptal.", false);
+    }
+  });
+
+  // Başlangıçta bakiye göster
+  fetchBalance(UID);
+});
                 
 
 // Rewarded Popup
