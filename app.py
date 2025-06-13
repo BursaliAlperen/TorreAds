@@ -78,3 +78,96 @@ def time_now():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)
+    import requests
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+TELEGRAM_BOT_TOKEN = "7574066753:AAFkvZzqnZTNZcLEFKzLAmYyyppIBPNUeaM"
+TELEGRAM_CHAT_ID = "7904032877"
+
+def send_telegram_message(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+    response = requests.post(url, json=payload)
+    return response.ok
+
+@app.route("/api/request_withdraw", methods=["POST"])
+def request_withdraw():
+    data = request.get_json(force=True)
+    user_token = data.get("userToken")
+
+    if not user_token:
+        return jsonify({"success": False, "error": "userToken gerekli"}), 400
+
+    msg = f"Yeni çekim talebi!\nUser Token: <code>{user_token}</code>"
+    send_telegram_message(msg)
+
+    return jsonify({"success": True, "message": "Çekim talebi iletildi. Lütfen bakiye sıfırlayın."})
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
+import requests
+import sqlite3
+from flask import Flask, request, jsonify, g
+import os
+
+DATABASE = os.getenv("DATABASE_PATH", "balances.db")
+
+app = Flask(__name__)
+
+TELEGRAM_BOT_TOKEN = "7574066753:AAFkvZzqnZTNZcLEFKzLAmYyyppIBPNUeaM"
+TELEGRAM_CHAT_ID = "7904032877"
+
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
+        )
+        db.commit()
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
+
+def send_telegram_message(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+    response = requests.post(url, json=payload)
+    return response.ok
+
+@app.route("/api/request_withdraw", methods=["POST"])
+def request_withdraw():
+    data = request.get_json(force=True)
+    user_token = data.get("userToken")
+
+    if not user_token:
+        return jsonify({"success": False, "error": "userToken gerekli"}), 400
+
+    # Telegram mesajı gönder
+    msg = f"Yeni çekim talebi!\nUser Token: <code>{user_token}</code>"
+    send_telegram_message(msg)
+
+    # Bakiyeyi sıfırla
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE balances SET bakiye = 0 WHERE uid = ?", (user_token,))
+    db.commit()
+
+    return jsonify({"success": True, "message": "Çekim talebi iletildi ve bakiye sıfırlandı."})
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
