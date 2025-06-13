@@ -1,128 +1,90 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🎬 Reklam İzle, 0.0001 TON Kazan</title>
+  <meta charset="UTF-8">
+  <title>TON Kazan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 50px;
-      background-color: #f0f2f5;
+      margin-top: 50px;
     }
-    h1 { font-size: 28px; margin-bottom: 10px; }
-    p, #balance { font-size: 18px; margin-bottom: 20px; }
+    h1 {
+      font-size: 28px;
+    }
+    #balance {
+      font-size: 24px;
+      margin: 20px 0;
+    }
     button {
-      padding: 12px 25px;
       font-size: 18px;
-      background: #4caf50;
-      color: white;
+      padding: 10px 20px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
     button:disabled {
-      background: #ccc;
+      background-color: #ccc;
       cursor: not-allowed;
     }
     #status {
       margin-top: 20px;
-      font-weight: bold;
-      min-height: 24px;
+      font-size: 18px;
       color: #333;
     }
   </style>
 </head>
 <body>
 
-<h1>🎬 Reklam İzle, 0.0001 TON Kazan</h1>
-<p>Reklamı izleyip 19 saniye bekleyerek TON kazanın!</p>
+  <h1>💰 TON Coin Bakiyesi</h1>
+  <div id="balance">0.0000 TON</div>
+  <button id="watchAdBtn">🎥 Reklam İzle</button>
+  <div id="status"></div>
 
-<p>💰 Bakiye: <span id="balance">0.0000</span> TON</p>
+  <script>
+    const btn = document.getElementById("watchAdBtn");
+    const balanceDisplay = document.getElementById("balance");
+    const status = document.getElementById("status");
 
-<button id="watchAdBtn" disabled>🔄 Reklam Yükleniyor...</button>
+    // Başlangıçta bakiye 0 veya localStorage'daki değer
+    let balance = parseFloat(localStorage.getItem("balance") || "0");
+    balanceDisplay.textContent = balance.toFixed(4) + " TON";
 
-<div id="status">Lütfen bekleyin...</div>
+    btn.addEventListener("click", () => {
+      btn.disabled = true;
+      status.textContent = "🎬 Reklam yükleniyor...";
 
-<script>
-  const btn = document.getElementById("watchAdBtn");
-  const status = document.getElementById("status");
-  const balanceDisplay = document.getElementById("balance");
+      // Reklamı göster
+      show_9441902('pop').then(() => {
+        // Reklamdan sonra 19 saniye geri sayım
+        let timeLeft = 19;
+        status.textContent = `⏳ Geri sayım: ${timeLeft} saniye`;
 
-  const STORAGE_KEY = "ton_balance";
+        const countdown = setInterval(() => {
+          timeLeft--;
+          status.textContent = `⏳ Geri sayım: ${timeLeft} saniye`;
+          if (timeLeft <= 0) {
+            clearInterval(countdown);
 
-  function loadBalance() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === null) return 0;
-    const parsed = parseFloat(stored);
-    return isNaN(parsed) ? 0 : parsed;
-  }
+            // Ödül ekle ve kaydet (0.0001 TON)
+            balance += 0.0001;
+            localStorage.setItem("balance", balance.toFixed(4));
+            balanceDisplay.textContent = balance.toFixed(4) + " TON";
 
-  function saveBalance(amount) {
-    localStorage.setItem(STORAGE_KEY, amount.toFixed(4));
-  }
-
-  function updateBalanceDisplay(amount) {
-    balanceDisplay.textContent = amount.toFixed(4);
-  }
-
-  let balance = loadBalance();
-  updateBalanceDisplay(balance);
-
-  function waitForSDK(retries = 20, delay = 500) {
-    return new Promise((resolve, reject) => {
-      let attempt = 0;
-      const check = () => {
-        if (typeof show_9441902 === "function") resolve();
-        else if (attempt++ >= retries) reject("❌ Reklam SDK yüklenemedi.");
-        else setTimeout(check, delay);
-      };
-      check();
+            status.textContent = "🎉 0.0001 TON eklendi!";
+            btn.disabled = false;
+          }
+        }, 1000);
+      }).catch(() => {
+        status.textContent = "❌ Reklam gösterilemedi veya kapatıldı.";
+        btn.disabled = false;
+      });
     });
-  }
-
-  waitForSDK()
-    .then(() => {
-      btn.disabled = false;
-      btn.textContent = "🎥 Reklamı İzle";
-      status.textContent = "Reklam hazır.";
-    })
-    .catch(err => {
-      status.textContent = err;
-    });
-
-  btn.addEventListener("click", () => {
-    btn.disabled = true;
-    status.textContent = "Reklam başlatılıyor...";
-
-    show_9441902().then(() => {
-      status.textContent = "🎬 Reklam izlendi. 19 saniye sayım başladı...";
-      let timeLeft = 19;
-
-      const countdown = setInterval(() => {
-        status.textContent = `⏳ Reklam bitiyor: ${timeLeft} saniye`;
-        timeLeft--;
-
-        if (timeLeft < 0) {
-          clearInterval(countdown);
-          balance += 0.0001;
-          saveBalance(balance);
-          updateBalanceDisplay(balance);
-          status.textContent = "✅ Reklam bitti! 0.0001 TON kazandınız!";
-          btn.disabled = false;
-          btn.textContent = "🎥 Yeni Reklam İzle";
-        }
-      }, 1000);
-    }).catch(() => {
-      status.textContent = "❌ Reklam gösterilemedi veya kapatıldı.";
-      btn.disabled = false;
-      btn.textContent = "🎥 Reklamı İzle";
-    });
-  });
-</script>
+  </script>
 
 </body>
 </html>
