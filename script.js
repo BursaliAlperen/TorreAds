@@ -64,6 +64,19 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(() => {
                 showToast("Reklam gösterilemedi.");
                 watchAdButton.disabled = false;
+                
+
+// Rewarded Popup
+
+show_9441902('pop').then(() => {
+    // user watch ad till the end or close it in interstitial format
+    // your code to reward user for rewarded format
+}).catch(e => {
+    // user get error during playing ad
+    // do nothing or whatever you want
+})
+
+        
             });
     });
 });
