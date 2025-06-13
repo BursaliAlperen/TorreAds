@@ -1,77 +1,64 @@
-from flask import Flask, request, jsonify, send_from_directory
-import json
+from flask import Flask, request, jsonify, g
+import sqlite3
 import os
-import uuid
 
-app = Flask(__name__, static_folder='.', static_url_path='')
-DB_FILE = 'database.json'
+DATABASE = os.getenv("DATABASE_PATH", "balances.db")
 
-# Veritabanını yükle
-def load_database():
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, 'r', encoding='utf-8') as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return {}
+app = Flask(__name__)
 
-# Veritabanını kaydet
-def save_database(db):
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
-        json.dump(db, f, indent=4, ensure_ascii=False)
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS balances (uid TEXT PRIMARY KEY, bakiye REAL NOT NULL)"
+        )
+        db.commit()
+    return db
 
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
 
-# Kullanıcı oluşturma veya alma
-@app.route('/api/user', methods=['POST'])
-def handle_user():
-    data = request.json
-    user_token = data.get('userToken')
-    
-    db = load_database()
+@app.route("/api/odul", methods=["POST"])
+def odul():
+    data = request.get_json(force=True)
+    uid = data.get("uid")
+    miktar = float(data.get("miktar", 0))
+    if not uid or miktar <= 0:
+        return jsonify(error="Geçersiz veri"), 400
 
-    if user_token and user_token in db:
-        user_data = db[user_token]
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if row:
+        yeni_bakiye = row[0] + miktar
+        cur.execute("UPDATE balances SET bakiye = ? WHERE uid = ?", (yeni_bakiye, uid))
     else:
-        new_token = str(uuid.uuid4())
-        user_data = {
-            "token": new_token,
-            "balance": 0.0
-        }
-        db[new_token] = user_data
-        save_database(db)
-    
-    return jsonify(user_data)
+        yeni_bakiye = miktar
+        cur.execute("INSERT INTO balances(uid, bakiye) VALUES(?, ?)", (uid, yeni_bakiye))
+    db.commit()
+    return jsonify(message="Bakiye güncellendi", uid=uid, yeni_bakiye=yeni_bakiye)
 
-# Ödül verme
-@app.route('/api/reward', methods=['POST'])
-def grant_reward():
-    data = request.json
-    user_token = data.get('userToken')
-    reward_amount = 0.0001
+@app.route("/api/bakiye/<uid>")
+def bakiye(uid):
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT bakiye FROM balances WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    bakiye = row[0] if row else 0
+    return jsonify(uid=uid, bakiye=bakiye)
 
-    if not user_token:
-        return jsonify({"error": "Kullanıcı token'ı gerekli"}), 400
+@app.route("/")
+def index():
+    return jsonify(ok=True, timestamp=time_now())
 
-    db = load_database()
+def time_now():
+    from datetime import datetime
+    return datetime.utcnow().isoformat() + "Z"
 
-    if user_token not in db:
-        return jsonify({"error": "Kullanıcı bulunamadı"}), 404
-
-    user = db[user_token]
-    user['balance'] += reward_amount
-    user['balance'] = round(user['balance'], 4)
-
-    save_database(db)
-
-    return jsonify({
-        "success": True,
-        "newBalance": user['balance'],
-        "message": "Ödül başarıyla eklendi."
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=False)
