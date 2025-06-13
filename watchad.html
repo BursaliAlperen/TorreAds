@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🎬 Reklam İzle, Kazan</title>
@@ -44,54 +43,108 @@
 <div id="status">Lütfen bekleyin...</div>
 
 <script>
+  const API_BASE = "http://127.0.0.1:5001";
+  const REWARD_AMOUNT = 0.0001;
+
   const btn = document.getElementById("watchAdBtn");
   const status = document.getElementById("status");
   const balanceDisplay = document.getElementById("balance");
 
-  // localStorage'dan mevcut bakiyeyi al
-  let balance = parseFloat(localStorage.getItem("balance") || "0");
-  balanceDisplay.textContent = balance.toFixed(4);
+  // Kullanıcı token'ını localStorage'da sakla
+  function getUserToken() {
+    let token = localStorage.getItem("user_token");
+    if (!token) {
+      token = crypto.randomUUID();
+      localStorage.setItem("user_token", token);
+    }
+    return token;
+  }
 
-  // SDK hazır mı kontrol et
+  async function fetchBalance() {
+    const token = getUserToken();
+    try {
+      const response = await fetch(`${API_BASE}/api/balance/${token}`);
+      if (response.ok) {
+        const data = await response.json();
+        return parseFloat(data.bakiye) || 0;
+      }
+    } catch (err) {
+      console.error("Bakiye alınamadı:", err);
+    }
+    return 0;
+  }
+
+  async function claimReward() {
+    const token = getUserToken();
+    try {
+      const response = await fetch(`${API_BASE}/api/reward`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        return parseFloat(result.yeni_bakiye) || 0;
+      } else {
+        throw new Error(result.message || "Ödül alınamadı.");
+      }
+    } catch (err) {
+      throw new Error("Sunucu hatası.");
+    }
+  }
+
   function waitForSDK(retries = 20, delay = 500) {
     return new Promise((resolve, reject) => {
-      let attempt = 0;
+      let attempts = 0;
       const check = () => {
-        if (typeof show_9441902 === "function") resolve();
-        else if (attempt++ >= retries) reject("❌ Reklam SDK yüklenemedi.");
-        else setTimeout(check, delay);
+        if (typeof show_9441902 === "function") {
+          resolve();
+        } else if (attempts++ >= retries) {
+          reject(new Error("❌ Reklam SDK yüklenemedi."));
+        } else {
+          setTimeout(check, delay);
+        }
       };
       check();
     });
   }
 
-  waitForSDK()
-    .then(() => {
+  async function initialize() {
+    try {
+      const balance = await fetchBalance();
+      balanceDisplay.textContent = balance.toFixed(4);
+      status.textContent = "Reklam hazır.";
       btn.disabled = false;
       btn.textContent = "🎥 Reklamı İzle";
-      status.textContent = "Reklam hazır.";
-    })
-    .catch(err => {
-      status.textContent = err;
-    });
+    } catch {
+      status.textContent = "❌ Bakiye alınamadı.";
+    }
+  }
 
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", async () => {
     btn.disabled = true;
     status.textContent = "Reklam başlatılıyor...";
+    btn.textContent = "⏳ Reklam oynatılıyor...";
 
-    show_9441902().then(() => {
-      // Reklam izlendiyse ödül ver
-      balance += 0.0001;
-      localStorage.setItem("balance", balance.toFixed(4));
-      balanceDisplay.textContent = balance.toFixed(4);
-      status.textContent = "🎉 0.0001 TON bakiyene eklendi!";
-    }).catch(() => {
-      status.textContent = "❌ Reklam gösterilemedi.";
-    }).finally(() => {
+    try {
+      await show_9441902();  // Reklamı göster
+      const newBalance = await claimReward();  // Ödülü al
+      balanceDisplay.textContent = newBalance.toFixed(4);
+      status.textContent = `🎉 ${REWARD_AMOUNT} TON eklendi!`;
+    } catch (err) {
+      status.textContent = err.message || "❌ Bir hata oluştu.";
+    } finally {
       btn.disabled = false;
       btn.textContent = "🎥 Reklamı İzle";
-    });
+    }
   });
+
+  // Başlat
+  waitForSDK()
+    .then(() => initialize())
+    .catch(err => {
+      status.textContent = err.message;
+    });
 </script>
 
 </body>
