@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, g, render_template, send_from_directory
 import sqlite3
 import os
-from datetime import datetime
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
