@@ -1,102 +1,68 @@
-let uid = localStorage.getItem("uid");
-const urlParams = new URLSearchParams(window.location.search);
-const referrer = urlParams.get("ref");
+<script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+<script>
+const uid = new URLSearchParams(window.location.search).get("uid") || Math.random().toString(36).substr(2, 9);
+const referrer = new URLSearchParams(window.location.search).get("ref");
+localStorage.setItem("uid", uid);
 
-// Yeni kullanıcıya UID ver ve referrer bilgisini gönder
-if (!uid) {
-  uid = "user-" + Math.random().toString(36).substring(2, 10);
-  localStorage.setItem("uid", uid);
-
-  if (referrer && referrer !== uid) {
-    fetch("/api/set_referrer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, referrer }),
-    });
-  }
+// Bakiye güncelle
+async function fetchBakiye() {
+    const res = await fetch(`/api/bakiye/${uid}`);
+    const data = await res.json();
+    document.getElementById("bakiye").innerText = (data.bakiye || 0).toFixed(6) + " TON";
 }
 
-// UI Elemanlarını al
-const balanceDisplay = document.getElementById("balance-display");
-const referralInput = document.getElementById("referral-link");
-const invitedCount = document.getElementById("invited-count");
-const copyButton = document.getElementById("copy-button");
-const watchAdButton = document.getElementById("watch-ad-button");
-const adModal = document.getElementById("ad-modal");
-const adTimerDisplay = document.getElementById("ad-timer-display");
-const toast = document.getElementById("toast-notification");
+// Reklam ve ödül süreci
+document.getElementById("reklamBtn").addEventListener("click", async () => {
+    const button = document.getElementById("reklamBtn");
+    button.disabled = true;
+    button.innerText = "Reklam oynatılıyor...";
 
-// Kullanıcının linkini göster
-referralInput.value = `${window.location.origin}?ref=${uid}`;
+    try {
+        await show_9441902("pop"); // Reklam izleniyor
 
-// Kopyalama fonksiyonu
-copyButton.addEventListener("click", () => {
-  referralInput.select();
-  document.execCommand("copy");
-  showToast("Link kopyalandı!", "success");
-});
-
-// Bakiye ve davet sayısını al
-function updateBalance() {
-  fetch(`/api/bakiye/${uid}`)
-    .then(res => res.json())
-    .then(data => {
-      balanceDisplay.textContent = `${data.bakiye.toFixed(4)} TON`;
-      invitedCount.textContent = `${data.referrals} kişi`;
-    });
-}
-
-// Reklam İzle Butonu
-watchAdButton.addEventListener("click", () => {
-  watchAdButton.disabled = true;
-  adModal.classList.remove("modal-hidden");
-  let timeLeft = 20;
-  adTimerDisplay.textContent = timeLeft;
-
-  const timer = setInterval(() => {
-    timeLeft--;
-    adTimerDisplay.textContent = timeLeft;
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      adModal.classList.add("modal-hidden");
-      rewardUser();
+        let kalan = 20;
+        const sayac = setInterval(() => {
+            button.innerText = `Bekleniyor... (${kalan}s)`;
+            kalan--;
+            if (kalan < 0) {
+                clearInterval(sayac);
+                kazanOdul();
+            }
+        }, 1000);
+    } catch (e) {
+        button.disabled = false;
+        button.innerText = "Reklam izle & 0.0001 TON kazan";
     }
-  }, 1000);
-
-  // Reklamı başlat (popup göster)
-  show_9441902("pop").then(() => {
-    // Reklam başarıyla oynatıldı
-  }).catch(e => {
-    console.error("Reklam gösterilemedi:", e);
-  });
 });
 
-// Ödül ekleme
-function rewardUser() {
-  fetch("/api/kazandir", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        showToast("0.0001 TON eklendi!", "success");
-        updateBalance();
-        watchAdButton.disabled = false;
-      }
+// Ödül kazandır
+async function kazanOdul() {
+    const res = await fetch("/api/kazandir", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ uid, referrer })
     });
+
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("reklamBtn").disabled = false;
+        document.getElementById("reklamBtn").innerText = "Reklam izle & 0.0001 TON kazan";
+        fetchBakiye();
+    }
 }
 
-// Bildirim
-function showToast(message, type) {
-  toast.textContent = message;
-  toast.className = "";
-  toast.classList.add("toast-visible", type);
-  setTimeout(() => {
-    toast.classList.remove("toast-visible");
-  }, 3000);
-}
+window.onload = fetchBakiye;
+</script>
 
-// İlk yüklemede verileri getir
-updateBalance();
+
+// Rewarded Popup
+
+show_9441902('pop').then(() => {
+    // user watch ad till the end or close it in interstitial format
+    // your code to reward user for rewarded format
+}).catch(e => {
+    // user get error during playing ad
+    // do nothing or whatever you want
+})
+
+        
