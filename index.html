@@ -1,176 +1,67 @@
-<html lang="tr">  
-<head>  
-    <meta charset="UTF-8" />  
-    <meta name="viewport" content="width=device-width, initial-scale=1" />  
-    <title>Reklam İzle - Ödül Kazan</title>  
-    <style>  
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');  
-        body {  
-            font-family: 'Roboto', sans-serif;  
-            background-color: #f0f2f5;  
-            color: #333;  
-            margin: 0;  
-            padding: 0;  
-            display: flex;  
-            justify-content: center;  
-            align-items: center;  
-            height: 100vh;  
-            text-align: center;  
-        }  
-        .container {  
-            background-color: white;  
-            padding: 2rem 1.5rem;  
-            border-radius: 12px;  
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);  
-            max-width: 90%;  
-            width: 400px;  
-            position: relative;  
-        }  
-        .balance {  
-            background-color: #e8f0fe;  
-            color: #1a73e8;  
-            padding: 0.75rem;  
-            border-radius: 8px;  
-            margin-bottom: 1.5rem;  
-            font-weight: 700;  
-            font-size: 1.1rem;  
-        }  
-        h1 {  
-            color: #1a73e8;  
-            margin-bottom: 0.5rem;  
-        }  
-        p {  
-            font-size: 1.1rem;  
-            color: #5f6368;  
-            margin-bottom: 2rem;  
-        }  
-        .reward-info {  
-            font-size: 0.95rem;  
-            color: #5f6368;  
-            margin-top: -1.5rem;  
-            margin-bottom: 2rem;  
-            line-height: 1.4;  
-        }  
-        #countdown {  
-            font-weight: bold;  
-            font-size: 1.2rem;  
-            margin-bottom: 1rem;  
-            color: #1a73e8;  
-            min-height: 1.5em;  
-        }  
-        .watch-button {  
-            display: inline-block;  
-            background-color: #1a73e8;  
-            color: white;  
-            padding: 1rem 2rem;  
-            border-radius: 8px;  
-            text-decoration: none;  
-            font-size: 1.2rem;  
-            font-weight: 700;  
-            transition: background-color 0.3s, transform 0.2s;  
-            cursor: pointer;  
-            border: none;  
-            width: 100%;  
-        }  
-        .watch-button:hover:not(:disabled) {  
-            background-color: #1558b8;  
-            transform: translateY(-2px);  
-        }  
-        .watch-button:disabled {  
-            background-color: #a0c3f0;  
-            cursor: not-allowed;  
-        }  
-        .message-box {  
-            margin-top: 1.5rem;  
-            padding: 1rem;  
-            border-radius: 8px;  
-            font-weight: 500;  
-            display: none;  
-            text-align: center;  
-            border: 1px solid transparent;  
-        }  
-        .message-box.success {  
-            background-color: #d4edda;  
-            color: #155724;  
-            border-color: #c3e6cb;  
-        }  
-        .message-box.error {  
-            background-color: #f8d7da;  
-            color: #721c24;  
-            border-color: #f5c6cb;  
-        }  
-    </style>  
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TorreAds - TON Ödül Kazan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
-<body>  
-    <div class="container">  
-        <div class="balance">Bakiyeniz: <span id="balance-amount">0.0000</span> TON</div>  
-        <h1>Reklam İzle, Ödül Kazan!</h1>  
-        <p>Ödül kazanmak için aşağıdaki butona tıklayarak bir reklam izleyin.</p>  
-        <p class="reward-info">  
-            Reklam başına <b>0.0001 TON</b> kazanın.<br><br>  
-            <span style="color: #d93025; font-weight: bold;">  
-                Minimum ödeme tutarı: 0.75 TON.<br>  
-                Bu tutarın altındaki bakiyeler ödenmeyecektir.  
-            </span>  
-        </p>  
+  <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+<body>
 
-        <div id="countdown"></div>  
+    <div id="app-container">
+        <header>
+            <img src="coin.png" alt="TON Coin" class="header-coin">
+            <h1>TorreAds</h1>
+        </header>
 
-        <button id="watch-ad-button" class="watch-button">Reklam İzle</button>  
-        <div id="message-box" class="message-box"></div>  
-    </div>  
+        <main id="main-card">
+            <div class="balance-section">
+                <p>Mevcut Bakiyeniz</p>
+                <h2 id="balance-display">0.0000 TON</h2>
+            </div>
 
-    <script>  
-        let tonBalance = 0.0;  
-        const rewardAmount = 0.0001;  
-        const countdownDuration = 19;  
+            <div class="info-section">
+                <h3>Davet Linkiniz</h3>
+                <div class="referral-box">
+                    <input type="text" id="referral-link" readonly>
+                    <button id="copy-button">Kopyala</button>
+                </div>
+                <p class="referral-info">Davet linkinden giriş yapan bir kullanıcıdan hayat boyu %100 ödül alırsınız.</p>
+            </div>
 
-        const balanceElement = document.getElementById('balance-amount');  
-        const watchButton = document.getElementById('watch-ad-button');  
-        const countdownElement = document.getElementById('countdown');  
-        const messageBox = document.getElementById('message-box');  
+            <div class="info-section">
+                <h3>Davet Edilen Kişi Sayısı</h3>
+                <p id="invited-count">0 kişi</p>
+            </div>
 
-        function updateBalance() {  
-            balanceElement.innerText = tonBalance.toFixed(4);  
-        }  
+            <a href="https://t.me/TorreAds_Bot/TorreAds" target="_blank" rel="noopener noreferrer" id="telegram-button">
+                <svg class="telegram-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                <span>Telegram'da Devam Et</span>
+            </a>
 
-        function showMessage(text, type) {  
-            messageBox.textContent = text;  
-            messageBox.className = `message-box ${type}`;  
-            messageBox.style.display = 'block';  
-        }  
+            <button id="watch-ad-button">
+                <span class="button-text">Reklam İzle & 0.0001 TON Kazan</span>
+                <span class="button-timer" style="display: none;"></span>
+            </button>
 
-        function hideMessage() {  
-            messageBox.style.display = 'none';  
-        }  
+            <p class="withdrawal-info">Çekim talepleri için <a href="https://t.me/torreads" target="_blank" rel="noopener noreferrer">@torreads</a>'e Telegram'dan ekran görüntüsü (SS) atmanız ve cüzdan adresinizi yollamanız yeterlidir.</p>
+        </main>
+    </div>
 
-        function startAd() {  
-            let timeLeft = countdownDuration;  
-            watchButton.disabled = true;  
-            hideMessage();  
+    <div id="ad-modal" class="modal-hidden">
+        <div class="modal-content">
+            <h3>Reklam Oynatılıyor...</h3>
+            <p>Lütfen ödülünüz için bekleyin.</p>
+            <div class="spinner"></div>
+            <div id="ad-timer-display">18</div>
+        </div>
+    </div>
 
-            countdownElement.innerText = `⏳ Reklam bitiyor: ${timeLeft} saniye`;  
-
-            const countdown = setInterval(() => {  
-                timeLeft--;  
-                if (timeLeft > 0) {  
-                    countdownElement.innerText = `⏳ Reklam bitiyor: ${timeLeft} saniye`;  
-                } else {  
-                    clearInterval(countdown);  
-                    countdownElement.innerText = "✅ Reklam bitti! 0.0001 TON kazandınız!";  
-                    tonBalance += rewardAmount;  
-                    updateBalance();  
-                    showMessage(`🎉 Tebrikler! ${rewardAmount.toFixed(4)} TON kazandınız.`, 'success');  
-                    watchButton.disabled = false;  
-                }  
-            }, 1000);  
-        }  
-
-        watchButton.addEventListener('click', startAd);  
-
-        // Başlangıçta bakiye 0 olarak göster  
-        updateBalance();  
-    </script>  
-</body>  
-    </html>
+    <div id="toast-notification" class="toast-hidden"></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
