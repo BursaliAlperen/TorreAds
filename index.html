@@ -33,14 +33,12 @@
     const balanceDisplay = document.getElementById("balance-display");
     const toast = document.getElementById("toast");
 
-    // Kullanıcı id simülasyonu
     const uid = localStorage.getItem("uid") || (function(){
       const id = Math.random().toString(36).substring(2,15);
       localStorage.setItem("uid", id);
       return id;
     })();
 
-    // Bakiye güncelleme fonksiyonu
     async function fetchBalance() {
       try {
         const res = await fetch(`/api/bakiye/${uid}`);
@@ -52,7 +50,6 @@
       }
     }
 
-    // Ödül ekleme fonksiyonu
     async function rewardUser(amount) {
       try {
         const res = await fetch("/api/odul", {
@@ -85,10 +82,8 @@
       watchAdButton.disabled = true;
 
       try {
-        // Reklamı göster
         await show_9441902('pop');
 
-        // 18 saniyelik sayaç
         let counter = 18;
         watchAdButton.textContent = `Lütfen bekleyin... ${counter}s`;
 
@@ -110,7 +105,6 @@
       }
     });
 
-    // Sayfa açıldığında bakiye çek
     fetchBalance();
   </script>
 
