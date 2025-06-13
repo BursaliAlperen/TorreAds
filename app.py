@@ -109,5 +109,62 @@ show_9441902('pop').then(() => {
     // user get error during playing ad
     // do nothing or whatever you want
 })
+btn.addEventListener("click", () => {
+  btn.disabled = true;
+  status.textContent = `🎥 Reklam başlatılıyor...`;
 
+  // Ad SDK çalıştır (örnek ID ile)
+  show_9441902('pop').then(() => {
+    let countdown = 18;
+    status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
+
+    const interval = setInterval(() => {
+      countdown--;
+      status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
+      if (countdown <= 0) {
+        clearInterval(interval);
+
+        // Ödül ver: 0.0001 TON
+        fetch("/api/odul", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            uid: uid,
+            miktar: 0.0001
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          fetchBalance();
+          status.textContent = `🎉 0.0001 TON kazandınız! Yeni bakiye: ${data.yeni_bakiye.toFixed(4)}`;
+        })
+        .catch(() => {
+          status.textContent = "❌ Ödül alınamadı!";
+        })
+        .finally(() => {
+          btn.disabled = false;
+        });
+      }
+    }, 1000);
+
+  }).catch(e => {
+    status.textContent = "❌ Reklam gösterilemedi. Lütfen tekrar deneyin.";
+    btn.disabled = false;
+  });
+});
+
+
+// Rewarded Popup
+
+show_9441902('pop').then(() => {
+    // user watch ad till the end or close it in interstitial format
+    // your code to reward user for rewarded format
+}).catch(e => {
+    // user get error during playing ad
+    // do nothing or whatever you want
+})
+
+        
         
