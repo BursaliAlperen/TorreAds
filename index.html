@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Ton Coin Bakiye</title>
   <style>
     body {
@@ -29,14 +29,22 @@
       color: red;
       margin-top: 10px;
     }
+    #status {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
 
-  <div id="balance">Bakiyeniz: <span id="tonBalance">0</span> TON</div>
+  <div id="balance">Bakiyeniz: <span id="tonBalance">0.0000</span> TON</div>
 
-  <button onclick="watchAd()">🎥 Reklam İzle</button>
+  <button onclick="watchAd()" id="watchAdBtn">🎥 Reklam İzle</button>
+  <button id="withdrawBtn">💸 Çekim Talebi Gönder</button>
+
   <div id="countdown"></div>
+  <div id="status"></div>
 
   <!-- Reklam SDK -->
   <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
@@ -44,31 +52,103 @@
   <script>
     let balance = 0;
 
-    function watchAd() {
+    // Kullanıcı tokeni - backend ile kullanıcıyı tanımlamak için
+    let userToken = localStorage.getItem("userToken") || null;
+
+    async function fetchUserBalance() {
+      if(!userToken) return;
+
+      try {
+        const res = await fetch("/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userToken })
+        });
+        const data = await res.json();
+        if (data.balance !== undefined) {
+          balance = parseFloat(data.balance);
+          document.getElementById("tonBalance").innerText = balance.toFixed(4);
+        }
+      } catch (e) {
+        console.error("Bakiye yüklenemedi", e);
+      }
+    }
+
+    fetchUserBalance();
+
+    async function watchAd() {
       const countdown = document.getElementById("countdown");
+      const status = document.getElementById("status");
+      status.innerText = "";
       countdown.innerText = "Reklam yükleniyor...";
 
-      // Reklamı göster
-      show_9441902('pop').then(() => {
-        // Reklam tamamlandı
-        let counter = 19;
-        countdown.innerText = "Reklam tamamlandı: " + counter + " saniye";
+      try {
+        await show_9441902('pop');
+
+        // Reklam tamamlandı, 18 saniyelik bekleme başlasın
+        let counter = 18;
+        countdown.innerText = `Reklam sonrası bekleme: ${counter} saniye`;
 
         const interval = setInterval(() => {
           counter--;
-          countdown.innerText = "Reklam sonrası bekleme: " + counter + " saniye";
+          countdown.innerText = `Reklam sonrası bekleme: ${counter} saniye`;
           if (counter <= 0) {
             clearInterval(interval);
-            countdown.innerText = "0.0002 TON kazandınız!";
+            countdown.innerText = "🎉 0.0002 TON kazandınız!";
             balance += 0.0002;
             document.getElementById("tonBalance").innerText = balance.toFixed(4);
+
+            // Burada backend'e bakiye güncelleme isteği atabilirsin
+            fetch("/api/reward", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userToken })
+            }).then(res => res.json())
+              .then(data => {
+                if (!data.success) {
+                  status.innerText = "❌ Ödül güncellenemedi: " + (data.error || "");
+                }
+              }).catch(() => {
+                status.innerText = "❌ Ödül güncellenirken hata oluştu.";
+              });
           }
         }, 1000);
-      }).catch(e => {
+      } catch (e) {
         countdown.innerText = "Reklam oynatılamadı. Lütfen tekrar deneyin.";
         console.error("Reklam hatası:", e);
-      });
+      }
     }
+
+    document.getElementById("withdrawBtn").addEventListener("click", async () => {
+      const status = document.getElementById("status");
+      status.innerText = "";
+
+      if (balance < 0.5) {
+        status.innerText = "❌ Minimum çekim tutarı 0.5 TON olmalıdır.";
+        return;
+      }
+
+      status.innerText = "Çekim talebi gönderiliyor...";
+
+      try {
+        const res = await fetch("/api/request_withdraw", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userToken })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          balance = 0;
+          document.getElementById("tonBalance").innerText = balance.toFixed(4);
+          status.innerText = "✅ Çekim talebi alındı, bakiye sıfırlandı.";
+        } else {
+          status.innerText = "❌ Çekim talebi başarısız: " + (data.error || "Bilinmeyen hata");
+        }
+      } catch (e) {
+        status.innerText = "❌ Sunucu hatası.";
+      }
+    });
   </script>
 
 </body>
