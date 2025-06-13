@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TorreAds - TON Ödül Kazan</title>
-<style>
-  body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background:#f4f4f4;}
-  #balance-display { font-size: 2em; margin: 20px; }
-  #watch-ad-button { font-size: 18px; padding: 10px 20px; cursor:pointer; border:none; background:#4CAF50; color:#fff; border-radius:6px; }
-  #watch-ad-button:disabled { background:#888; cursor: default; }
-  #toast-notification { margin-top: 20px; color: green; font-weight: bold; height: 30px; }
-  .info-text { margin-top: 30px; font-size: 14px; color: #333; }
-</style>
-<script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Toncoin Kazan</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+    <div id="app-container">
+        <header>
+            <img src="coin.svg" alt="Coin" class="header-coin" />
+            <h1>Toncoin Kazan</h1>
+        </header>
 
-<h1>TorreAds - TON Coin Kazan</h1>
+        <main id="main-card">
+            <section class="balance-section">
+                <p>Bakiyeniz</p>
+                <div id="balance-display">0.0000 TON</div>
+            </section>
 
-<div id="balance-display">Bakiyeniz: 0.0000 TON</div>
+            <section class="info-section">
+                <h3>Davet Linkiniz</h3>
+                <div class="referral-box">
+                    <input type="text" id="referral-link" readonly />
+                    <button id="copy-button">Kopyala</button>
+                </div>
+                <p id="invited-count"></p>
+            </section>
 
-<button id="watch-ad-button">🎥 Reklam İzle & 0.0001 TON Kazan</button>
+            <button id="watch-ad-button">Reklam İzle & 0.0001 TON Kazan</button>
+            <p class="withdrawal-info">Ödeme almak için minimum 0.75 TON'a ulaşmanız gerekmektedir.</p>
+        </main>
+    </div>
 
-<div id="toast-notification"></div>
+    <div id="toast-notification"></div>
 
-<p class="info-text">Ödeme almak için minimum 0.75 TON’a ulaşmanız gerekmektedir.</p>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
 </body>
-</html>
+              </html>
