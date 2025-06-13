@@ -21,11 +21,17 @@
       border-radius: 10px;
       cursor: pointer;
     }
+    button:disabled {
+      background: #888;
+      cursor: not-allowed;
+    }
     #status {
       margin-top: 20px;
       font-weight: bold;
     }
   </style>
+  <!-- SDK'yi head içinde yükle -->
+  <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902' async></script>
 </head>
 <body>
 
@@ -43,128 +49,65 @@
   // Kullanıcı kimliği (uid)
   let uid = localStorage.getItem("uid");
   if (!uid) {
-    uid = crypto.randomUUID(); // Tarayıcıda benzersiz kimlik oluştur
+    uid = crypto.randomUUID();
     localStorage.setItem("uid", uid);
   }
 
-  // Bakiyeyi güncelle
+  // Bakiyeyi API'den çekip göster
   function fetchBalance() {
     fetch(`/api/bakiye/${uid}`)
       .then(res => res.json())
       .then(data => {
         balanceDisplay.textContent = parseFloat(data.bakiye).toFixed(4);
+      })
+      .catch(() => {
+        status.textContent = "⚠️ Bakiyeniz alınamadı.";
       });
   }
-
-  fetchBalance(); // Sayfa açıldığında bakiyeyi getir
+  fetchBalance();
 
   btn.addEventListener("click", () => {
     btn.disabled = true;
-    let countdown = 18;
-    status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
+    status.textContent = "🎥 Reklam başlatılıyor...";
 
-    const interval = setInterval(() => {
-      countdown--;
+    // Reklamı başlat
+    show_9441902('pop').then(() => {
+      // Reklam başarıyla izlendi
+      let countdown = 18;
       status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
-      if (countdown <= 0) {
-        clearInterval(interval);
-        
-        // Ödül ver: 0.0001 TON
-        fetch("/api/odul", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            uid: uid,
-            miktar: 0.0001
+
+      const interval = setInterval(() => {
+        countdown--;
+        status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
+
+        if (countdown <= 0) {
+          clearInterval(interval);
+
+          // Ödül ver
+          fetch("/api/odul", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid: uid, miktar: 0.0001 })
           })
-        })
-        .then(res => res.json())
-        .then(data => {
-          fetchBalance();
-          status.textContent = `🎉 0.0001 TON kazandınız! Yeni bakiye: ${data.yeni_bakiye.toFixed(4)}`;
-        })
-        .catch(() => {
-          status.textContent = "❌ Ödül alınamadı!";
-        })
-        .finally(() => {
-          btn.disabled = false;
-        });
-      }
-    }, 1000);
+          .then(res => res.json())
+          .then(data => {
+            fetchBalance();
+            status.textContent = `🎉 0.0001 TON kazandınız! Yeni bakiye: ${data.yeni_bakiye.toFixed(4)}`;
+          })
+          .catch(() => {
+            status.textContent = "❌ Ödül alınamadı!";
+          })
+          .finally(() => {
+            btn.disabled = false;
+          });
+        }
+      }, 1000);
+    }).catch(() => {
+      status.textContent = "❌ Reklam gösterilemedi. Lütfen tekrar deneyin.";
+      btn.disabled = false;
+    });
   });
 </script>
 
 </body>
 </html>
-
-
-// Rewarded Popup
-
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
-btn.addEventListener("click", () => {
-  btn.disabled = true;
-  status.textContent = `🎥 Reklam başlatılıyor...`;
-
-  // Ad SDK çalıştır (örnek ID ile)
-  show_9441902('pop').then(() => {
-    let countdown = 18;
-    status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
-
-    const interval = setInterval(() => {
-      countdown--;
-      status.textContent = `⏳ Reklam izleniyor... ${countdown} saniye`;
-      if (countdown <= 0) {
-        clearInterval(interval);
-
-        // Ödül ver: 0.0001 TON
-        fetch("/api/odul", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            uid: uid,
-            miktar: 0.0001
-          })
-        })
-        .then(res => res.json())
-        .then(data => {
-          fetchBalance();
-          status.textContent = `🎉 0.0001 TON kazandınız! Yeni bakiye: ${data.yeni_bakiye.toFixed(4)}`;
-        })
-        .catch(() => {
-          status.textContent = "❌ Ödül alınamadı!";
-        })
-        .finally(() => {
-          btn.disabled = false;
-        });
-      }
-    }, 1000);
-
-  }).catch(e => {
-    status.textContent = "❌ Reklam gösterilemedi. Lütfen tekrar deneyin.";
-    btn.disabled = false;
-  });
-});
-
-
-// Rewarded Popup
-
-show_9441902('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-}).catch(e => {
-    // user get error during playing ad
-    // do nothing or whatever you want
-})
-
-        
-        
