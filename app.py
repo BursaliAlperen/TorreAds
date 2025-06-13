@@ -29,7 +29,6 @@ def bakiye(uid):
         if row:
             return jsonify({"bakiye": row[0]})
         else:
-            # Kullanıcı yoksa oluştur ve 0 bakiye dön
             c.execute("INSERT INTO users (uid, balance) VALUES (?, 0)", (uid,))
             conn.commit()
             return jsonify({"bakiye": 0})
