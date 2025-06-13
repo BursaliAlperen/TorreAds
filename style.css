@@ -158,11 +158,12 @@ header h1 {
     box-shadow: none;
 }
 
+/* Ödeme için eklenen bilgi */
 .withdrawal-info {
     font-size: 0.8rem;
     color: #6c757d;
     text-align: center;
-    margin-top: -0.5rem; /* Reduce the default gap from the button */
+    margin-top: 0.5rem;
 }
 
 .withdrawal-info a {
@@ -271,4 +272,4 @@ header h1 {
 
 #toast-notification.success {
     background-color: var(--success-color);
-}
+    }}
