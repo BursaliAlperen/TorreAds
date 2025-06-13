@@ -1,9 +1,7 @@
-<!DOCTYPE html>
 <html lang="tr">  
 <head>  
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta charset="UTF-8" />  
+    <meta name="viewport" content="width=device-width, initial-scale=1" />  
     <title>Reklam İzle - Ödül Kazan</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');  
@@ -52,6 +50,13 @@
             margin-top: -1.5rem;  
             margin-bottom: 2rem;  
             line-height: 1.4;  
+        }  
+        #countdown {  
+            font-weight: bold;  
+            font-size: 1.2rem;  
+            margin-bottom: 1rem;  
+            color: #1a73e8;  
+            min-height: 1.5em;  
         }  
         .watch-button {  
             display: inline-block;  
@@ -102,85 +107,31 @@
         <h1>Reklam İzle, Ödül Kazan!</h1>  
         <p>Ödül kazanmak için aşağıdaki butona tıklayarak bir reklam izleyin.</p>  
         <p class="reward-info">  
-            Reklam başına <b>0.0001 TON</b> kazanın.<br>  
-            Ödeme için Telegram'dan <b>@torreads</b> ile iletişime geçin.<br><br>  
+            Reklam başına <b>0.0001 TON</b> kazanın.<br><br>  
             <span style="color: #d93025; font-weight: bold;">  
                 Minimum ödeme tutarı: 0.75 TON.<br>  
                 Bu tutarın altındaki bakiyeler ödenmeyecektir.  
             </span>  
         </p>  
+
+        <div id="countdown"></div>  
+
         <button id="watch-ad-button" class="watch-button">Reklam İzle</button>  
         <div id="message-box" class="message-box"></div>  
     </div>  
 
-    <!-- Monetag SDK -->  
-    <script src='//libtl.com/sdk.js' data-zone='9441902'></script>  
-
-    <script type="module">  
-        // Flask backend API URL, port ve path ihtiyacınıza göre değiştirin
-        const API_BASE_URL = 'http://localhost:8000/api';  
-        const REWARD_AMOUNT = 0.0001;  
+    <script>  
+        let tonBalance = 0.0;  
+        const rewardAmount = 0.0001;  
+        const countdownDuration = 19;  
 
         const balanceElement = document.getElementById('balance-amount');  
         const watchButton = document.getElementById('watch-ad-button');  
+        const countdownElement = document.getElementById('countdown');  
         const messageBox = document.getElementById('message-box');  
 
-        // Kullanıcı ID'si: Bunu gerçek uygulamada dinamik yapmalısın, şimdilik localStorage kullanıyoruz
-        function getOrSetUserId() {  
-            let uid = localStorage.getItem('user_uid');  
-            if (!uid) {  
-                uid = crypto.randomUUID();  
-                localStorage.setItem('user_uid', uid);  
-            }  
-            return uid;  
-        }  
-        const uid = getOrSetUserId();
-
-        // Backend'den bakiye çek
-        async function fetchBalance() {  
-            try {  
-                const res = await fetch(`${API_BASE_URL}/bakiye/${uid}`);  
-                if (!res.ok) {  
-                    throw new Error('Bakiye alınamadı');  
-                }  
-                const data = await res.json();  
-                if (data.bakiye !== undefined) {  
-                    updateBalanceDisplay(data.bakiye);  
-                } else {  
-                    updateBalanceDisplay(0);  
-                }  
-            } catch (error) {  
-                console.error(error);  
-                updateBalanceDisplay(0);  
-            }  
-        }  
-
-        // Bakiye gösterimi güncelle
-        function updateBalanceDisplay(amount) {  
-            balanceElement.textContent = parseFloat(amount).toFixed(4);  
-        }  
-
-        // Ödül backend'e POST at
-        async function claimReward() {  
-            try {  
-                const response = await fetch(`${API_BASE_URL}/odul`, {  
-                    method: 'POST',  
-                    headers: { 'Content-Type': 'application/json' },  
-                    body: JSON.stringify({ uid: uid, miktar: REWARD_AMOUNT }),  
-                });  
-
-                const data = await response.json();  
-
-                if (response.ok && data.success !== false) {  
-                    updateBalanceDisplay(data.yeni_bakiye);  
-                    showMessage(`Başarıyla ödül eklendi! Yeni bakiyeniz: ${data.yeni_bakiye.toFixed(4)} TON.`, 'success');  
-                } else {  
-                    showMessage(data.error || 'Ödül alınamadı.', 'error');  
-                }  
-            } catch (error) {  
-                console.error('Ödül isteği başarısız:', error);  
-                showMessage('Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.', 'error');  
-            }  
+        function updateBalance() {  
+            balanceElement.innerText = tonBalance.toFixed(4);  
         }  
 
         function showMessage(text, type) {  
@@ -193,50 +144,32 @@
             messageBox.style.display = 'none';  
         }  
 
-        // SDK hazır mı kontrolü
-        function checkSdkReady() {  
-            return new Promise((resolve, reject) => {  
-                let attempts = 0;  
-                const maxAttempts = 10;  
-                const intervalTime = 500;  
-
-                const intervalId = setInterval(() => {  
-                    if (typeof show_9441902 === 'function') {  
-                        clearInterval(intervalId);  
-                        resolve();  
-                    } else {  
-                        attempts++;  
-                        if (attempts >= maxAttempts) {  
-                            clearInterval(intervalId);  
-                            reject(new Error('Reklam altyapısı yüklenemedi. Lütfen sayfayı yenileyin.'));  
-                        }  
-                    }  
-                }, intervalTime);  
-            });  
-        }  
-
-        watchButton.addEventListener('click', async () => {  
+        function startAd() {  
+            let timeLeft = countdownDuration;  
             watchButton.disabled = true;  
-            watchButton.textContent = 'Reklam Yükleniyor...';  
             hideMessage();  
 
-            try {  
-                await checkSdkReady();  
-                await show_9441902();  // Reklam göster  
-                alert(`🎉 ${REWARD_AMOUNT} TON kazandınız!`);  
-                await claimReward();  
+            countdownElement.innerText = `⏳ Reklam bitiyor: ${timeLeft} saniye`;  
 
-            } catch (error) {  
-                console.error('Reklam süreci başarısız:', error);  
-                showMessage(error.message || 'Reklam gösterilemedi veya erken kapatıldı.', 'error');  
-            } finally {  
-                watchButton.disabled = false;  
-                watchButton.textContent = 'Yeni Reklam İzle';  
-            }  
-        });  
+            const countdown = setInterval(() => {  
+                timeLeft--;  
+                if (timeLeft > 0) {  
+                    countdownElement.innerText = `⏳ Reklam bitiyor: ${timeLeft} saniye`;  
+                } else {  
+                    clearInterval(countdown);  
+                    countdownElement.innerText = "✅ Reklam bitti! 0.0001 TON kazandınız!";  
+                    tonBalance += rewardAmount;  
+                    updateBalance();  
+                    showMessage(`🎉 Tebrikler! ${rewardAmount.toFixed(4)} TON kazandınız.`, 'success');  
+                    watchButton.disabled = false;  
+                }  
+            }, 1000);  
+        }  
 
-        // Sayfa yüklenince bakiye çek ve göster
-        fetchBalance();  
+        watchButton.addEventListener('click', startAd);  
+
+        // Başlangıçta bakiye 0 olarak göster  
+        updateBalance();  
     </script>  
 </body>  
-</html>
+    </html>
