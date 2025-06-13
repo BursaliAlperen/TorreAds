@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, render_template, send_from_directory
 import sqlite3
 import os
+from datetime import datetime
+
+app = Flask(__name__, static_folder="static", template_folder="templates")
 
 DATABASE = os.getenv("DATABASE_PATH", "balances.db")
-
-app = Flask(__name__)
 
 def get_db():
     db = getattr(g, "_database", None)
@@ -21,6 +22,10 @@ def close_connection(exception):
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 @app.route("/api/odul", methods=["POST"])
 def odul():
@@ -52,13 +57,9 @@ def bakiye(uid):
     bakiye = row[0] if row else 0
     return jsonify(uid=uid, bakiye=bakiye)
 
-@app.route("/")
-def index():
-    return jsonify(ok=True, timestamp=time_now())
-
-def time_now():
-    from datetime import datetime
-    return datetime.utcnow().isoformat() + "Z"
+@app.route("/<path:path>")
+def static_proxy(path):
+    return send_from_directory('static', path)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=True)
