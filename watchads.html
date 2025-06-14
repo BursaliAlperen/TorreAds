@@ -102,7 +102,8 @@
                     show_9441902('pop').then(() => {
                         localStorage.setItem('adWatchedResult', 'success');
                         alert('Tebrikler, ödül kazandınız!');
-                        // Ana pencere bu çerçeveyi kapatacak
+                        // Try to close the window automatically after the user sees the alert
+                        setTimeout(() => window.close(), 500);
                     }).catch(e => {
                         console.error("Ad error:", e);
                         localStorage.setItem('adWatchedResult', 'error');
@@ -117,6 +118,17 @@
                 }
             });
         });
+      
+
+// Rewarded interstitial
+
+show_9441902().then(() => {
+    // You need to add your user reward function here, which will be executed after the user watches the ad.
+    // For more details, please refer to the detailed instructions.
+    alert('You have seen an ad!');
+})
+
+        
     </script>
 </body>
 </html>

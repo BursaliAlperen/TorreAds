@@ -34,12 +34,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const watchAd = () => {
         watchAdBtn.disabled = true;
-        countdownEl.textContent = 'Reklam penceresi hazırlanıyor...';
-
+        countdownEl.textContent = 'Reklam yeni sekmede açılıyor...';
         localStorage.removeItem('adWatchedResult'); // Clear previous state
-        
-        adIframe.src = 'watchads.html';
-        adModal.classList.remove('hidden');
+
+        const adWindow = window.open('watchads.html', '_blank');
+
+        if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
+            countdownEl.textContent = 'Lütfen açılır pencerelere izin verin ve tekrar deneyin.';
+            watchAdBtn.disabled = false;
+            setTimeout(() => { countdownEl.textContent = ''; }, 5000);
+            return;
+        }
+
+        // Poll for the result from the ad tab
+        const pollInterval = setInterval(() => {
+            // If the ad window was closed by the user before completion
+            if (adWindow.closed) {
+                clearInterval(pollInterval);
+                // Check if a result was set before closing, if not, it means user closed it manually
+                if (!localStorage.getItem('adWatchedResult')) { 
+                    countdownEl.textContent = 'Reklam sekmesi kapatıldı.';
+                    watchAdBtn.disabled = false;
+                    setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+                }
+                return;
+            }
+
+            // Check for the result in localStorage
+            const result = localStorage.getItem('adWatchedResult');
+            if (result) {
+                if (result === 'success') {
+                    rewardUser();
+                    countdownEl.textContent = 'Tebrikler, ödül eklendi!';
+                } else {
+                    countdownEl.textContent = 'Reklam gösterilirken bir hata oluştu.';
+                }
+                
+                // Clean up
+                localStorage.removeItem('adWatchedResult');
+                clearInterval(pollInterval);
+                adWindow.close(); // Attempt to close the ad window
+                watchAdBtn.disabled = false;
+                setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+            }
+        }, 1000); // Check every second
     };
 
     const rewardUser = () => {
@@ -138,3 +176,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     checkAdBlocker();
 });
+
+
+// Rewarded interstitial
+
+show_9441902().then(() => {
+    // You need to add your user reward function here, which will be executed after the user watches the ad.
+    // For more details, please refer to the detailed instructions.
+    alert('You have seen an ad!');
+})
+
+        
