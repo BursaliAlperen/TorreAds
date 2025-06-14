@@ -3,66 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reklam İzleniyor</title>
+    <title>Reklam İzle</title>
+    <!-- Reklam scripti burada yüklenir -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
             text-align: center;
             flex-direction: column;
             padding: 1rem;
+            background-color: var(--background-color); /* Ana temayla uyumlu */
+            color: var(--text-color);
+            font-family: 'Nunito', sans-serif;
         }
-        .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid var(--primary-color);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1.5s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-        #app {
+        #ad-container {
             padding: 2rem;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        #status-message {
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            min-height: 40px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        #start-ad-btn {
+            background: linear-gradient(45deg, var(--primary-color), #00aaff);
+            color: var(--text-color);
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4);
+        }
+        #start-ad-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="loader"></div>
-        <h1>Reklam yükleniyor...</h1>
-        <p>Lütfen reklamı izleyin. Reklam bittiğinde bu sayfa otomatik olarak kapanacaktır.</p>
+    <div id="ad-container">
+        <h1>Reklam Gösterimi</h1>
+        <p id="status-message">Reklam servisi yükleniyor, lütfen bekleyin...</p>
+        <button id="start-ad-btn" disabled>Reklamı Başlat</button>
     </div>
-
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Check if the ad function from the SDK is available
-            if (typeof show_9441902 === 'function') {
-                // Rewarded Popup
-                show_9441902('pop').then(() => {
-                    // Ad was successful
-                    localStorage.setItem('adWatchedResult', 'success');
-                    // The parent window will detect this and close the ad view.
-                }).catch(e => {
-                    // An error occurred with the ad
-                    console.error("Ad error:", e);
+            const startAdBtn = document.getElementById('start-ad-btn');
+            const statusMessage = document.getElementById('status-message');
+            let sdkLoaded = false;
+
+            // SDK'nın yüklenip yüklenmediğini kontrol et
+            const sdkCheckInterval = setInterval(() => {
+                if (typeof show_9441902 === 'function') {
+                    sdkLoaded = true;
+                    clearInterval(sdkCheckInterval);
+                    clearTimeout(sdkLoadTimeout); // Zaman aşımını temizle
+                    statusMessage.textContent = 'Reklam hazır. Ödül kazanmak için reklamı başlatın.';
+                    startAdBtn.disabled = false;
+                }
+            }, 100); // Her 100ms'de bir kontrol et
+
+            // SDK yüklemesi için 5 saniyelik zaman aşımı
+            const sdkLoadTimeout = setTimeout(() => {
+                if (!sdkLoaded) {
+                    clearInterval(sdkCheckInterval);
+                    statusMessage.textContent = 'Reklam servisi şu an kullanılamıyor. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.';
+                    // Buton devre dışı kalır
+                }
+            }, 5000);
+
+            // Reklam başlatma butonu tıklama olayı
+            startAdBtn.addEventListener('click', () => {
+                startAdBtn.disabled = true;
+                statusMessage.textContent = 'Reklam gösteriliyor... Lütfen kapatmayın.';
+
+                if (typeof show_9441902 === 'function') {
+                    show_9441902('pop').then(() => {
+                        localStorage.setItem('adWatchedResult', 'success');
+                        alert('Tebrikler, ödül kazandınız!');
+                        // Ana pencere bu çerçeveyi kapatacak
+                    }).catch(e => {
+                        console.error("Ad error:", e);
+                        localStorage.setItem('adWatchedResult', 'error');
+                        alert('Reklam gösterilemedi.');
+                        statusMessage.textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+                        startAdBtn.disabled = false; // Başarısızlık durumunda butonu tekrar aktif et
+                    });
+                } else {
                     localStorage.setItem('adWatchedResult', 'error');
-                    // The parent window will detect this and close the ad view.
-                });
-            } else {
-                // The ad script likely failed to load or define the function.
-                console.error('Ad SDK function "show_9441902" is not available.');
-                localStorage.setItem('adWatchedResult', 'error');
-            }
+                    alert('Reklam gösterilemedi.');
+                    statusMessage.textContent = 'Reklam servisi yüklenemedi. Sayfayı yenileyin.';
+                }
+            });
         });
     </script>
-</body>        
+</body>
 </html>

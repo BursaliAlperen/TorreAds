@@ -230,6 +230,22 @@ footer a:hover {
     padding: 1rem;
 }
 
+#close-modal-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    line-height: 1;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    padding: 0.5rem;
+}
+
 #ad-iframe {
     width: 100%;
     max-width: 480px; /* A good max width for vertical ads */
@@ -238,4 +254,53 @@ footer a:hover {
     border: 2px solid var(--primary-color);
     border-radius: var(--border-radius);
     background: var(--background-color); /* Fallback bg */
+}
+
+/* Ad Blocker Modal Styles */
+#adblock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(26, 28, 34, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    text-align: center;
+    padding: 1rem;
+    backdrop-filter: blur(5px);
+}
+
+.adblock-modal {
+    background-color: var(--background-color);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--error-color);
+    max-width: 90%;
+    width: 400px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+}
+
+.adblock-modal h2 {
+    color: var(--error-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.adblock-modal p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.adblock-modal p:last-of-type {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
