@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reklam İzle</title>
+    <!-- Reklam scripti burada yüklenir -->
+    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            flex-direction: column;
+            padding: 1rem;
+            background-color: var(--background-color); /* Ana temayla uyumlu */
+            color: var(--text-color);
+            font-family: 'Nunito', sans-serif;
+        }
+        #ad-container {
+            padding: 2rem;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        #status-message {
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            min-height: 40px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        #start-ad-btn {
+            background: linear-gradient(45deg, var(--primary-color), #00aaff);
+            color: var(--text-color);
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4);
+        }
+        #start-ad-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="ad-container">
+        <h1>Reklam Gösterimi</h1>
+        <p id="status-message">Reklam servisi yükleniyor, lütfen bekleyin...</p>
+        <button id="start-ad-btn" disabled>Reklamı Başlat</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startAdBtn = document.getElementById('start-ad-btn');
+            const statusMessage = document.getElementById('status-message');
+            let sdkLoaded = false;
+
+            // SDK'nın yüklenip yüklenmediğini kontrol et
+            const sdkCheckInterval = setInterval(() => {
+                if (typeof show_9441902 === 'function') {
+                    sdkLoaded = true;
+                    clearInterval(sdkCheckInterval);
+                    clearTimeout(sdkLoadTimeout); // Zaman aşımını temizle
+                    statusMessage.textContent = 'Reklam hazır. Ödül kazanmak için reklamı başlatın.';
+                    startAdBtn.disabled = false;
+                }
+            }, 100); // Her 100ms'de bir kontrol et
+
+            // SDK yüklemesi için 5 saniyelik zaman aşımı
+            const sdkLoadTimeout = setTimeout(() => {
+                if (!sdkLoaded) {
+                    clearInterval(sdkCheckInterval);
+                    statusMessage.textContent = 'Reklam servisi şu an kullanılamıyor. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.';
+                    // Buton devre dışı kalır
+                }
+            }, 5000);
+
+            // Reklam başlatma butonu tıklama olayı
+            startAdBtn.addEventListener('click', () => {
+                startAdBtn.disabled = true;
+                statusMessage.textContent = 'Reklam gösteriliyor... Lütfen kapatmayın.';
+
+                if (typeof show_9441902 === 'function') {
+                    show_9441902('pop').then(() => {
+                        localStorage.setItem('adWatchedResult', 'success');
+                        alert('Tebrikler, ödül kazandınız!');
+                        // Try to close the window automatically after the user sees the alert
+                        setTimeout(() => window.close(), 500);
+                    }).catch(e => {
+                        console.error("Ad error:", e);
+                        localStorage.setItem('adWatchedResult', 'error');
+                        alert('Reklam gösterilemedi.');
+                        statusMessage.textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+                        startAdBtn.disabled = false; // Başarısızlık durumunda butonu tekrar aktif et
+                    });
+                } else {
+                    localStorage.setItem('adWatchedResult', 'error');
+                    alert('Reklam gösterilemedi.');
+                    statusMessage.textContent = 'Reklam servisi yüklenemedi. Sayfayı yenileyin.';
+                }
+            });
+        });
+      
+
+// Rewarded interstitial
+
+show_9441902().then(() => {
+    // You need to add your user reward function here, which will be executed after the user watches the ad.
+    // For more details, please refer to the detailed instructions.
+    alert('You have seen an ad!');
+})
+
+        
+    </script>
+</body>
+</html>

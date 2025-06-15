@@ -1,255 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ads on Monetage mini app</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            text-align: center;
-            background: #1f1f1f;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            width: 300px;
-        }
-        .container h1 {
-            font-size: 20px;
-            color: green;
-            margin-bottom: 10px;
-        }
-        .developer {
-            font-size: 12px;
-            background-color: green;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: inline-block;
-            cursor: pointer;
-        }
-        .stats {
-            margin: 10px 0;
-        }
-        .stats p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-        .progress-circle {
-            width: 80px;
-            height: 80px;
-            border: 4px solid green;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 10px auto;
-        }
-        .progress-circle span {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .buttons button {
-            width: 90%;
-            margin: 5px 0;
-            padding: 10px;
-            font-size: 14px;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            background: green;
-            cursor: pointer;
-        }
-        .buttons button:hover {
-            background: darkorange;
-        }
-        .withdraw-section {
-            margin-top: 20px;
-            display: none;
-            padding: 20px;
-            background-color: #2a2a2a;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-        .withdraw-section input,
-        .withdraw-section select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 5px;
-            border: 2px solid #555;
-            background-color: #333;
-            color: #fff;
-        }
-        .withdraw-section input:focus,
-        .withdraw-section select:focus {
-            border-color: green;
-            outline: none;
-        }
-        .withdraw-section button {
-            background-color: green;
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            margin-top: 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .withdraw-section button:hover {
-            background-color: #006400;
-        }
-        #withdraw-status {
-            color: red;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .user-info {
-            margin: 10px 0;
-        }
-        .user-info p {
-            font-size: 14px;
-            margin: 5px 0;
-        }
-    </style>
-    <script src="//libtl.com/sdk.js" data-zone="9441902" data-sdk="show_9441902"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torre Ads - İzle Kazan</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+  <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
 <body>
-    <div class="container">
-        <h1>Earning Technology</h1>
-        <div class="developer" onclick="window.location.href='https://t.me/Bossmaster100'">Developer by Md Srabon Ahmed</div>
+    <div id="app">
+        <header>
+            <h1><i class="fas fa-coins"></i> Torre Ads</h1>
+            <div class="balance-container">
+                <p>Mevcut Bakiyeniz:</p>
+                <p><span id="balance">0.0000</span> TON</p>
+            </div>
+        </header>
 
-        <!-- Display User Info -->
-        <div class="user-info">
-            <p>Welcome, <span id="user-name"></span></p>
-        </div>
+        <main>
+            <button id="watch-ad-btn">
+                Torre Ads Reklam İzle Kazan
+            </button>
+            <p id="countdown"></p>
+        </main>
 
-        <div class="stats">
-            <p>Watched Ads: <span id="watched-ads">0</span></p>
-            <p>Earned Points: <span id="earned-points">0</span></p>
-        </div>
-
-        <div class="progress-circle">
-            <span id="ads-progress">0%</span>
-        </div>
-
-        <div class="buttons">
-            <button id="watch-ad-btn" onclick="watchAd()">Watch Ad</button>
-            <button id="auto-ad-btn" onclick="startAutoAds()">Auto Show Ads</button>
-            <button id="stop-auto-btn" onclick="stopAutoAds()" disabled>Stop Auto Ads</button>
-            <button id="withdraw-btn" onclick="showWithdrawForm()">Withdraw</button>
-        </div>
-
-        <!-- Withdraw Section -->
-        <div class="withdraw-section" id="withdraw-section">
-            <h3 style="color: orange; margin-bottom: 15px;">Withdrawal Request</h3>
-            <input type="number" id="withdraw-amount" placeholder="Enter Points to Withdraw" min="0" />
-            <select id="payment-method">
-                <option value="toncoin">TONCOIN</option>
-            </select>
-            <input type="text" id="withdraw-toncoin-address" placeholder="Enter TONCOIN Address" />
-            <button onclick="withdrawPoints()">Withdraw</button>
+        <section id="withdraw-section">
+            <h2><i class="fas fa-wallet"></i> Ödeme Alma</h2>
+            <div class="input-group">
+                <label for="ton-address">TON Adresiniz</label>
+                <input type="text" id="ton-address" placeholder="Cüzdan adresinizi buraya girin...">
+            </div>
+            <div class="input-group">
+                <label for="withdraw-amount">Çekim Miktarı</label>
+                <input type="number" id="withdraw-amount" placeholder="Örn: 0.8">
+            </div>
+            <button id="withdraw-btn">Ödeme Talep Et</button>
             <p id="withdraw-status"></p>
+        </section>
+
+        <footer>
+            <a href="https://t.me/TorreAdsChannel" target="_blank" rel="noopener noreferrer">
+                <img src="telegram-logo.png" alt="Telegram Logosu" class="telegram-logo">
+                <span>Kanala Katıl</span>
+            </a>
+        </footer>
+    </div>
+
+    <div id="ad-modal-overlay" class="hidden">
+        <button id="close-modal-btn" class="close-btn">&times;</button>
+        <iframe id="ad-iframe" src="about:blank" allow="autoplay; fullscreen"></iframe>
+    </div>
+
+    <!-- Ad Blocker Detection -->
+    <div id="ad-bait" class="textads banner-ads ad-box" style="position: absolute; height: 1px; width: 1px; top: -1px; left: -1px; visibility: hidden;"></div>
+    <div id="adblock-overlay" class="hidden">
+        <div class="adblock-modal">
+            <h2><i class="fas fa-exclamation-triangle"></i> Reklam Engelleyici Tespit Edildi</h2>
+            <p>Uygulamayı kullanmaya devam etmek için lütfen reklam engelleyicinizi devre dışı bırakın ve sayfayı yenileyin.</p>
+            <p>Reklamlar, bu hizmeti ücretsiz sunmamızı sağlar.</p>
         </div>
     </div>
 
-    <script>
-        const MIN_WITHDRAW_POINTS = 5;
-        const ADMIN_USER_ID = 6665642603;
-        const BOT_TOKEN = "7474129750:AAHDOrtYnulZqB5V3CH2XaHR_02t_PVwi7M";
-
-        let watchedAdsCount = 0;
-        let earnedPoints = 0.0;
-        let autoAdInterval;
-
-        // Kullanıcı ismi simülasyonu
-        const telegramUserName = "@exampleUser"; // Bunu gerçek kullanıcı adı ile değiştir
-
-        document.getElementById("user-name").textContent = telegramUserName;
-
-        // LocalStorage'dan yükle
-        if (localStorage.getItem("watchedAdsCount")) {
-            watchedAdsCount = parseInt(localStorage.getItem("watchedAdsCount"));
-            earnedPoints = parseFloat(localStorage.getItem("earnedPoints"));
-            document.getElementById("watched-ads").textContent = watchedAdsCount;
-            document.getElementById("earned-points").textContent = earnedPoints.toFixed(2);
-            updateProgressCircle();
-        }
-
-        // Reklam izleme fonksiyonu
-        function watchAd() {
-            if (typeof show_9441902 === "function") {
-                show_9441902().then(() => {
-                    watchedAdsCount++;
-                    earnedPoints += 0.50;
-
-                    document.getElementById("watched-ads").textContent = watchedAdsCount;
-                    document.getElementById("earned-points").textContent = earnedPoints.toFixed(2);
-
-                    localStorage.setItem("watchedAdsCount", watchedAdsCount);
-                    localStorage.setItem("earnedPoints", earnedPoints.toFixed(2));
-
-                    updateProgressCircle();
-
-                    alert("You have seen an ad!");
-                });
-            } else {
-                alert("Ad SDK not loaded, please try again later.");
-            }
-        }
-
-        function updateProgressCircle() {
-            const percentage = Math.min(100, (watchedAdsCount / 10) * 100);
-            document.getElementById("ads-progress").textContent = `${percentage}%`;
-        }
-
-        function startAutoAds() {
-            autoAdInterval = setInterval(watchAd, 5000);
-            document.getElementById("auto-ad-btn").disabled = true;
-            document.getElementById("stop-auto-btn").disabled = false;
-        }
-
-        function stopAutoAds() {
-            clearInterval(autoAdInterval);
-            document.getElementById("auto-ad-btn").disabled = false;
-            document.getElementById("stop-auto-btn").disabled = true;
-        }
-
-        function showWithdrawForm() {
-            document.getElementById("withdraw-section").style.display = "block";
-        }
-
-        // Para çekme fonksiyonu
-        function withdrawPoints() {
-            const amountInput = document.getElementById("withdraw-amount").value;
-            const amount = parseFloat(amountInput);
-            const paymentMethod = document.getElementById("payment-method").value;
-            const toncoinAddress = document.getElementById("withdraw-toncoin-address").value.trim();
-
-            if (isNaN(amount) || amount < MIN_WITHDRAW_POINTS) {
-                document.getElementById("withdraw-status").textContent = `Minimum withdrawal amount is ${MIN_WITHDRAW_POINTS} points.`;
-                return;
-            }
-
-            if (amount > earnedPoints) {
-                document.getElementById("withdraw-status").textContent = `Insufficient balance. You have ${earnedPoints.toFixed(2)} points.`;
-                return;
-            }
-
-            if (!toncoinAddress) {
-                document.getElementById("withdraw-status").textContent = "Please enter your TONCOIN address.";
-                return;
-            }
-
-            // Basit TONCOIN adres uzunluk kontrolü (opsiyonel)
-            if (toncoinAddress.length !== 48) {
-                document.getElementById("withdraw-status").text
+    <script src="script.js"></script>
+</body>
+</html>
