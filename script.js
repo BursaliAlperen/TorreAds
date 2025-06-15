@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let balance = parseFloat(localStorage.getItem('tonBalance')) || 0.0;
 
     // Constants
-    const REWARD_AMOUNT = 0.0002;
+    const REWARD_AMOUNT = 0.0010; // Total reward for 5 ads
     const MIN_WITHDRAWAL = 0.75;
 
     const updateBalanceDisplay = () => {
@@ -34,50 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const watchAd = () => {
         watchAdBtn.disabled = true;
-        countdownEl.textContent = 'Reklam yeni sekmede açılıyor...';
+        countdownEl.textContent = 'Loading ads, please wait...';
         localStorage.removeItem('adWatchedResult'); // Clear previous state
 
-        const adWindow = window.open('watchads.html', '_blank');
-
-        if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
-            countdownEl.textContent = 'Lütfen açılır pencerelere izin verin ve tekrar deneyin.';
-            watchAdBtn.disabled = false;
-            setTimeout(() => { countdownEl.textContent = ''; }, 5000);
-            return;
-        }
-
-        // Poll for the result from the ad tab
-        const pollInterval = setInterval(() => {
-            // If the ad window was closed by the user before completion
-            if (adWindow.closed) {
-                clearInterval(pollInterval);
-                // Check if a result was set before closing, if not, it means user closed it manually
-                if (!localStorage.getItem('adWatchedResult')) { 
-                    countdownEl.textContent = 'Reklam sekmesi kapatıldı.';
-                    watchAdBtn.disabled = false;
-                    setTimeout(() => { countdownEl.textContent = ''; }, 3000);
-                }
-                return;
-            }
-
-            // Check for the result in localStorage
-            const result = localStorage.getItem('adWatchedResult');
-            if (result) {
-                if (result === 'success') {
-                    rewardUser();
-                    countdownEl.textContent = 'Tebrikler, ödül eklendi!';
-                } else {
-                    countdownEl.textContent = 'Reklam gösterilirken bir hata oluştu.';
-                }
-                
-                // Clean up
-                localStorage.removeItem('adWatchedResult');
-                clearInterval(pollInterval);
-                adWindow.close(); // Attempt to close the ad window
-                watchAdBtn.disabled = false;
-                setTimeout(() => { countdownEl.textContent = ''; }, 3000);
-            }
-        }, 1000); // Check every second
+        adIframe.src = 'watchads.html';
+        adModal.classList.remove('hidden');
     };
 
     const rewardUser = () => {
@@ -90,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         adModal.classList.add('hidden');
         adIframe.src = 'about:blank';
         watchAdBtn.disabled = false; // Ana butonu tekrar aktif et
-        countdownEl.textContent = ''; // Durum mesajını temizle
     };
 
     const handleAdResult = (event) => {
@@ -99,9 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.newValue === 'success') {
             rewardUser();
             closeAdModal();
-        } 
-        // Hata durumunda hiçbir şey yapma. Kullanıcı iframe içinde kalır,
-        // tekrar deneyebilir veya modalı manuel olarak kapatabilir.
+            countdownEl.textContent = 'Congratulations, reward added!';
+            setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+        } else if (event.newValue === 'error') {
+            closeAdModal();
+            countdownEl.textContent = 'An error occurred with ads. Please try again.';
+            setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+        }
         
         localStorage.removeItem('adWatchedResult');
     };
@@ -116,22 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = parseFloat(withdrawAmountInput.value);
 
         if (!address) {
-            setStatusMessage('Lütfen TON adresinizi girin.', true);
+            setStatusMessage('Please enter your TON address.', true);
             return;
         }
 
         if (isNaN(amount) || amount <= 0) {
-            setStatusMessage('Lütfen geçerli bir tutar girin.', true);
+            setStatusMessage('Please enter a valid amount.', true);
             return;
         }
         
         if (amount > balance) {
-            setStatusMessage('Bakiyeniz bu tutarı çekmek için yetersiz.', true);
+            setStatusMessage('Your balance is insufficient for this withdrawal.', true);
             return;
         }
 
         if (amount < MIN_WITHDRAWAL) {
-            setStatusMessage(`Minimum çekim tutarı ${MIN_WITHDRAWAL} TON'dur.`, true);
+            setStatusMessage(`The minimum withdrawal amount is ${MIN_WITHDRAWAL} TON.`, true);
             return;
         }
 
@@ -139,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         balance -= amount;
         updateBalanceDisplay();
         
-        setStatusMessage('Ödeme talebiniz onaylandı!', false);
+        setStatusMessage('Your payment request has been approved!', false);
         
         // Clear inputs after successful withdrawal
         tonAddressInput.value = '';
@@ -154,7 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
     watchAdBtn.addEventListener('click', watchAd);
     window.addEventListener('storage', handleAdResult);
     withdrawBtn.addEventListener('click', handleWithdrawal);
-    closeModalBtn.addEventListener('click', closeAdModal);
+    closeModalBtn.addEventListener('click', () => {
+        closeAdModal();
+        countdownEl.textContent = 'Ad watching cancelled.';
+        setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+    });
 
     // Initial setup
     updateBalanceDisplay();
@@ -169,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Disable functionality
                 watchAdBtn.disabled = true;
                 withdrawBtn.disabled = true;
-                watchAdBtn.textContent = 'Reklam Engelleyiciyi Kapatın';
+                watchAdBtn.textContent = 'Disable Ad Blocker';
             }
         }, 500);
     };
@@ -177,13 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAdBlocker();
 });
 
-
 // Rewarded interstitial
 
 show_9441902().then(() => {
     // You need to add your user reward function here, which will be executed after the user watches the ad.
     // For more details, please refer to the detailed instructions.
     alert('You have seen an ad!');
-})
-
-        
+});
