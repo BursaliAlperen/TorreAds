@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torre Ads - İzle Kazan</title>
+    <title>Torre Ads - Watch & Earn</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -14,36 +13,36 @@
         <header>
             <h1><i class="fas fa-coins"></i> Torre Ads</h1>
             <div class="balance-container">
-                <p>Mevcut Bakiyeniz:</p>
+                <p>Your Current Balance:</p>
                 <p><span id="balance">0.0000</span> TON</p>
             </div>
         </header>
 
         <main>
             <button id="watch-ad-btn">
-                Torre Ads Reklam İzle Kazan
+                Watch Ads & Earn
             </button>
             <p id="countdown"></p>
         </main>
 
         <section id="withdraw-section">
-            <h2><i class="fas fa-wallet"></i> Ödeme Alma</h2>
+            <h2><i class="fas fa-wallet"></i> Withdraw</h2>
             <div class="input-group">
-                <label for="ton-address">TON Adresiniz</label>
-                <input type="text" id="ton-address" placeholder="Cüzdan adresinizi buraya girin...">
+                <label for="ton-address">Your TON Address</label>
+                <input type="text" id="ton-address" placeholder="Enter your wallet address here...">
             </div>
             <div class="input-group">
-                <label for="withdraw-amount">Çekim Miktarı</label>
-                <input type="number" id="withdraw-amount" placeholder="Örn: 0.8">
+                <label for="withdraw-amount">Withdrawal Amount</label>
+                <input type="number" id="withdraw-amount" placeholder="e.g., 0.8">
             </div>
-            <button id="withdraw-btn">Ödeme Talep Et</button>
+            <button id="withdraw-btn">Request Payment</button>
             <p id="withdraw-status"></p>
         </section>
 
         <footer>
             <a href="https://t.me/TorreAdsChannel" target="_blank" rel="noopener noreferrer">
-                <img src="telegram-logo.png" alt="Telegram Logosu" class="telegram-logo">
-                <span>Kanala Katıl</span>
+                <img src="telegram-logo.png" alt="Telegram Logo" class="telegram-logo">
+                <span>Join Channel</span>
             </a>
         </footer>
     </div>
@@ -57,9 +56,9 @@
     <div id="ad-bait" class="textads banner-ads ad-box" style="position: absolute; height: 1px; width: 1px; top: -1px; left: -1px; visibility: hidden;"></div>
     <div id="adblock-overlay" class="hidden">
         <div class="adblock-modal">
-            <h2><i class="fas fa-exclamation-triangle"></i> Reklam Engelleyici Tespit Edildi</h2>
-            <p>Uygulamayı kullanmaya devam etmek için lütfen reklam engelleyicinizi devre dışı bırakın ve sayfayı yenileyin.</p>
-            <p>Reklamlar, bu hizmeti ücretsiz sunmamızı sağlar.</p>
+            <h2><i class="fas fa-exclamation-triangle"></i> Ad Blocker Detected</h2>
+            <p>To continue using the application, please disable your ad blocker and refresh the page.</p>
+            <p>Ads allow us to provide this service for free.</p>
         </div>
     </div>
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reklam İzle</title>
+    <title>Watch Ads</title>
     <!-- Reklam scripti burada yüklenir -->
     <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
     <link rel="stylesheet" href="style.css">
@@ -62,9 +62,9 @@
 </head>
 <body>
     <div id="ad-container">
-        <h1>Reklam Gösterimi</h1>
-        <p id="status-message">Reklam servisi yükleniyor, lütfen bekleyin...</p>
-        <button id="start-ad-btn" disabled>Reklamı Başlat</button>
+        <h1>Ad Display</h1>
+        <p id="status-message">Ad service is loading, please wait...</p>
+        <button id="start-ad-btn" disabled>Start Ads</button>
     </div>
 
     <script>
@@ -73,62 +73,66 @@
             const statusMessage = document.getElementById('status-message');
             let sdkLoaded = false;
 
-            // SDK'nın yüklenip yüklenmediğini kontrol et
+            // Check if the SDK is loaded
             const sdkCheckInterval = setInterval(() => {
                 if (typeof show_9441902 === 'function') {
                     sdkLoaded = true;
                     clearInterval(sdkCheckInterval);
-                    clearTimeout(sdkLoadTimeout); // Zaman aşımını temizle
-                    statusMessage.textContent = 'Reklam hazır. Ödül kazanmak için reklamı başlatın.';
+                    clearTimeout(sdkLoadTimeout); // Clear timeout
+                    statusMessage.textContent = 'Ad service is ready. Start the ads to earn your reward.';
                     startAdBtn.disabled = false;
                 }
-            }, 100); // Her 100ms'de bir kontrol et
+            }, 100); // Check every 100ms
 
-            // SDK yüklemesi için 5 saniyelik zaman aşımı
+            // 5-second timeout for SDK loading
             const sdkLoadTimeout = setTimeout(() => {
                 if (!sdkLoaded) {
                     clearInterval(sdkCheckInterval);
-                    statusMessage.textContent = 'Reklam servisi şu an kullanılamıyor. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.';
-                    // Buton devre dışı kalır
+                    statusMessage.textContent = 'The ad service is currently unavailable. Please refresh the page or try again later.';
+                    // Button remains disabled
                 }
             }, 5000);
 
-            // Reklam başlatma butonu tıklama olayı
+            // Ad start button click event
             startAdBtn.addEventListener('click', () => {
                 startAdBtn.disabled = true;
-                statusMessage.textContent = 'Reklam gösteriliyor... Lütfen kapatmayın.';
+                const totalAds = 5;
+                let adsWatched = 0;
 
-                if (typeof show_9441902 === 'function') {
-                    show_9441902('pop').then(() => {
+                const showNextAd = () => {
+                    if (adsWatched >= totalAds) {
                         localStorage.setItem('adWatchedResult', 'success');
-                        alert('Tebrikler, ödül kazandınız!');
-                        // Try to close the window automatically after the user sees the alert
-                        setTimeout(() => window.close(), 500);
-                    }).catch(e => {
-                        console.error("Ad error:", e);
+                        alert('Congratulations! You have watched all ads and earned a reward!');
+                        // The parent window will handle closing the modal.
+                        return;
+                    }
+
+                    adsWatched++;
+                    statusMessage.textContent = `Showing ad ${adsWatched} of ${totalAds}... Please do not close.`;
+
+                    if (typeof show_9441902 === 'function') {
+                        // Use rewarded interstitial format
+                        show_9441902().then(() => {
+                            // Successfully watched, show next ad
+                            showNextAd();
+                        }).catch(e => {
+                            console.error(`Ad ${adsWatched} error:`, e);
+                            localStorage.setItem('adWatchedResult', 'error');
+                            alert('Could not show ad. Please try again.');
+                            statusMessage.textContent = 'An error occurred. Please try again.';
+                            startAdBtn.disabled = false; // Re-enable button on failure
+                        });
+                    } else {
                         localStorage.setItem('adWatchedResult', 'error');
-                        alert('Reklam gösterilemedi.');
-                        statusMessage.textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
-                        startAdBtn.disabled = false; // Başarısızlık durumunda butonu tekrar aktif et
-                    });
-                } else {
-                    localStorage.setItem('adWatchedResult', 'error');
-                    alert('Reklam gösterilemedi.');
-                    statusMessage.textContent = 'Reklam servisi yüklenemedi. Sayfayı yenileyin.';
-                }
+                        alert('Could not show ad.');
+                        statusMessage.textContent = 'Ad service failed to load. Please refresh the page.';
+                        startAdBtn.disabled = false;
+                    }
+                };
+
+                showNextAd(); // Start the ad sequence
             });
         });
-      
-
-// Rewarded interstitial
-
-show_9441902().then(() => {
-    // You need to add your user reward function here, which will be executed after the user watches the ad.
-    // For more details, please refer to the detailed instructions.
-    alert('You have seen an ad!');
-})
-
-        
     </script>
 </body>
 </html>
