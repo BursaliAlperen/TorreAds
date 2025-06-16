@@ -20,16 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const adblockOverlay = document.getElementById('adblock-overlay');
     const adBait = document.getElementById('ad-bait');
 
+    // Referral DOM Elements
+    const refCountEl = document.getElementById('ref-count');
+    const refEarningsEl = document.getElementById('ref-earnings');
+    const refLinkInput = document.getElementById('ref-link');
+    const copyRefBtn = document.getElementById('copy-ref-btn');
+    const copyStatusEl = document.getElementById('copy-status');
+
     // State
     let balance = parseFloat(localStorage.getItem('tonBalance')) || 0.0;
+    // NOTE: Referral stats are stored but cannot be updated by new users without a backend.
+    // This is a UI representation of a feature that would require a server to be fully functional.
+    let referralCount = parseInt(localStorage.getItem('referralCount')) || 0;
+    let referralEarnings = parseFloat(localStorage.getItem('referralEarnings')) || 0.0;
 
     // Constants
     const REWARD_AMOUNT = 0.0010; // Total reward for 5 ads
+    const REFERRAL_BONUS = 0.01; // Bonus for a NEW user who was referred
     const MIN_WITHDRAWAL = 0.75;
 
     const updateBalanceDisplay = () => {
         balanceEl.textContent = balance.toFixed(4);
         localStorage.setItem('tonBalance', balance.toString());
+    };
+
+    const updateReferralDisplay = () => {
+        refCountEl.textContent = referralCount;
+        refEarningsEl.textContent = referralEarnings.toFixed(4);
+        localStorage.setItem('referralCount', referralCount.toString());
+        localStorage.setItem('referralEarnings', referralEarnings.toString());
     };
 
     const watchAd = () => {
@@ -114,6 +133,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 4000);
     };
 
+    const setupReferralSystem = () => {
+        // Use Telegram user ID for uniqueness, with a fallback for browsers
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        let userId = tgUser ? tgUser.id : localStorage.getItem('userUniqueId');
+
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substring(2, 11);
+            localStorage.setItem('userUniqueId', userId);
+        }
+
+        const refLink = `${window.location.origin}${window.location.pathname}?ref=${userId}`;
+        refLinkInput.value = refLink;
+
+        copyRefBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(refLink).then(() => {
+                copyStatusEl.textContent = 'Link copied to clipboard!';
+                setTimeout(() => { copyStatusEl.textContent = ''; }, 2000);
+            }).catch(err => {
+                copyStatusEl.textContent = 'Failed to copy link.';
+                console.error('Failed to copy text: ', err);
+                setTimeout(() => { copyStatusEl.textContent = ''; }, 2000);
+            });
+        });
+    };
+
+    const checkIncomingReferral = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerId = urlParams.get('ref');
+        const hasBeenReferred = localStorage.getItem('hasBeenReferred');
+
+        if (referrerId && !hasBeenReferred) {
+            // Give a bonus to the new user
+            balance += REFERRAL_BONUS;
+            updateBalanceDisplay();
+            localStorage.setItem('hasBeenReferred', 'true');
+
+            // Show a welcome message
+            countdownEl.textContent = `Welcome! You received a ${REFERRAL_BONUS.toFixed(2)} TON bonus!`;
+            setTimeout(() => { countdownEl.textContent = '' }, 5000);
+            
+            // Remove the ref parameter from the URL to prevent re-triggering on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            // NOTE: In a real app, you would now send `referrerId` to your backend
+            // to credit the person who referred this new user.
+        }
+    };
+
     // Event Listeners
     watchAdBtn.addEventListener('click', watchAd);
     window.addEventListener('storage', handleAdResult);
@@ -126,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial setup
     updateBalanceDisplay();
+    updateReferralDisplay();
+    setupReferralSystem();
+    checkIncomingReferral();
     localStorage.removeItem('adWatchedResult'); // Clean up on page load
 
     // Ad Blocker Check
