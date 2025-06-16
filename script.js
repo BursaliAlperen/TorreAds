@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('userUniqueId', userId);
         }
 
-        const refLink = `${window.location.origin}${window.location.pathname}?ref=${userId}`;
+        const refLink = `https://t.me/TorreAds_Bot?start=r${userId}`;
         refLinkInput.value = refLink;
 
         copyRefBtn.addEventListener('click', () => {
@@ -160,8 +160,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkIncomingReferral = () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const referrerId = urlParams.get('ref');
+        const refFromUrl = urlParams.get('ref');
+        const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
         const hasBeenReferred = localStorage.getItem('hasBeenReferred');
+        
+        let referrerId = null;
+
+        // Priority to new system: Telegram bot start_param
+        if (startParam && startParam.startsWith('r')) {
+            referrerId = startParam.substring(1);
+        } 
+        // Fallback to old system: URL parameter
+        else if (refFromUrl) {
+            referrerId = refFromUrl;
+        }
 
         if (referrerId && !hasBeenReferred) {
             // Give a bonus to the new user
@@ -173,8 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
             countdownEl.textContent = `Welcome! You received a ${REFERRAL_BONUS.toFixed(2)} TON bonus!`;
             setTimeout(() => { countdownEl.textContent = '' }, 5000);
             
-            // Remove the ref parameter from the URL to prevent re-triggering on refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
+            // Remove the ref parameter from the URL to prevent re-triggering on refresh, if it was there
+            if (refFromUrl) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
             // NOTE: In a real app, you would now send `referrerId` to your backend
             // to credit the person who referred this new user.

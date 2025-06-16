@@ -22,9 +22,9 @@ body {
     color: var(--text-color);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Align content to the top */
     min-height: 100vh;
-    padding: 1rem;
+    padding: 3rem 1rem; /* Add more space at the top and bottom */
 }
 
 #app {
