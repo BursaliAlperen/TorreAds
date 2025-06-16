@@ -21,17 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const adBait = document.getElementById('ad-bait');
 
     // Referral DOM Elements
-    const refCountEl = document.getElementById('ref-count');
-    const refEarningsEl = document.getElementById('ref-earnings');
     const refLinkInput = document.getElementById('ref-link');
     const copyRefBtn = document.getElementById('copy-ref-btn');
     const copyStatusEl = document.getElementById('copy-status');
 
     // State
     let balance = parseFloat(localStorage.getItem('tonBalance')) || 0.0;
-    // NOTE: Referral stats are stored but cannot be updated by new users without a backend.
+    // NOTE: Referral earnings are stored but cannot be updated by new users without a backend.
     // This is a UI representation of a feature that would require a server to be fully functional.
-    let referralCount = parseInt(localStorage.getItem('referralCount')) || 0;
     let referralEarnings = parseFloat(localStorage.getItem('referralEarnings')) || 0.0;
 
     // Constants
@@ -45,9 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateReferralDisplay = () => {
-        refCountEl.textContent = referralCount;
         refEarningsEl.textContent = referralEarnings.toFixed(4);
-        localStorage.setItem('referralCount', referralCount.toString());
         localStorage.setItem('referralEarnings', referralEarnings.toString());
     };
 
@@ -162,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
         const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
-        const hasBeenReferred = localStorage.getItem('hasBeenReferred');
         
         let referrerId = null;
 
@@ -175,23 +169,28 @@ document.addEventListener('DOMContentLoaded', () => {
             referrerId = refFromUrl;
         }
 
-        if (referrerId && !hasBeenReferred) {
-            // Give a bonus to the new user
-            balance += REFERRAL_BONUS;
-            updateBalanceDisplay();
-            localStorage.setItem('hasBeenReferred', 'true');
+        if (referrerId) {
+            // As a welcome bonus, we reward the NEW user for joining via a link,
+            // as we cannot securely reward the referrer on the client-side.
+            const hasReceivedBonus = localStorage.getItem('receivedReferralBonus');
+            if (!hasReceivedBonus) {
+                balance += REFERRAL_BONUS;
+                updateBalanceDisplay();
+                
+                // Show a confirmation message in the countdown area
+                countdownEl.textContent = `Welcome! You received a ${REFERRAL_BONUS.toFixed(4)} TON bonus!`;
+                setTimeout(() => {
+                    countdownEl.textContent = '';
+                }, 4000);
 
-            // Show a welcome message
-            countdownEl.textContent = `Welcome! You received a ${REFERRAL_BONUS.toFixed(2)} TON bonus!`;
-            setTimeout(() => { countdownEl.textContent = '' }, 5000);
+                // Mark that this user has received the bonus to prevent re-awarding
+                localStorage.setItem('receivedReferralBonus', 'true');
+            }
             
-            // Remove the ref parameter from the URL to prevent re-triggering on refresh, if it was there
+            // Remove the ref parameter from the URL to prevent issues on refresh, if it was there
             if (refFromUrl) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-
-            // NOTE: In a real app, you would now send `referrerId` to your backend
-            // to credit the person who referred this new user.
         }
     };
 
@@ -207,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial setup
     updateBalanceDisplay();
-    updateReferralDisplay();
     setupReferralSystem();
     checkIncomingReferral();
     localStorage.removeItem('adWatchedResult'); // Clean up on page load
