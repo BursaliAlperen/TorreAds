@@ -112,6 +112,99 @@ main {
     min-height: 24px;
 }
 
+/* New Referral Section Styles */
+#referral-section {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border: 1px solid #333;
+}
+
+#referral-section h2 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.ref-description {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.ref-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    background-color: var(--secondary-color);
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+
+.ref-stats div p {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 0.25rem;
+}
+
+.ref-stats div span {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.ref-stats div span span {
+    color: var(--success-color);
+}
+
+.ref-link-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.ref-link-wrapper input {
+    flex-grow: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+#copy-ref-btn {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: 1px solid var(--primary-color);
+    padding: 0.75rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+#copy-ref-btn:hover {
+    background-color: #0077b3;
+}
+
+#copy-status {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--success-color);
+    min-height: 18px;
+    font-weight: 600;
+}
+
 #withdraw-section {
     background-color: var(--background-color);
     padding: 1.5rem;
@@ -183,32 +276,6 @@ main {
     min-height: 20px;
     font-size: 0.9rem;
     transition: color 0.3s ease;
-}
-
-footer {
-    text-align: center;
-    margin-top: 0.5rem;
-    opacity: 0.8;
-}
-
-footer a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: #aab;
-    font-weight: 600;
-    transition: color 0.3s ease, transform 0.3s ease;
-}
-
-footer a:hover {
-    color: var(--text-color);
-    transform: scale(1.05);
-}
-
-.telegram-logo {
-    width: 24px;
-    height: 24px;
 }
 
 /* Ad Modal Styles */
@@ -303,4 +370,33 @@ footer a:hover {
     margin-bottom: 0;
     font-size: 0.9rem;
     opacity: 0.8;
+}
+
+footer {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+}
+
+footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+}
+
+footer a:hover {
+    color: #00aaff;
+    background-color: var(--background-color);
+}
+
+.telegram-logo {
+    width: 24px;
+    height: 24px;
 }

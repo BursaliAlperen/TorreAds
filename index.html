@@ -25,6 +25,31 @@
             <p id="countdown"></p>
         </main>
 
+        <section id="referral-section">
+            <h2><i class="fas fa-users"></i> Referral System</h2>
+            <p class="ref-description">Earn 0.01 TON for every friend that joins using your link!</p>
+            <div class="ref-stats">
+                <div>
+                    <p>Your Referrals</p>
+                    <span id="ref-count">0</span>
+                </div>
+                <div>
+                    <p>Referral Earnings</p>
+                    <span><span id="ref-earnings">0.0000</span> TON</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="ref-link">Share your referral link:</label>
+                <div class="ref-link-wrapper">
+                    <input type="text" id="ref-link" placeholder="Generating your link..." readonly>
+                    <button id="copy-ref-btn" title="Copy link">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <p id="copy-status" class="copy-status"></p>
+        </section>
+
         <section id="withdraw-section">
             <h2><i class="fas fa-wallet"></i> Withdraw</h2>
             <div class="input-group">
