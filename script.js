@@ -14,65 +14,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const withdrawAmountInput = document.getElementById('withdraw-amount');
     const withdrawBtn = document.getElementById('withdraw-btn');
     const withdrawStatusEl = document.getElementById('withdraw-status');
-    const adModal = document.getElementById('ad-modal-overlay');
-    const adIframe = document.getElementById('ad-iframe');
-    const closeModalBtn = document.getElementById('close-modal-btn');
     const adblockOverlay = document.getElementById('adblock-overlay');
     const adBait = document.getElementById('ad-bait');
 
     // State
     let balance = parseFloat(localStorage.getItem('tonBalance')) || 0.0;
+    let statusTimeout = null;
 
     // Constants
-    const REWARD_AMOUNT = 0.0001; // Reward for 1 ad
+    const REWARD_AMOUNT = 0.0003; // Reward for 1 ad
     const MIN_WITHDRAWAL = 0.75;
+    const AD_SDK_URL = '//libtl.com/sdk.js';
+    const AD_ZONE_ID = '9441902';
 
     const updateBalanceDisplay = () => {
         balanceEl.textContent = balance.toFixed(4);
         localStorage.setItem('tonBalance', balance.toString());
     };
 
+    const showStatus = (element, message, duration = 3000) => {
+        element.textContent = message;
+        if (statusTimeout) clearTimeout(statusTimeout);
+        if (duration > 0) {
+            statusTimeout = setTimeout(() => {
+                element.textContent = '';
+            }, duration);
+        }
+    };
+
     const watchAd = () => {
         watchAdBtn.disabled = true;
-        countdownEl.textContent = 'Loading ads, please wait...';
-        localStorage.removeItem('adWatchedResult'); // Clear previous state
+        showStatus(countdownEl, 'Loading ad, please wait...', 0);
 
-        adIframe.src = 'watchads.html';
-        adModal.classList.remove('hidden');
-    };
-
-    const rewardUser = () => {
-        // Sadece ödül verme mantığını yönetir
-        balance += REWARD_AMOUNT;
-        updateBalanceDisplay();
-    };
-
-    const closeAdModal = () => {
-        adModal.classList.add('hidden');
-        adIframe.src = 'about:blank';
-        watchAdBtn.disabled = false; // Ana butonu tekrar aktif et
-    };
-
-    const handleAdResult = (event) => {
-        if (event.key !== 'adWatchedResult') return;
-
-        if (event.newValue === 'success') {
-            rewardUser();
-            closeAdModal();
-            countdownEl.textContent = 'Congratulations, reward added!';
-            setTimeout(() => { countdownEl.textContent = ''; }, 3000);
-        } else if (event.newValue === 'error') {
-            closeAdModal();
-            countdownEl.textContent = 'An error occurred with ads. Please try again.';
-            setTimeout(() => { countdownEl.textContent = ''; }, 3000);
+        // Remove any old ad scripts to prevent conflicts
+        const oldScript = document.querySelector(`script[src="${AD_SDK_URL}"]`);
+        if (oldScript) {
+            oldScript.remove();
         }
-        
-        localStorage.removeItem('adWatchedResult');
+
+        // Dynamically create and load the ad SDK script
+        const script = document.createElement('script');
+        script.src = AD_SDK_URL;
+        script.dataset.zone = AD_ZONE_ID;
+        script.dataset.sdk = `show_${AD_ZONE_ID}`;
+        script.onload = handleAdSDK;
+        script.onerror = () => {
+            showStatus(countdownEl, 'Ad service failed to load. Please try again.');
+            watchAdBtn.disabled = false;
+        };
+        document.body.appendChild(script);
+    };
+
+    const handleAdSDK = () => {
+        const adFunctionName = `show_${AD_ZONE_ID}`;
+        if (typeof window[adFunctionName] === 'function') {
+            showStatus(countdownEl, 'Please complete the ad to receive your reward.', 0);
+            
+            window[adFunctionName]().then(() => {
+                // Ad watched successfully
+                balance += REWARD_AMOUNT;
+                updateBalanceDisplay();
+                showStatus(countdownEl, `Congratulations! You've earned ${REWARD_AMOUNT.toFixed(4)} TON.`);
+                watchAdBtn.disabled = false;
+            }).catch(e => {
+                // Ad failed or was closed early
+                console.error('Ad error:', e);
+                showStatus(countdownEl, 'Ad could not be shown. Please try again.');
+                watchAdBtn.disabled = false;
+            });
+        } else {
+            // This case should be rare due to onload, but it's good practice
+            showStatus(countdownEl, 'Ad service is not available. Please try again later.');
+            watchAdBtn.disabled = false;
+        }
     };
     
-    const setStatusMessage = (message, isError) => {
+    const setWithdrawStatusMessage = (message, isError) => {
         withdrawStatusEl.textContent = message;
         withdrawStatusEl.style.color = isError ? 'var(--error-color)' : 'var(--success-color)';
+        setTimeout(() => {
+            withdrawStatusEl.textContent = '';
+        }, 4000);
     };
 
     const handleWithdrawal = () => {
@@ -80,22 +102,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = parseFloat(withdrawAmountInput.value);
 
         if (!address) {
-            setStatusMessage('Please enter your TON address.', true);
+            setWithdrawStatusMessage('Please enter your TON address.', true);
             return;
         }
 
         if (isNaN(amount) || amount <= 0) {
-            setStatusMessage('Please enter a valid amount.', true);
+            setWithdrawStatusMessage('Please enter a valid amount.', true);
             return;
         }
         
         if (amount > balance) {
-            setStatusMessage('Your balance is insufficient for this withdrawal.', true);
+            setWithdrawStatusMessage('Your balance is insufficient for this withdrawal.', true);
             return;
         }
 
         if (amount < MIN_WITHDRAWAL) {
-            setStatusMessage(`The minimum withdrawal amount is ${MIN_WITHDRAWAL} TON.`, true);
+            setWithdrawStatusMessage(`The minimum withdrawal amount is ${MIN_WITHDRAWAL} TON.`, true);
             return;
         }
 
@@ -103,30 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
         balance -= amount;
         updateBalanceDisplay();
         
-        setStatusMessage('Your payment request has been approved!', false);
+        setWithdrawStatusMessage('Your payment request has been approved!', false);
         
         // Clear inputs after successful withdrawal
         tonAddressInput.value = '';
         withdrawAmountInput.value = '';
-
-        setTimeout(() => {
-            setStatusMessage('', false);
-        }, 4000);
     };
 
     // Event Listeners
     watchAdBtn.addEventListener('click', watchAd);
-    window.addEventListener('storage', handleAdResult);
     withdrawBtn.addEventListener('click', handleWithdrawal);
-    closeModalBtn.addEventListener('click', () => {
-        closeAdModal();
-        countdownEl.textContent = 'Ad watching cancelled.';
-        setTimeout(() => { countdownEl.textContent = ''; }, 3000);
-    });
 
     // Initial setup
     updateBalanceDisplay();
-    localStorage.removeItem('adWatchedResult'); // Clean up on page load
 
     // Ad Blocker Check
     const checkAdBlocker = () => {
@@ -137,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Disable functionality
                 watchAdBtn.disabled = true;
                 withdrawBtn.disabled = true;
-                watchAdBtn.textContent = 'Disable Ad Blocker';
+                watchAdBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Disable Ad Blocker';
             }
         }, 500);
     };

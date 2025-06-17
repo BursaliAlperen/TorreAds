@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Ads</title>
-    <!-- Reklam scripti burada yüklenir -->
-    <script src='//libtl.com/sdk.js' data-zone='9441902' data-sdk='show_9441902'></script>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
@@ -62,9 +60,9 @@
 </head>
 <body>
     <div id="ad-container">
-        <h1>Ad Display</h1>
+        <h1>Watch Ad & Earn</h1>
         <p id="status-message">Ad service is loading, please wait...</p>
-        <button id="start-ad-btn" disabled>Start Ads</button>
+        <button id="start-ad-btn" disabled>Start Ad</button>
     </div>
 
     <script>
@@ -79,7 +77,7 @@
                     sdkLoaded = true;
                     clearInterval(sdkCheckInterval);
                     clearTimeout(sdkLoadTimeout); // Clear timeout
-                    statusMessage.textContent = 'Ad service is ready. Start the ads to earn your reward.';
+                    statusMessage.textContent = 'Ad service is ready. Start the ad to earn your reward.';
                     startAdBtn.disabled = false;
                 }
             }, 100); // Check every 100ms
@@ -96,41 +94,26 @@
             // Ad start button click event
             startAdBtn.addEventListener('click', () => {
                 startAdBtn.disabled = true;
-                const totalAds = 5;
-                let adsWatched = 0;
+                statusMessage.textContent = 'Showing ad... Please do not close.';
 
-                const showNextAd = () => {
-                    if (adsWatched >= totalAds) {
+                if (typeof show_9441902 === 'function') {
+                    // Use rewarded interstitial format for a single ad
+                    show_9441902().then(() => {
+                        // Successfully watched the ad
                         localStorage.setItem('adWatchedResult', 'success');
-                        alert('Congratulations! You have watched all ads and earned a reward!');
-                        // The parent window will handle closing the modal.
-                        return;
-                    }
-
-                    adsWatched++;
-                    statusMessage.textContent = `Showing ad ${adsWatched} of ${totalAds}... Please do not close.`;
-
-                    if (typeof show_9441902 === 'function') {
-                        // Use rewarded interstitial format
-                        show_9441902().then(() => {
-                            // Successfully watched, show next ad
-                            showNextAd();
-                        }).catch(e => {
-                            console.error(`Ad ${adsWatched} error:`, e);
-                            localStorage.setItem('adWatchedResult', 'error');
-                            alert('Could not show ad. Please try again.');
-                            statusMessage.textContent = 'An error occurred. Please try again.';
-                            startAdBtn.disabled = false; // Re-enable button on failure
-                        });
-                    } else {
+                        statusMessage.textContent = 'Congratulations! You have earned a reward!';
+                        // The parent window will detect the storage change and close the modal.
+                    }).catch(e => {
+                        console.error('Ad error:', e);
                         localStorage.setItem('adWatchedResult', 'error');
-                        alert('Could not show ad.');
-                        statusMessage.textContent = 'Ad service failed to load. Please refresh the page.';
-                        startAdBtn.disabled = false;
-                    }
-                };
-
-                showNextAd(); // Start the ad sequence
+                        statusMessage.textContent = 'An error occurred. Please try again.';
+                        startAdBtn.disabled = false; // Re-enable button on failure
+                    });
+                } else {
+                    localStorage.setItem('adWatchedResult', 'error');
+                    statusMessage.textContent = 'Ad service failed to load. Please refresh the page.';
+                    startAdBtn.disabled = false;
+                }
             });
         });
     </script>

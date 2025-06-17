@@ -90,6 +90,10 @@ main {
     transition: all 0.3s ease;
     width: 100%;
     box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
 }
 
 #watch-ad-btn:hover:not(:disabled) {
