@@ -7,8 +7,11 @@ export const MINIMUM_WITHDRAWAL = 0.05;
 // The duration of the simulated ad in seconds.
 export const AD_DURATION_SECONDS = 15;
 
-// The bonus amount credited to a referrer when their referred user watches their first ad.
+// The bonus amount credited to a referrer when their referred user watches a specific number of ads.
 export const REFERRAL_BONUS_FOR_REFERRER = 0.01;
+
+// The number of ads a referred user must watch for the referrer to receive a bonus.
+export const REFERRAL_ADS_WATCH_TARGET = 45;
 
 // The bonus amount a new user receives for joining via a referral link.
 export const REFERRAL_BONUS_FOR_REFERRED = 0.005;
