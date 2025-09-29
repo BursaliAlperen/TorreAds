@@ -713,7 +713,35 @@ const handleJoinGroup = async () => {
         updateUI();
     }, 3000);
 };
-                const handleWithdraw = async (e) => {
+                                tg.showAlert("✅ Referral link copied!");
+            });
+        };
+
+        const setupNavigation = () => {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const pages = document.querySelectorAll('.page');
+            
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    
+                    // Tüm sayfa ve butonları resetle
+                    pages.forEach(page => page.classList.remove('active'));
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Aktif sayfa ve butonu ayarla
+                    document.getElementById(pageId).classList.add('active');
+                    button.classList.add('active');
+                    
+                    // TON fiyatını güncelle (withdraw sayfasına geçerse)
+                    if (pageId === 'withdraw-page') {
+                        updateTONPrice();
+                    }
+                });
+            });
+        };
+
+        const handleWithdraw = async (e) => {
             e.preventDefault();
             const method = document.getElementById('withdraw-method').value;
             const tonAddress = document.getElementById('ton-address').value;
@@ -846,6 +874,55 @@ const handleJoinGroup = async () => {
                     }
                 });
             });
+        };
+
+        // EVENT LISTENER'LARI DOĞRU YERDE KUR
+        const setupEventListeners = () => {
+            console.log("Setting up event listeners...");
+            
+            // Butonları kontrol et
+            console.log("Watch ad button:", watchAdBtn);
+            console.log("Test ad button:", testAdBtn);
+            console.log("Copy ref button:", copyRefLinkBtn);
+            
+            // Event listener'ları ekle
+            if (watchAdBtn) {
+                watchAdBtn.addEventListener('click', handleWatchAd);
+                console.log("Watch ad listener added");
+            }
+            
+            if (testAdBtn) {
+                testAdBtn.addEventListener('click', handleTestAd);
+                console.log("Test ad listener added");
+            }
+            
+            if (joinChannelBtn) {
+                joinChannelBtn.addEventListener('click', handleJoinChannel);
+                console.log("Join channel listener added");
+            }
+            
+            if (joinGroupBtn) {
+                joinGroupBtn.addEventListener('click', handleJoinGroup);
+                console.log("Join group listener added");
+            }
+            
+            if (withdrawForm) {
+                withdrawForm.addEventListener('submit', handleWithdraw);
+                console.log("Withdraw form listener added");
+            }
+            
+            if (copyRefLinkBtn) {
+                copyRefLinkBtn.addEventListener('click', copyReferralLink);
+                console.log("Copy ref listener added");
+            }
+            
+            if (amountInput) {
+                amountInput.addEventListener('input', updateTONConversionInfo);
+                console.log("Amount input listener added");
+            }
+            
+            setupNavigation();
+            console.log("All event listeners setup completed");
         };
 
         // Uygulamayı başlat
