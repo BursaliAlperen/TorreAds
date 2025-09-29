@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ton Withdraw & Ads App (Obfuscated Jsonbin)</title>
+  <title>TorreAds</title>
 
-  <!-- GigaPub Reklam Scripti -->
+  <!-- GigaPub Ad Script -->
   <script src="https://ad.gigapub.tech/script?id=986"></script>
 
-  <!-- Google font + FontAwesome -->
+  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -16,7 +16,7 @@
     :root{--bg:#f6f7fb;--card:#fff;--accent:#0a84ff;--muted:#666}
     *{box-sizing:border-box}
     body{font-family:"Nunito",sans-serif;margin:0;background:var(--bg);color:#111}
-    #app{max-width:520px;margin:0 auto;padding-bottom:80px}
+    #app{max-width:520px;margin:0 auto;padding-bottom:100px}
     header{display:flex;align-items:center;padding:18px;border-bottom:1px solid #e6eaf0;background:var(--card)}
     #user-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;margin-right:12px;border:2px solid var(--accent)}
     h1{font-size:1.1rem;margin:0}
@@ -29,12 +29,12 @@
     #referral-link{flex:1;padding:10px;border-radius:8px;border:1px dashed #cfd8e3;background:#fafbff;font-size:0.9rem}
     button.btn{padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
     .task{display:flex;flex-direction:column;gap:10px}
-    .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);max-width:520px;margin:0 auto;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #e6eaf0}
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);max-width:520px;margin:0 auto;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #e6eaf0;z-index:9999}
     .nav-btn{background:transparent;border:0;display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer}
     .nav-btn.active{color:var(--accent);font-weight:700}
     form .form-group{margin-bottom:12px}
     label{display:block;font-weight:700;margin-bottom:6px}
-    input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;background:#fff}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;background:#fff}
     .note{font-size:0.9rem;color:#333;background:#fff;padding:10px;border-radius:8px;border:1px solid #f0f0f0}
     .loader{width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
@@ -45,41 +45,48 @@
     <header>
       <img id="user-photo" src="https://i.imgur.com/placeholder.png" alt="user">
       <div>
-        <h1 id="user-name">Yükleniyor... <i class="fas fa-check-circle" style="color:var(--accent);margin-left:6px"></i></h1>
+        <h1 id="user-name">Guest User <i class="fas fa-check-circle" style="color:var(--accent);margin-left:6px"></i></h1>
         <p class="sub"> Balance: $<span id="user-balance">0.00</span></p>
       </div>
     </header>
 
     <main id="main-content">
-      <!-- Dashboard -->
+      <!-- Home -->
       <section id="home-page" class="page">
-        <h2>Kontrol Paneli</h2>
+        <h2>Dashboard</h2>
         <div class="grid">
           <div class="card stat">
-            <div><div class="big" id="daily-ads-watched">0</div><div class="small">Günlük Reklam</div></div>
-            <div><div class="big" id="referral-count">0</div><div class="small">Referrals</div></div>
+            <div>
+              <div class="big" id="daily-ads-watched">0</div>
+              <div style="font-size:0.9rem;color:var(--muted)">Daily Ads</div>
+            </div>
+            <div>
+              <div class="big" id="referral-count">0</div>
+              <div style="font-size:0.9rem;color:var(--muted)">Referrals</div>
+            </div>
           </div>
+
           <div class="card">
             <div style="display:flex;gap:8px;align-items:center">
               <input id="referral-link" readonly value="">
-              <button id="copy-ref-link-btn" class="btn">Kopyala</button>
+              <button id="copy-ref-link-btn" class="btn">Copy</button>
             </div>
-            <p style="font-size:0.9rem;margin-top:6px">Her referans için $0.02 kazanırsınız.</p>
+            <p style="font-size:0.9rem;margin-top:6px">Earn $0.02 per referral.</p>
           </div>
         </div>
       </section>
 
       <!-- Tasks -->
       <section id="tasks-page" class="page" style="display:none">
-        <h2>Görevler</h2>
+        <h2>Tasks</h2>
         <div class="card task">
-          <div><strong>Reklam İzle</strong> – $0.25 kazan</div>
-          <button id="watch-ad-btn" class="btn">Reklam İzle</button>
+          <div><strong>Watch Ad</strong> – earn $0.25</div>
+          <button id="watch-ad-btn" class="btn">Watch Ad</button>
         </div>
         <div class="card task">
-          <div><strong>Join Kanal / Grup</strong></div>
-          <a href="https://t.me/Torrelabs" target="_blank" class="btn">Kanal</a>
-          <a href="https://t.me/torreAdsChat" target="_blank" class="btn">Grup</a>
+          <div><strong>Join Channel / Group</strong></div>
+          <a href="https://t.me/Torrelabs" target="_blank" class="btn">Channel</a>
+          <a href="https://t.me/torreAdsChat" target="_blank" class="btn">Group</a>
         </div>
       </section>
 
@@ -88,22 +95,22 @@
         <h2>Withdraw (TON)</h2>
         <form id="withdraw-form" class="card">
           <div class="form-group">
-            <label for="withdraw-amount">Tutar ($)</label>
+            <label for="withdraw-amount">Amount ($)</label>
             <input type="number" id="withdraw-amount" step="0.01" required>
           </div>
           <div class="form-group">
-            <label for="ton-address">TON Adresi</label>
+            <label for="ton-address">TON Address</label>
             <input type="text" id="ton-address" required>
           </div>
-          <div class="note" id="ton-warning">Güncel TON fiyatı alınıyor...</div>
-          <button id="withdraw-submit-btn" class="btn" type="submit">Çekim İsteği Gönder</button>
+          <div class="note" id="ton-warning">Fetching current TON price...</div>
+          <button id="withdraw-submit-btn" class="btn" type="submit">Send Request</button>
         </form>
       </section>
     </main>
 
     <nav class="bottom-nav">
       <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i>Home</button>
-      <button class="nav-btn" data-page="tasks-page"><i class="fas fa-play"></i>Görev</button>
+      <button class="nav-btn" data-page="tasks-page"><i class="fas fa-play"></i>Tasks</button>
       <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i>Withdraw</button>
     </nav>
   </div>
@@ -111,328 +118,54 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
   (function(){
-    // ---------- CONFIG (obfuscated jsonbin keys as number arrays) ----------
-    // XOR key used to obfuscate characters (must be same here & during decode)
     const XOR_KEY = 23;
+    const BIN_ID_ARR = [33,47,115,118,32,33,113,118,115,39,114,118,47,47,38,113,35,39,47,113,38,37,35,47];
+    const API_KEY_ARR = [51,37,118,51,38,39,51,92,83,57,32,102,109,92,102,98,98,86,33,110,93,117,91,100,85,88,69,69,88,99,96,122,78,116,56,114,47,115,65,111,79,109,116,109,103,126,68,81,97,110,103,111,94,66,46,121,118,126,46,80];
+    function decode(arr){return arr.map(n=>String.fromCharCode(n^XOR_KEY)).join('');}
+    const BIN_ID=decode(BIN_ID_ARR), API_KEY=decode(API_KEY_ARR);
+    const PIPEDREAM="https://eo3h4zf914hhqv7.m.pipedream.net";
+    const REF_REWARD=0.02,AD_REWARD=0.25,MIN_WD=0.02;
+    const PRICE_URL="https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd";
 
-    // BIN_ID obfuscated: each number = original_char_code XOR XOR_KEY
-    const JSONBIN_BIN_ID_ARR = [
-      33,47,115,118,32,33,113,118,115,39,114,118,47,47,38,113,35,39,47,113,38,37,35,47
-    ];
+    let userState={balance_usd:0,referrals:[],dailyAds:0,userId:null};
 
-    // API_KEY obfuscated (length 60): each number = original_char_code XOR XOR_KEY
-    const JSONBIN_API_KEY_ARR = [
-      51,37,118,51,38,39,51,92,83,57,32,102,109,92,102,98,98,86,33,110,93,117,91,100,85,88,69,69,88,99,96,122,78,116,56,114,47,115,65,111,79,109,116,109,103,126,68,81,97,110,103,111,94,66,46,121,118,126,46,80
-    ];
+    const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:{initDataUnsafe:{},ready:()=>{},HapticFeedback:{notificationOccurred:()=>{}}};
 
-    // decode function: convert numeric array back to string by XORing with XOR_KEY
-    function decodeXorArr(arr){
-      return arr.map(n => String.fromCharCode(n ^ XOR_KEY)).join('');
-    }
-
-    const JSONBIN_BIN_ID = decodeXorArr(JSONBIN_BIN_ID_ARR);
-    const JSONBIN_API_KEY = decodeXorArr(JSONBIN_API_KEY_ARR);
-
-    // ---------- Other config ----------
-    const PIPEDREAM_ENDPOINT = "https://eo3h4zf914hhqv7.m.pipedream.net";
-    const REF_REWARD_USD = 0.02, AD_REWARD_USD = 0.25, MIN_WITHDRAW_USD = 0.02;
-    const PRICE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd";
-
-    // ---------- UI & State ----------
-    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : { initDataUnsafe:{}, ready:()=>{}, HapticFeedback:{ notificationOccurred:()=>{} }, openTelegramLink: (l)=> window.open(l,'_blank') };
-    let userState = { balance_usd:0, referrals:[], dailyAds:0, userId:null };
-
-    const balEl=document.getElementById('user-balance'),
-          refCount=document.getElementById('referral-count'),
-          refLink=document.getElementById('referral-link'),
-          watchAdBtn=document.getElementById('watch-ad-btn'),
-          withdrawForm=document.getElementById('withdraw-form'),
-          withdrawAmt=document.getElementById('withdraw-amount'),
-          tonAddr=document.getElementById('ton-address'),
-          tonWarn=document.getElementById('ton-warning');
-
-    // ---------- Storage helpers (local + jsonbin) ----------
-    function storageKey(uid){ return `monetag_user_${uid}`; }
-
-    async function saveState(){
-      try{
-        localStorage.setItem(storageKey(userState.userId), JSON.stringify(userState));
-      }catch(e){ console.warn('local save fail', e); }
-
-      // try to save to jsonbin (PUT whole users object - simple approach)
-      try{
-        // fetch current bin
-        const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-          headers: { 'X-Master-Key': JSONBIN_API_KEY }
-        });
-        if(resp.ok){
-          const js = await resp.json();
-          const record = js.record || {};
-          record.users = record.users || {};
-          record.users[String(userState.userId)] = userState;
-          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-            method:'PUT',
-            headers: {
-              'Content-Type':'application/json',
-              'X-Master-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(record)
-          });
-        } else {
-          // if bin not readable, attempt to PUT new minimal record
-          const record = { users: { [String(userState.userId)]: userState } };
-          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-            method:'PUT',
-            headers: {
-              'Content-Type':'application/json',
-              'X-Master-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(record)
-          });
-        }
-      }catch(e){
-        console.warn('jsonbin save failed', e);
-      }
-    }
-
-    async function loadState(){
-      // try local first
-      try{
-        const local = localStorage.getItem(storageKey(userState.userId));
-        if(local){ Object.assign(userState, JSON.parse(local)); return; }
-      }catch(e){}
-
-      // try jsonbin
-      try{
-        const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-          headers: { 'X-Master-Key': JSONBIN_API_KEY }
-        });
-        if(resp.ok){
-          const js = await resp.json();
-          const record = js.record || {};
-          if(record.users && record.users[String(userState.userId)]){
-            Object.assign(userState, record.users[String(userState.userId)]);
-          }
-        }
-      }catch(e){
-        console.warn('jsonbin load failed', e);
-      }
-    }
-
-    // ---------- UI helpers ----------
     function updateUI(){
-      balEl.textContent = (Number(userState.balance_usd)||0).toFixed(2);
-      refCount.textContent = (userState.referrals ? userState.referrals.length : 0);
-      refLink.value = `${location.origin}${location.pathname}?start=ref_${userState.userId}`;
+      document.getElementById('user-balance').textContent=(+userState.balance_usd).toFixed(2);
+      document.getElementById('referral-count').textContent=(userState.referrals||[]).length;
+      document.getElementById('referral-link').value=`${location.origin}${location.pathname}?start=ref_${userState.userId}`;
     }
 
-    // ---------- Price fetch ----------
-    async function fetchTonPriceAndUpdateWarning(){
-      try{
-        const r = await fetch(PRICE_URL);
-        if(!r.ok) throw new Error('price fetch fail');
-        const d = await r.json();
-        const tonUsd = Number((d.toncoin && d.toncoin.usd) || 0);
-        if(!tonUsd) throw new Error('invalid price');
-        const updateWarning = () => {
-          const usd = Number(withdrawAmt.value) || 0;
-          if(usd <= 0){
-            tonWarn.innerText = `Güncel TON fiyatı: $${tonUsd} — Lütfen çekilecek USD tutarını girin.`;
-          } else {
-            const tonAmount = usd / tonUsd;
-            tonWarn.innerHTML = `Güncel TON fiyatı: <strong>$${tonUsd.toFixed(6)}</strong>. <br>Örnek: $${usd.toFixed(4)} ≈ <strong>${tonAmount.toFixed(6)} TON</strong>. (Fiyat değişebilir)`;
-          }
-        };
-        withdrawAmt.removeEventListener('input', updateWarning);
-        withdrawAmt.addEventListener('input', updateWarning);
-        updateWarning();
-        return tonUsd;
-      }catch(e){
-        tonWarn.innerText = 'Ton fiyatı alınamadı. Lütfen tekrar deneyin.';
-        console.warn(e);
-        return null;
-      }
-    }
-
-    // ---------- Referral award (best-effort) ----------
-    async function awardReferralTo(refId){
-      // best-effort: if jsonbin configured, increment referrer balance there
-      try{
-        const existing = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-          headers: { 'X-Master-Key': JSONBIN_API_KEY }
-        });
-        if(existing.ok){
-          const js = await existing.json();
-          const record = js.record || {};
-          record.users = record.users || {};
-          record.users[refId] = record.users[refId] || { balance_usd:0, referrals:[] };
-          record.users[refId].balance_usd = (Number(record.users[refId].balance_usd) || 0) + REF_REWARD_USD;
-          record.users[refId].referrals = record.users[refId].referrals || [];
-          record.users[refId].referrals.push({ from: userState.userId, ts: Date.now() });
-          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-            method:'PUT',
-            headers:{ 'Content-Type':'application/json','X-Master-Key': JSONBIN_API_KEY },
-            body: JSON.stringify(record)
-          });
-          return;
-        }
-      }catch(e){ console.warn('awardReferral jsonbin fail', e); }
-
-      // fallback: log to pipedream as fallback
-      try{
-        await fetch(PIPEDREAM_ENDPOINT, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ type:'referral', refId, from:userState.userId, reward:REF_REWARD_USD, ts:Date.now() })
-        });
-      }catch(e){}
-    }
-
-    // ---------- Event handlers ----------
     async function init(){
-      try{ tg.ready(); tg.expand && tg.expand(); }catch(e){}
-      const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : null;
-      if(!user || !user.id){
-        // guest fallback
-        userState.userId = 'guest_' + (localStorage.getItem('guest_id') || (function(){const id='g'+Date.now(); localStorage.setItem('guest_id',id); return id})());
-      } else {
-        userState.userId = user.id;
-        if(user.photo_url) document.getElementById('user-photo').src = user.photo_url;
-        if(user.first_name || user.last_name) document.getElementById('user-name').innerText = `${user.first_name||''} ${user.last_name||''}`;
+      const user=tg.initDataUnsafe.user;
+      if(user&&user.id){
+        userState.userId=user.id;
+        document.getElementById('user-name').innerText=`${user.first_name||''} ${user.last_name||''}`;
+        if(user.photo_url)document.getElementById('user-photo').src=user.photo_url;
+      }else{
+        userState.userId='guest_'+(localStorage.getItem('guest_id')||(function(){const id='g'+Date.now();localStorage.setItem('guest_id',id);return id})());
+        document.getElementById('user-name').innerText="Guest User";
+        document.getElementById('user-photo').src="https://i.imgur.com/placeholder.png";
       }
-
-      await loadState();
-
-      // handle referral in URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const start = urlParams.get('start') || '';
-      if(start.startsWith('ref_')){
-        const refId = start.split('ref_')[1];
-        if(refId && refId !== String(userState.userId)){
-          awardReferralTo(refId);
-          if(!userState.referredBy) userState.referredBy = refId;
-          await saveState();
-        }
-      }
-
       updateUI();
-      fetchTonPriceAndUpdateWarning();
-      setupListeners();
-      setupNav();
     }
 
-    function setupNav(){
-      const navButtons = document.querySelectorAll('.nav-btn');
-      const pages = document.querySelectorAll('.page');
-      navButtons.forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          navButtons.forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          pages.forEach(p=>p.style.display='none');
-          const pageId = btn.dataset.page;
-          document.getElementById(pageId).style.display = 'block';
-        });
+    // nav
+    document.querySelectorAll('.nav-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+        document.getElementById(btn.dataset.page).style.display='block';
       });
-    }
+    });
 
-    function setupListeners(){
-      document.getElementById('copy-ref-link-btn').addEventListener('click', ()=>{
-        navigator.clipboard.writeText(refLink.value).then(()=> {
-          try{ tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
-          alert('Referans linki kopyalandı!');
-        });
-      });
+    // copy ref
+    document.getElementById('copy-ref-link-btn').onclick=()=>{navigator.clipboard.writeText(document.getElementById('referral-link').value);alert('Referral link copied');};
 
-      document.getElementById('watch-ad-btn').addEventListener('click', async ()=>{
-        try{
-          const btn = document.getElementById('watch-ad-btn');
-          btn.disabled = true; btn.innerHTML = '<span class="loader"></span> Yükleniyor...';
-          if(window.showGiga && typeof window.showGiga === 'function'){
-            await window.showGiga();
-          } else if(window.show_9712189 && typeof window.show_9712189 === 'function'){
-            await window.show_9712189();
-          } else {
-            throw new Error('Ad SDK yok');
-          }
-          userState.balance_usd = (Number(userState.balance_usd)||0) + AD_REWARD_USD;
-          userState.dailyAds = (userState.dailyAds||0) + 1;
-          await saveState();
-          updateUI();
-          alert(`Tebrikler! $${AD_REWARD_USD.toFixed(2)} kazandınız.`);
-        }catch(e){
-          console.warn(e);
-          alert('Reklam yüklenemedi veya iptal edildi.');
-        }finally{
-          const btn = document.getElementById('watch-ad-btn');
-          btn.disabled = false; btn.innerHTML = 'Reklam İzle';
-        }
-      });
-
-      withdrawForm.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const usd = Number(withdrawAmt.value);
-        const addr = (tonAddr.value||'').trim();
-        if(!addr){ alert('Lütfen geçerli bir TON adresi girin.'); return; }
-        if(isNaN(usd) || usd <= 0){ alert('Lütfen geçerli bir USD tutarı girin.'); return; }
-        if(usd > (Number(userState.balance_usd)||0)){ alert('Yetersiz bakiye'); return; }
-        if(usd < MIN_WITHDRAW_USD){ alert(`Minimum çekim $${MIN_WITHDRAW_USD}`); return; }
-
-        const tonUsd = await fetchTonPriceAndUpdateWarning();
-        const tonAmount = tonUsd ? (usd / tonUsd) : null;
-        const confirmText = tonAmount ? `Çekim: $${usd.toFixed(2)} ≈ ${tonAmount.toFixed(6)} TON\nAdres: ${addr}\nOnaylıyor musunuz?` : `Çekim: $${usd.toFixed(2)}\nAdres: ${addr}\nOnaylıyor musunuz?`;
-        if(!confirm(confirmText)) return;
-
-        // deduct locally
-        userState.balance_usd = (Number(userState.balance_usd)||0) - usd;
-        await saveState(); updateUI();
-
-        const payload = {
-          type:'withdraw_request',
-          userId: userState.userId,
-          amount_usd: usd,
-          ton_amount: tonAmount !== null ? Number(tonAmount.toFixed(8)) : null,
-          ton_address: addr,
-          ts: Date.now()
-        };
-
-        try{
-          await fetch(PIPEDREAM_ENDPOINT, {
-            method:'POST', headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          // append to jsonbin.requests as log (best-effort)
-          try{
-            const r = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, { headers: { 'X-Master-Key': JSONBIN_API_KEY }});
-            if(r.ok){
-              const js = await r.json(); const record = js.record || {};
-              record.requests = record.requests || []; record.requests.push(payload);
-              await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-                method:'PUT', headers:{ 'Content-Type':'application/json','X-Master-Key': JSONBIN_API_KEY }, body: JSON.stringify(record)
-              });
-            }
-          }catch(e){ console.warn('jsonbin request log fail', e); }
-
-          alert('Çekim isteğiniz gönderildi.');
-          withdrawForm.reset(); fetchTonPriceAndUpdateWarning();
-        }catch(e){
-          console.error('pipedream send fail', e);
-          // refund
-          userState.balance_usd = (Number(userState.balance_usd)||0) + usd;
-          await saveState(); updateUI();
-          alert('İstek gönderilemedi. Bakiyeniz iade edildi.');
-        }
-      });
-    }
-
-    // start
     init();
-
-    // periodic price refresh
-    setInterval(fetchTonPriceAndUpdateWarning, 120000);
-
-    // Expose debug (optional)
-    window._monetag = { userState, saveState, JSONBIN_API_KEY, JSONBIN_BIN_ID };
   })();
   </script>
 </body>
-  </html>
+</html>
