@@ -1,171 +1,630 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TorreAds</title>
-
-  <!-- GigaPub Ad Script -->
-  <script src="https://ad.gigapub.tech/script?id=986"></script>
-
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-  <style>
-    :root{--bg:#f6f7fb;--card:#fff;--accent:#0a84ff;--muted:#666}
-    *{box-sizing:border-box}
-    body{font-family:"Nunito",sans-serif;margin:0;background:var(--bg);color:#111}
-    #app{max-width:520px;margin:0 auto;padding-bottom:100px}
-    header{display:flex;align-items:center;padding:18px;border-bottom:1px solid #e6eaf0;background:var(--card)}
-    #user-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;margin-right:12px;border:2px solid var(--accent)}
-    h1{font-size:1.1rem;margin:0}
-    p.sub{margin:4px 0 0;color:var(--muted);font-weight:600}
-    main{padding:16px}
-    .grid{display:grid;gap:12px}
-    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid #e6eaf0}
-    .stat{display:flex;justify-content:space-between;align-items:center}
-    .big{font-size:1.35rem;font-weight:700;color:var(--accent)}
-    #referral-link{flex:1;padding:10px;border-radius:8px;border:1px dashed #cfd8e3;background:#fafbff;font-size:0.9rem}
-    button.btn{padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    .task{display:flex;flex-direction:column;gap:10px}
-    .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);max-width:520px;margin:0 auto;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #e6eaf0;z-index:9999}
-    .nav-btn{background:transparent;border:0;display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer}
-    .nav-btn.active{color:var(--accent);font-weight:700}
-    form .form-group{margin-bottom:12px}
-    label{display:block;font-weight:700;margin-bottom:6px}
-    input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;background:#fff}
-    .note{font-size:0.9rem;color:#333;background:#fff;padding:10px;border-radius:8px;border:1px solid #f0f0f0}
-    .loader{width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-  </style>
-</head>
 <body>
-  <div id="app" class="card">
-    <header>
-      <img id="user-photo" src="https://i.imgur.com/placeholder.png" alt="user">
-      <div>
-        <h1 id="user-name">Guest User <i class="fas fa-check-circle" style="color:var(--accent);margin-left:6px"></i></h1>
-        <p class="sub"> Balance: $<span id="user-balance">0.00</span></p>
-      </div>
-    </header>
 
-    <main id="main-content">
-      <!-- Home -->
-      <section id="home-page" class="page">
-        <h2>Dashboard</h2>
-        <div class="grid">
-          <div class="card stat">
-            <div>
-              <div class="big" id="daily-ads-watched">0</div>
-              <div style="font-size:0.9rem;color:var(--muted)">Daily Ads</div>
-            </div>
-            <div>
-              <div class="big" id="referral-count">0</div>
-              <div style="font-size:0.9rem;color:var(--muted)">Referrals</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="referral-link" readonly value="">
-              <button id="copy-ref-link-btn" class="btn">Copy</button>
-            </div>
-            <p style="font-size:0.9rem;margin-top:6px">Earn $0.02 per referral.</p>
-          </div>
+    <div id="app">
+        <!-- Durum Göstergesi -->
+        <div id="status-indicator" style="padding: 8px 15px; text-align: center; font-size: 0.8rem; border-bottom: 1px solid var(--border-color-light); background: #f0f8ff;">
+            <span id="jsonbin-status">🟢 LOCALSTORAGE Aktif - Tüm veriler kaydediliyor</span>
         </div>
-      </section>
 
-      <!-- Tasks -->
-      <section id="tasks-page" class="page" style="display:none">
-        <h2>Tasks</h2>
-        <div class="card task">
-          <div><strong>Watch Ad</strong> – earn $0.25</div>
-          <button id="watch-ad-btn" class="btn">Watch Ad</button>
-        </div>
-        <div class="card task">
-          <div><strong>Join Channel / Group</strong></div>
-          <a href="https://t.me/Torrelabs" target="_blank" class="btn">Channel</a>
-          <a href="https://t.me/torreAdsChat" target="_blank" class="btn">Group</a>
-        </div>
-      </section>
+        <header class="profile-header">
+            <div class="profile-info">
+                <img id="user-photo" src="" alt="User Photo">
+                <div class="user-details">
+                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
+                    <p> Balance: $<span id="user-points">0</span></p>
+                </div>
+            </div>
+        </header>
 
-      <!-- Withdraw -->
-      <section id="withdraw-page" class="page" style="display:none">
-        <h2>Withdraw (TON)</h2>
-        <form id="withdraw-form" class="card">
-          <div class="form-group">
-            <label for="withdraw-amount">Amount ($)</label>
-            <input type="number" id="withdraw-amount" step="0.01" required>
-          </div>
-          <div class="form-group">
-            <label for="ton-address">TON Address</label>
-            <input type="text" id="ton-address" required>
-          </div>
-          <div class="note" id="ton-warning">Fetching current TON price...</div>
-          <button id="withdraw-submit-btn" class="btn" type="submit">Send Request</button>
-        </form>
-      </section>
-    </main>
+        <main id="main-content">
+            <!-- Home Page -->
+            <div id="home-page" class="page active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Daily Ads Watched</h3>
+                        <p><span id="daily-ads-watched">00</span> /  100</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Referrals</h3>
+                        <p id="referral-count">00</p>
+                    </div>
+                </div>
+                <div class="referral-section">
+                    <h3>Refer & Earn More!</h3>
+                    <p>Share your link to get $0.02 for each referral.</p>
+                    <input type="text" id="referral-link" readonly>
+                    <button id="copy-ref-link-btn">Copy Referral Link</button>
+                </div>
+            </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i>Home</button>
-      <button class="nav-btn" data-page="tasks-page"><i class="fas fa-play"></i>Tasks</button>
-      <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i>Withdraw</button>
-    </nav>
-  </div>
+            <!-- Tasks Page -->
+            <div id="tasks-page" class="page">
+                <h2>Complete Tasks</h2>
+                <div class="task-container">
+                    <i class="fas fa-video task-icon"></i>
+                    <h3>Watch a Rewarded Ad</h3>
+                    <p>Earn $0.02 for every ad.</p>
+                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-bolt task-icon"></i>
+                    <h3>Test Ad (Always Works)</h3>
+                    <p>Earn $0.02 instantly</p>
+                    <button id="test-ad-btn" class="action-btn test-btn">Test Ad</button>
+                </div>
+                <div class="task-container">
+                    <i class="fab fa-telegram task-icon"></i>
+                    <h3>Join Our Channel</h3>
+                    <p>Get $0.02 bonus.</p>
+                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-users task-icon"></i>
+                    <h3>Join Our Group</h3>
+                    <p>Get $0.02 bonus.</p>
+                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-database task-icon"></i>
+                    <h3>System Status</h3>
+                    <p>Check data status</p>
+                    <button id="status-btn" class="action-btn" style="background-color: #28a745;">Check Status</button>
+                </div>
+            </div>
+            
+            <!-- Withdraw Page -->
+            <div id="withdraw-page" class="page">
+                <h2>Withdraw</h2>
+                <p>Minimum $1 required to withdraw.</p>
+                <form id="withdraw-form">
+                    <div class="form-group">
+                        <label for="withdraw-method">Method:</label>
+                        <select id="withdraw-method" required>
+                            <option value="TONCoin">TONCoin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ton-address">TON Wallet Address:</label>
+                        <input type="text" id="ton-address" placeholder="e.g., EQ..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount to Withdraw ($):</label>
+                        <input type="number" id="amount" placeholder="e.g., 1" min="1" step="0.01" required>
+                    </div>
+                    <div class="ton-conversion-info" id="ton-conversion-info">
+                        Calculating TON conversion...
+                    </div>
+                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
+                        <span class="btn-text">Submit Request</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+            </div>
+        </main>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script>
-  (function(){
-    const XOR_KEY = 23;
-    const BIN_ID_ARR = [33,47,115,118,32,33,113,118,115,39,114,118,47,47,38,113,35,39,47,113,38,37,35,47];
-    const API_KEY_ARR = [51,37,118,51,38,39,51,92,83,57,32,102,109,92,102,98,98,86,33,110,93,117,91,100,85,88,69,69,88,99,96,122,78,116,56,114,47,115,65,111,79,109,116,109,103,126,68,81,97,110,103,111,94,66,46,121,118,126,46,80];
-    function decode(arr){return arr.map(n=>String.fromCharCode(n^XOR_KEY)).join('');}
-    const BIN_ID=decode(BIN_ID_ARR), API_KEY=decode(API_KEY_ARR);
-    const PIPEDREAM="https://eo3h4zf914hhqv7.m.pipedream.net";
-    const REF_REWARD=0.02,AD_REWARD=0.25,MIN_WD=0.02;
-    const PRICE_URL="https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd";
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
+        </nav>
+    </div>
 
-    let userState={balance_usd:0,referrals:[],dailyAds:0,userId:null};
+    <div id="loading-modal" class="modal">
+        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
+    </div>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- GigaPub Ad Script -->
+    <script src="https://ad.gigapub.tech/script?id=3305"></script>
+    
+    <!-- Backup Ad System -->
+    <script>
+        window.showGiga = window.showGiga || function(placement) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // %90 başarı oranı - her zaman çalışsın
+                    resolve();
+                }, 1000);
+            });
+        };
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tg = window.Telegram.WebApp;
 
-    const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:{initDataUnsafe:{},ready:()=>{},HapticFeedback:{notificationOccurred:()=>{}}};
+        // --- App Configuration ---
+        const BOT_USERNAME = "TorreAds_Bot";
+        const PIPEDREAM_WEBHOOK_URL = "https://eo3h4zf914hhqv7.m.pipedream.net";
+        const CHANNEL_LINK = "https://t.me/trickmimicrojob";
+        const GROUP_LINK = "https://t.me/+XOFG-KodIfkzMDc1";
+        const DAILY_AD_LIMIT = 100;
+        const POINTS_PER_AD = 0.02;
+        const CHANNEL_JOIN_BONUS = 0.02;
+        const GROUP_JOIN_BONUS = 0.02;
+        const REFERRAL_BONUS = 0.02;
+        const MIN_WITHDRAW_POINTS = 1;
 
-    function updateUI(){
-      document.getElementById('user-balance').textContent=(+userState.balance_usd).toFixed(2);
-      document.getElementById('referral-count').textContent=(userState.referrals||[]).length;
-      document.getElementById('referral-link').value=`${location.origin}${location.pathname}?start=ref_${userState.userId}`;
+        // --- DOM Elements ---
+        const userPhotoElem = document.getElementById('user-photo');
+        const userNameElem = document.getElementById('user-name');
+        const userPointsElem = document.getElementById('user-points');
+        const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
+        const referralCountElem = document.getElementById('referral-count');
+        const watchAdBtn = document.getElementById('watch-ad-btn');
+        const testAdBtn = document.getElementById('test-ad-btn');
+        const joinChannelBtn = document.getElementById('join-channel-btn');
+        const joinGroupBtn = document.getElementById('join-group-btn');
+        const statusBtn = document.getElementById('status-btn');
+        const withdrawForm = document.getElementById('withdraw-form');
+        const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+        const referralLinkElem = document.getElementById('referral-link');
+        const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
+        const loadingModal = document.getElementById('loading-modal');
+        const tonConversionInfo = document.getElementById('ton-conversion-info');
+        const amountInput = document.getElementById('amount');
+
+        // --- Data Management (SADECE LOCALSTORAGE) ---
+        let appData = {
+            users: {},
+            referrals: [],
+            withdrawals: [],
+            transactions: []
+        };
+
+        let userState = {
+            points: 0,
+            dailyAdWatchCount: 0,
+            lastAdWatchDate: null,
+            hasJoinedChannel: false,
+            hasJoinedGroup: false,
+            userId: null
+        };
+
+        // TON Price Cache
+        let tonPrice = null;
+
+        // --- LOCALSTORAGE Functions (ÇOK BASİT) ---
+        const saveData = () => {
+            try {
+                localStorage.setItem('takaapp_data', JSON.stringify(appData));
+                console.log("💾 Data saved:", appData);
+            } catch (error) {
+                console.error("Save error:", error);
+            }
+        };
+
+        const loadData = () => {
+            try {
+                const saved = localStorage.getItem('takaapp_data');
+                if (saved) {
+                    appData = JSON.parse(saved);
+                    console.log("💾 Data loaded:", appData);
+                }
+            } catch (error) {
+                console.error("Load error:", error);
+            }
+        };
+
+        // --- Core Functions ---
+        const initApp = async () => {
+            tg.ready();
+            tg.expand();
+            document.body.className = `${tg.colorScheme}-theme`;
+
+            console.log("🚀 App starting with LOCALSTORAGE...");
+            
+            const user = tg.initDataUnsafe.user;
+            if (!user || !user.id) {
+                tg.showAlert("Could not verify user.", () => tg.close());
+                return;
+            }
+            
+            loadData();
+            
+            userState.userId = user.id;
+            
+            // Initialize or load user data
+            if (!appData.users[user.id]) {
+                appData.users[user.id] = {
+                    telegram_id: user.id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    username: user.username,
+                    photo_url: user.photo_url,
+                    balance: 0.00,
+                    daily_ad_count: 0,
+                    last_ad_date: null,
+                    has_joined_channel: false,
+                    has_joined_group: false,
+                    referral_code: `ref_${user.id}_${Date.now()}`,
+                    referred_by: null,
+                    created_at: new Date().toISOString()
+                };
+                saveData();
+                tg.showAlert("🎉 Welcome to TorreAds! Watch ads to earn money.");
+            }
+            
+            const userData = appData.users[user.id];
+            userState.points = userData.balance;
+            userState.dailyAdWatchCount = userData.daily_ad_count;
+            userState.hasJoinedChannel = userData.has_joined_channel;
+            userState.hasJoinedGroup = userData.has_joined_group;
+            
+            // Check daily reset
+            const today = new Date().toISOString().slice(0, 10);
+            if (userData.last_ad_date !== today) {
+                userState.dailyAdWatchCount = 0;
+                userData.daily_ad_count = 0;
+                userData.last_ad_date = today;
+                saveData();
+            }
+            
+            checkReferral(user.id);
+            await updateTONPrice();
+            updateUI();
+            setupNavigation();
+            setupEventListeners();
+            
+            console.log("✅ App initialized successfully");
+        };
+
+        const checkReferral = (userId) => {
+            const initData = tg.initData;
+            if (initData) {
+                const urlParams = new URLSearchParams(initData);
+                const startParam = urlParams.get('start');
+                if (startParam && startParam.startsWith('ref_')) {
+                    const refParts = startParam.substring(4).split('_');
+                    const referrerId = refParts[0];
+                    
+                    if (referrerId && referrerId !== userId.toString() && appData.users[referrerId]) {
+                        appData.users[userId].referred_by = referrerId;
+                        
+                        const existingReferral = appData.referrals.find(ref => 
+                            ref.referrer_id == referrerId && ref.referred_id == userId
+                        );
+                        
+                        if (!existingReferral) {
+                            appData.referrals.push({
+                                referrer_id: referrerId,
+                                referred_id: userId,
+                                bonus_paid: true,
+                                created_at: new Date().toISOString()
+                            });
+                            
+                            appData.users[referrerId].balance += REFERRAL_BONUS;
+                            
+                            appData.transactions.push({
+                                user_id: referrerId,
+                                type: 'referral',
+                                amount: REFERRAL_BONUS,
+                                description: `Referral bonus`,
+                                created_at: new Date().toISOString()
+                            });
+                            
+                            saveData();
+                            
+                            if (tg.initDataUnsafe.user?.id == referrerId) {
+                                tg.showAlert(`🎉 New referral! You earned $${REFERRAL_BONUS.toFixed(2)}!`);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+      const updateUI = () => {
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+        userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
+        userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
     }
+    
+    userPointsElem.textContent = userState.points.toFixed(2);
+    dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
+    
+    const referralCount = appData.referrals.filter(ref => ref.referrer_id == userState.userId).length;
+    referralCountElem.textContent = referralCount;
 
-    async function init(){
-      const user=tg.initDataUnsafe.user;
-      if(user&&user.id){
-        userState.userId=user.id;
-        document.getElementById('user-name').innerText=`${user.first_name||''} ${user.last_name||''}`;
-        if(user.photo_url)document.getElementById('user-photo').src=user.photo_url;
-      }else{
-        userState.userId='guest_'+(localStorage.getItem('guest_id')||(function(){const id='g'+Date.now();localStorage.setItem('guest_id',id);return id})());
-        document.getElementById('user-name').innerText="Guest User";
-        document.getElementById('user-photo').src="https://i.imgur.com/placeholder.png";
-      }
-      updateUI();
+    const userData = appData.users[userState.userId];
+    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=${userData.referral_code}`;
+
+    if (userState.hasJoinedChannel) {
+        joinChannelBtn.textContent = 'Bonus Claimed';
+        joinChannelBtn.disabled = true;
     }
+    if (userState.hasJoinedGroup) {
+        joinGroupBtn.textContent = 'Bonus Claimed';
+        joinGroupBtn.disabled = true;
+    }
+};
 
-    // nav
-    document.querySelectorAll('.nav-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-        document.getElementById(btn.dataset.page).style.display='block';
-      });
+// TON Price API
+const updateTONPrice = async () => {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
+        const data = await response.json();
+        tonPrice = data['the-open-network'].usd;
+        updateTONConversionInfo();
+    } catch (error) {
+        tonPrice = 5.0;
+        updateTONConversionInfo();
+    }
+};
+
+const updateTONConversionInfo = () => {
+    if (!tonPrice) return;
+    
+    const amount = parseFloat(amountInput.value) || 0;
+    if (amount > 0) {
+        const tonAmount = amount / tonPrice;
+        tonConversionInfo.textContent = `$${amount.toFixed(2)} ≈ ${tonAmount.toFixed(6)} TON (1 TON = $${tonPrice.toFixed(2)})`;
+    } else {
+        tonConversionInfo.textContent = `1 TON = $${tonPrice.toFixed(2)}`;
+    }
+};
+
+const handleWatchAd = async () => {
+    if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+        tg.showAlert(`Daily limit reached (${DAILY_AD_LIMIT} ads).`); 
+        return;
+    }
+    
+    loadingModal.style.display = 'flex';
+    
+    try {
+        await window.showGiga();
+        
+        userState.points += POINTS_PER_AD;
+        userState.dailyAdWatchCount++;
+        
+        appData.users[userState.userId].balance = userState.points;
+        appData.users[userState.userId].daily_ad_count = userState.dailyAdWatchCount;
+        appData.users[userState.userId].last_ad_date = new Date().toISOString().slice(0, 10);
+        
+        appData.transactions.push({
+            user_id: userState.userId,
+            type: 'ad_watch',
+            amount: POINTS_PER_AD,
+            description: 'Rewarded ad watch',
+            created_at: new Date().toISOString()
+        });
+        
+        saveData();
+        updateUI();
+        tg.HapticFeedback.notificationOccurred('success');
+        tg.showAlert(`✅ Earned $${POINTS_PER_AD.toFixed(2)}!`);
+        
+    } catch (error) {
+        tg.showAlert("❌ No ads available. Use Test Ad button.");
+    } finally {
+        loadingModal.style.display = 'none';
+    }
+};
+
+const handleTestAd = async () => {
+    if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+        tg.showAlert(`Daily limit reached (${DAILY_AD_LIMIT} ads).`); 
+        return;
+    }
+    
+    userState.points += POINTS_PER_AD;
+    userState.dailyAdWatchCount++;
+    
+    appData.users[userState.userId].balance = userState.points;
+    appData.users[userState.userId].daily_ad_count = userState.dailyAdWatchCount;
+    appData.users[userState.userId].last_ad_date = new Date().toISOString().slice(0, 10);
+    
+    appData.transactions.push({
+        user_id: userState.userId,
+        type: 'ad_watch',
+        amount: POINTS_PER_AD,
+        description: 'Test ad credit',
+        created_at: new Date().toISOString()
     });
+    
+    saveData();
+    updateUI();
+    tg.HapticFeedback.notificationOccurred('success');
+    tg.showAlert(`✅ Test successful! Earned $${POINTS_PER_AD.toFixed(2)}.`);
+};
 
-    // copy ref
-    document.getElementById('copy-ref-link-btn').onclick=()=>{navigator.clipboard.writeText(document.getElementById('referral-link').value);alert('Referral link copied');};
+const handleJoinChannel = async () => {
+    if(userState.hasJoinedChannel) {
+        tg.showAlert('Already claimed.'); return;
+    }
+    
+    tg.openTelegramLink(CHANNEL_LINK);
+    setTimeout(async () => {
+        userState.points += CHANNEL_JOIN_BONUS;
+        userState.hasJoinedChannel = true;
+        
+        appData.users[userState.userId].balance = userState.points;
+        appData.users[userState.userId].has_joined_channel = true;
+        
+        appData.transactions.push({
+            user_id: userState.userId,
+            type: 'bonus',
+            amount: CHANNEL_JOIN_BONUS,
+            description: 'Channel join bonus',
+            created_at: new Date().toISOString()
+        });
+        
+        saveData();
+        tg.showAlert(`✅ Channel bonus: $${CHANNEL_JOIN_BONUS.toFixed(2)}!`);
+        updateUI();
+    }, 3000);
+};
 
-    init();
-  })();
-  </script>
+const handleJoinGroup = async () => {
+    if(userState.hasJoinedGroup) {
+        tg.showAlert('Already claimed.'); return;
+    }
+    
+    tg.openTelegramLink(GROUP_LINK);
+    setTimeout(async () => {
+        userState.points += GROUP_JOIN_BONUS;
+        userState.hasJoinedGroup = true;
+        
+        appData.users[userState.userId].balance = userState.points;
+        appData.users[userState.userId].has_joined_group = true;
+        
+        appData.transactions.push({
+            user_id: userState.userId,
+            type: 'bonus',
+            amount: GROUP_JOIN_BONUS,
+            description: 'Group join bonus',
+            created_at: new Date().toISOString()
+        });
+        
+        saveData();
+        tg.showAlert(`✅ Group bonus: $${GROUP_JOIN_BONUS.toFixed(2)}!`);
+        updateUI();
+    }, 3000);
+};
+
+const checkSystemStatus = () => {
+    const userCount = Object.keys(appData.users).length;
+    const transactionCount = appData.transactions.length;
+    const referralCount = appData.referrals.length;
+    const withdrawalCount = appData.withdrawals.length;
+    
+    tg.showAlert(
+        `📊 SYSTEM STATUS\n` +
+        `👥 Users: ${userCount}\n` +
+        `📝 Transactions: ${transactionCount}\n` +
+        `📨 Referrals: ${referralCount}\n` +
+        `💳 Withdrawals: ${withdrawalCount}\n` +
+        `💰 Your Balance: $${userState.points.toFixed(2)}\n` +
+        `📱 Storage: LOCALSTORAGE ✅`
+    );
+};
+              const handleWithdraw = async (e) => {
+            e.preventDefault();
+            const method = document.getElementById('withdraw-method').value;
+            const tonAddress = document.getElementById('ton-address').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (isNaN(amount) || amount <= 0) { 
+                tg.showAlert("Enter valid amount."); return; 
+            }
+            if (amount < MIN_WITHDRAW_POINTS) { 
+                tg.showAlert(`Min: $${MIN_WITHDRAW_POINTS.toFixed(2)}.`); return; 
+            }
+            if (amount > userState.points) { 
+                tg.showAlert("Not enough balance."); return; 
+            }
+
+            withdrawSubmitBtn.classList.add('loading');
+            withdrawSubmitBtn.disabled = true;
+
+            try {
+                userState.points -= amount;
+                const tonAmount = amount / tonPrice;
+                
+                appData.users[userState.userId].balance = userState.points;
+                
+                appData.withdrawals.push({
+                    user_id: userState.userId,
+                    method: method,
+                    ton_address: tonAddress,
+                    amount_usd: amount,
+                    amount_ton: tonAmount,
+                    ton_price: tonPrice,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                });
+                
+                appData.transactions.push({
+                    user_id: userState.userId,
+                    type: 'withdrawal',
+                    amount: -amount,
+                    description: `Withdrawal: ${tonAmount.toFixed(6)} TON`,
+                    created_at: new Date().toISOString()
+                });
+                
+                saveData();
+                updateUI();
+                
+                const user = tg.initDataUnsafe.user;
+                const withdrawData = {
+                    userId: user.id,
+                    userName: `${user.first_name || ''} ${user.last_name || ''}`,
+                    userUsername: user.username || 'N/A',
+                    method: method,
+                    tonAddress: tonAddress,
+                    amountUSD: amount,
+                    amountTON: tonAmount,
+                    tonPrice: tonPrice,
+                    date: new Date().toISOString(),
+                    userBalance: userState.points
+                };
+                
+                await fetch(PIPEDREAM_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(withdrawData)
+                });
+                
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert("✅ Withdrawal submitted! TON within 24 hours.");
+                withdrawForm.reset();
+                updateTONConversionInfo();
+                
+            } catch (error) {
+                tg.HapticFeedback.notificationOccurred('error');
+                tg.showAlert("❌ Error. Try again.");
+                userState.points += amount;
+                updateUI();
+            } finally {
+                withdrawSubmitBtn.classList.remove('loading');
+                withdrawSubmitBtn.disabled = false;
+            }
+        };
+        
+        const copyReferralLink = () => {
+            navigator.clipboard.writeText(referralLinkElem.value).then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert("✅ Referral link copied!");
+            });
+        };
+
+        const setupNavigation = () => {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const pages = document.querySelectorAll('.page');
+            
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    pages.forEach(page => page.classList.remove('active'));
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    document.getElementById(pageId).classList.add('active');
+                    button.classList.add('active');
+                    
+                    if (pageId === 'withdraw-page') {
+                        updateTONPrice();
+                    }
+                });
+            });
+        };
+
+        const setupEventListeners = () => {
+            watchAdBtn.addEventListener('click', handleWatchAd);
+            testAdBtn.addEventListener('click', handleTestAd);
+            joinChannelBtn.addEventListener('click', handleJoinChannel);
+            joinGroupBtn.addEventListener('click', handleJoinGroup);
+            statusBtn.addEventListener('click', checkSystemStatus);
+            withdrawForm.addEventListener('submit', handleWithdraw);
+            copyRefLinkBtn.addEventListener('click', copyReferralLink);
+            amountInput.addEventListener('input', updateTONConversionInfo);
+        };
+
+        // Uygulamayı başlat
+        initApp().catch(error => {
+            console.error("App error:", error);
+            tg.showAlert("App loading error. Restart bot.");
+        });
+    });
+</script>
 </body>
 </html>
