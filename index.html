@@ -253,7 +253,7 @@
                 <div id="referral-success" class="referral-success" style="display: none;">
                     <i class="fas fa-gift fa-2x" style="margin-bottom: 10px;"></i>
                     <h3>🎉 Welcome Bonus! 🎉</h3>
-                    <p>You received <strong>$0.05</strong> for joining through a referral link!</p>
+                    <p>You received <strong>$0.02</strong> for joining through a referral link!</p>
                 </div>
                 
                 <div id="error-message" class="error-message"></div>
@@ -290,7 +290,7 @@
                 <div class="referral-section">
                     <h3>Refer & Earn More!</h3>
                     <div class="referral-bonus-info">
-                        <i class="fas fa-gift"></i> Get $0.05 for each friend who joins!
+                        <i class="fas fa-gift"></i> Get $0.02 for each friend who joins!
                     </div>
                     <p>Share your link and earn when your friends sign up and complete tasks.</p>
                     
@@ -410,7 +410,7 @@
             POINTS_PER_AD: 0.0005,
             CHANNEL_JOIN_BONUS: 0.10,
             GROUP_JOIN_BONUS: 0.05,
-            REFERRAL_BONUS: 0.05,
+            REFERRAL_BONUS: 0.02, // 0.02 olarak güncellendi
             MIN_WITHDRAW_POINTS: 0.50
         };
 
@@ -508,7 +508,7 @@
             }
         }
 
-        // JSONBin operations
+        // JSONBin operations - DÜZELTİLMİŞ VERSİYON
         async function saveState() {
             if (!userState.userId) {
                 debugLog('No user ID for saveState');
@@ -516,7 +516,7 @@
             }
             
             try {
-                // First get current data
+                // Önce mevcut veriyi al
                 const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
                     headers: {
                         'X-Master-Key': CONFIG.JSONBIN_API_KEY
@@ -532,10 +532,10 @@
                     debugLog('No existing data in JSONBin, creating new');
                 }
                 
-                // Update user data
+                // Kullanıcı verisini güncelle
                 allData[userState.userId] = userState;
                 
-                // Save updated data
+                // Güncellenmiş veriyi kaydet
                 const putResponse = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: {
@@ -549,7 +549,8 @@
                     debugLog('State saved successfully to JSONBin');
                     return true;
                 } else {
-                    throw new Error('Failed to save state to JSONBin: ' + putResponse.status);
+                    const errorText = await putResponse.text();
+                    throw new Error('Failed to save state to JSONBin: ' + putResponse.status + ' - ' + errorText);
                 }
             } catch (error) {
                 console.error('Error saving to JSONBin:', error);
@@ -579,7 +580,16 @@
                         return true;
                     } else {
                         debugLog('No user data found in JSONBin for: ' + userId);
-                        return false;
+                        // Yeni kullanıcı için temel state'i ayarla
+                        userState.userId = userId;
+                        userState.points = 0;
+                        userState.dailyAdWatchCount = 0;
+                        userState.referrals = [];
+                        userState.referralEarnings = 0;
+                        userState.hasJoinedChannel = false;
+                        userState.hasJoinedGroup = false;
+                        userState.hasReceivedReferralBonus = false;
+                        return true;
                     }
                 } else {
                     debugLog('JSONBin response not OK: ' + response.status);
@@ -592,7 +602,7 @@
             }
         }
 
-        // YENİ REFERANS SİSTEMİ
+        // DÜZELTİLMİŞ REFERANS SİSTEMİ
         async function checkAndApplyReferral() {
             debugLog('=== REFERRAL CHECK STARTED ===');
             
@@ -632,33 +642,16 @@
                 }
             }
             
-            // 4. Hash parametreleri kontrolü (fallback)
-            const hashParams = window.location.hash.substring(1);
-            if (hashParams.includes('ref_')) {
-                const refMatch = hashParams.match(/ref_([a-zA-Z0-9]+)/);
-                if (refMatch) {
-                    debugLog('Hash ref param found: ' + refMatch[0]);
-                    await applyReferralBonus(refMatch[1]);
-                    return;
-                }
-            }
-            
             debugLog('No referral parameters found');
         }
 
-        // REFERANS BONUS UYGULAMA
+        // DÜZELTİLMİŞ REFERANS BONUS UYGULAMA
         async function applyReferralBonus(referrerId) {
             debugLog('Applying referral bonus from: ' + referrerId);
             
             // Kendi kendine referans kontrolü
             if (referrerId === userState.userId?.toString()) {
                 debugLog('Self-referral detected, skipping');
-                return;
-            }
-            
-            // Çift referans kontrolü
-            if (userState.referrals.includes(referrerId)) {
-                debugLog('Already referred by this user: ' + referrerId);
                 return;
             }
             
@@ -698,7 +691,7 @@
             await giveBonusToReferrer(referrerId);
         }
 
-        // REFERANS VEREN KULLANICIYA BONUS VER
+        // DÜZELTİLMİŞ REFERANS VEREN KULLANICIYA BONUS VER
         async function giveBonusToReferrer(referrerId) {
             try {
                 debugLog('Giving bonus to referrer: ' + referrerId);
