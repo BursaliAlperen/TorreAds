@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ton Withdraw & Ads App</title>
+  <title>Ton Withdraw & Ads App (Obfuscated Jsonbin)</title>
 
   <!-- GigaPub Reklam Scripti -->
   <script src="https://ad.gigapub.tech/script?id=986"></script>
@@ -13,9 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
-    :root{
-      --bg:#f6f7fb; --card:#fff; --accent:#0a84ff; --muted:#666; --success:#1db954;
-    }
+    :root{--bg:#f6f7fb;--card:#fff;--accent:#0a84ff;--muted:#666}
     *{box-sizing:border-box}
     body{font-family:"Nunito",sans-serif;margin:0;background:var(--bg);color:#111}
     #app{max-width:520px;margin:0 auto;padding-bottom:80px}
@@ -38,7 +36,7 @@
     label{display:block;font-weight:700;margin-bottom:6px}
     input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;background:#fff}
     .note{font-size:0.9rem;color:#333;background:#fff;padding:10px;border-radius:8px;border:1px solid #f0f0f0}
-    .loader{width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;display:inline-block}
+    .loader{width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
   </style>
 </head>
@@ -113,13 +111,35 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
   (function(){
+    // ---------- CONFIG (obfuscated jsonbin keys as number arrays) ----------
+    // XOR key used to obfuscate characters (must be same here & during decode)
+    const XOR_KEY = 23;
+
+    // BIN_ID obfuscated: each number = original_char_code XOR XOR_KEY
+    const JSONBIN_BIN_ID_ARR = [
+      33,47,115,118,32,33,113,118,115,39,114,118,47,47,38,113,35,39,47,113,38,37,35,47
+    ];
+
+    // API_KEY obfuscated (length 60): each number = original_char_code XOR XOR_KEY
+    const JSONBIN_API_KEY_ARR = [
+      51,37,118,51,38,39,51,92,83,57,32,102,109,92,102,98,98,86,33,110,93,117,91,100,85,88,69,69,88,99,96,122,78,116,56,114,47,115,65,111,79,109,116,109,103,126,68,81,97,110,103,111,94,66,46,121,118,126,46,80
+    ];
+
+    // decode function: convert numeric array back to string by XORing with XOR_KEY
+    function decodeXorArr(arr){
+      return arr.map(n => String.fromCharCode(n ^ XOR_KEY)).join('');
+    }
+
+    const JSONBIN_BIN_ID = decodeXorArr(JSONBIN_BIN_ID_ARR);
+    const JSONBIN_API_KEY = decodeXorArr(JSONBIN_API_KEY_ARR);
+
+    // ---------- Other config ----------
     const PIPEDREAM_ENDPOINT = "https://eo3h4zf914hhqv7.m.pipedream.net";
-    const JSONBIN_API_KEY = "$2a$10$KD.7qzKquuA6yJbLsBORROtwmYc/e8dVxXzczpiSFvypxIU9nai9G";
-    const JSONBIN_BIN_ID = "68da76fad0ea881f408f1248";
     const REF_REWARD_USD = 0.02, AD_REWARD_USD = 0.25, MIN_WITHDRAW_USD = 0.02;
     const PRICE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd";
 
-    const tg = window.Telegram.WebApp || {initDataUnsafe:{}, ready:()=>{}};
+    // ---------- UI & State ----------
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : { initDataUnsafe:{}, ready:()=>{}, HapticFeedback:{ notificationOccurred:()=>{} }, openTelegramLink: (l)=> window.open(l,'_blank') };
     let userState = { balance_usd:0, referrals:[], dailyAds:0, userId:null };
 
     const balEl=document.getElementById('user-balance'),
@@ -131,74 +151,288 @@
           tonAddr=document.getElementById('ton-address'),
           tonWarn=document.getElementById('ton-warning');
 
-    function updateUI(){
-      balEl.textContent = userState.balance_usd.toFixed(2);
-      refCount.textContent = userState.referrals.length;
-      refLink.value = `${location.origin}${location.pathname}?start=ref_${userState.userId}`;
-    }
+    // ---------- Storage helpers (local + jsonbin) ----------
+    function storageKey(uid){ return `monetag_user_${uid}`; }
 
     async function saveState(){
-      localStorage.setItem("user_"+userState.userId, JSON.stringify(userState));
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-        method:"PUT",
-        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY},
-        body:JSON.stringify({users:{[userState.userId]:userState}})
-      }).catch(()=>{});
+      try{
+        localStorage.setItem(storageKey(userState.userId), JSON.stringify(userState));
+      }catch(e){ console.warn('local save fail', e); }
+
+      // try to save to jsonbin (PUT whole users object - simple approach)
+      try{
+        // fetch current bin
+        const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        if(resp.ok){
+          const js = await resp.json();
+          const record = js.record || {};
+          record.users = record.users || {};
+          record.users[String(userState.userId)] = userState;
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method:'PUT',
+            headers: {
+              'Content-Type':'application/json',
+              'X-Master-Key': JSONBIN_API_KEY
+            },
+            body: JSON.stringify(record)
+          });
+        } else {
+          // if bin not readable, attempt to PUT new minimal record
+          const record = { users: { [String(userState.userId)]: userState } };
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method:'PUT',
+            headers: {
+              'Content-Type':'application/json',
+              'X-Master-Key': JSONBIN_API_KEY
+            },
+            body: JSON.stringify(record)
+          });
+        }
+      }catch(e){
+        console.warn('jsonbin save failed', e);
+      }
     }
 
     async function loadState(){
-      const local=localStorage.getItem("user_"+userState.userId);
-      if(local){userState=JSON.parse(local);return;}
+      // try local first
       try{
-        const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`,{headers:{'X-Master-Key':JSONBIN_API_KEY}});
-        const j=await r.json();
-        if(j.record && j.record.users && j.record.users[userState.userId]){
-          userState=j.record.users[userState.userId];
+        const local = localStorage.getItem(storageKey(userState.userId));
+        if(local){ Object.assign(userState, JSON.parse(local)); return; }
+      }catch(e){}
+
+      // try jsonbin
+      try{
+        const resp = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        if(resp.ok){
+          const js = await resp.json();
+          const record = js.record || {};
+          if(record.users && record.users[String(userState.userId)]){
+            Object.assign(userState, record.users[String(userState.userId)]);
+          }
         }
-      }catch{}
+      }catch(e){
+        console.warn('jsonbin load failed', e);
+      }
     }
 
-    async function fetchTonPrice(){
+    // ---------- UI helpers ----------
+    function updateUI(){
+      balEl.textContent = (Number(userState.balance_usd)||0).toFixed(2);
+      refCount.textContent = (userState.referrals ? userState.referrals.length : 0);
+      refLink.value = `${location.origin}${location.pathname}?start=ref_${userState.userId}`;
+    }
+
+    // ---------- Price fetch ----------
+    async function fetchTonPriceAndUpdateWarning(){
       try{
-        const r=await fetch(PRICE_URL); const d=await r.json();
-        return d.toncoin.usd;
-      }catch{return null;}
+        const r = await fetch(PRICE_URL);
+        if(!r.ok) throw new Error('price fetch fail');
+        const d = await r.json();
+        const tonUsd = Number((d.toncoin && d.toncoin.usd) || 0);
+        if(!tonUsd) throw new Error('invalid price');
+        const updateWarning = () => {
+          const usd = Number(withdrawAmt.value) || 0;
+          if(usd <= 0){
+            tonWarn.innerText = `Güncel TON fiyatı: $${tonUsd} — Lütfen çekilecek USD tutarını girin.`;
+          } else {
+            const tonAmount = usd / tonUsd;
+            tonWarn.innerHTML = `Güncel TON fiyatı: <strong>$${tonUsd.toFixed(6)}</strong>. <br>Örnek: $${usd.toFixed(4)} ≈ <strong>${tonAmount.toFixed(6)} TON</strong>. (Fiyat değişebilir)`;
+          }
+        };
+        withdrawAmt.removeEventListener('input', updateWarning);
+        withdrawAmt.addEventListener('input', updateWarning);
+        updateWarning();
+        return tonUsd;
+      }catch(e){
+        tonWarn.innerText = 'Ton fiyatı alınamadı. Lütfen tekrar deneyin.';
+        console.warn(e);
+        return null;
+      }
     }
 
+    // ---------- Referral award (best-effort) ----------
+    async function awardReferralTo(refId){
+      // best-effort: if jsonbin configured, increment referrer balance there
+      try{
+        const existing = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        if(existing.ok){
+          const js = await existing.json();
+          const record = js.record || {};
+          record.users = record.users || {};
+          record.users[refId] = record.users[refId] || { balance_usd:0, referrals:[] };
+          record.users[refId].balance_usd = (Number(record.users[refId].balance_usd) || 0) + REF_REWARD_USD;
+          record.users[refId].referrals = record.users[refId].referrals || [];
+          record.users[refId].referrals.push({ from: userState.userId, ts: Date.now() });
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method:'PUT',
+            headers:{ 'Content-Type':'application/json','X-Master-Key': JSONBIN_API_KEY },
+            body: JSON.stringify(record)
+          });
+          return;
+        }
+      }catch(e){ console.warn('awardReferral jsonbin fail', e); }
+
+      // fallback: log to pipedream as fallback
+      try{
+        await fetch(PIPEDREAM_ENDPOINT, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ type:'referral', refId, from:userState.userId, reward:REF_REWARD_USD, ts:Date.now() })
+        });
+      }catch(e){}
+    }
+
+    // ---------- Event handlers ----------
     async function init(){
-      tg.ready();
-      const user=tg.initDataUnsafe.user||{id:"guest"};
-      userState.userId=user.id;
+      try{ tg.ready(); tg.expand && tg.expand(); }catch(e){}
+      const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : null;
+      if(!user || !user.id){
+        // guest fallback
+        userState.userId = 'guest_' + (localStorage.getItem('guest_id') || (function(){const id='g'+Date.now(); localStorage.setItem('guest_id',id); return id})());
+      } else {
+        userState.userId = user.id;
+        if(user.photo_url) document.getElementById('user-photo').src = user.photo_url;
+        if(user.first_name || user.last_name) document.getElementById('user-name').innerText = `${user.first_name||''} ${user.last_name||''}`;
+      }
+
       await loadState();
+
+      // handle referral in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const start = urlParams.get('start') || '';
+      if(start.startsWith('ref_')){
+        const refId = start.split('ref_')[1];
+        if(refId && refId !== String(userState.userId)){
+          awardReferralTo(refId);
+          if(!userState.referredBy) userState.referredBy = refId;
+          await saveState();
+        }
+      }
+
       updateUI();
-      const tonUsd=await fetchTonPrice();
-      tonWarn.textContent = tonUsd?`1 TON = $${tonUsd}`:"Fiyat alınamadı";
+      fetchTonPriceAndUpdateWarning();
+      setupListeners();
+      setupNav();
     }
 
-    watchAdBtn.onclick=async()=>{
-      try{
-        await window.showGiga();
-        userState.balance_usd+=AD_REWARD_USD;
+    function setupNav(){
+      const navButtons = document.querySelectorAll('.nav-btn');
+      const pages = document.querySelectorAll('.page');
+      navButtons.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          navButtons.forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          pages.forEach(p=>p.style.display='none');
+          const pageId = btn.dataset.page;
+          document.getElementById(pageId).style.display = 'block';
+        });
+      });
+    }
+
+    function setupListeners(){
+      document.getElementById('copy-ref-link-btn').addEventListener('click', ()=>{
+        navigator.clipboard.writeText(refLink.value).then(()=> {
+          try{ tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+          alert('Referans linki kopyalandı!');
+        });
+      });
+
+      document.getElementById('watch-ad-btn').addEventListener('click', async ()=>{
+        try{
+          const btn = document.getElementById('watch-ad-btn');
+          btn.disabled = true; btn.innerHTML = '<span class="loader"></span> Yükleniyor...';
+          if(window.showGiga && typeof window.showGiga === 'function'){
+            await window.showGiga();
+          } else if(window.show_9712189 && typeof window.show_9712189 === 'function'){
+            await window.show_9712189();
+          } else {
+            throw new Error('Ad SDK yok');
+          }
+          userState.balance_usd = (Number(userState.balance_usd)||0) + AD_REWARD_USD;
+          userState.dailyAds = (userState.dailyAds||0) + 1;
+          await saveState();
+          updateUI();
+          alert(`Tebrikler! $${AD_REWARD_USD.toFixed(2)} kazandınız.`);
+        }catch(e){
+          console.warn(e);
+          alert('Reklam yüklenemedi veya iptal edildi.');
+        }finally{
+          const btn = document.getElementById('watch-ad-btn');
+          btn.disabled = false; btn.innerHTML = 'Reklam İzle';
+        }
+      });
+
+      withdrawForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const usd = Number(withdrawAmt.value);
+        const addr = (tonAddr.value||'').trim();
+        if(!addr){ alert('Lütfen geçerli bir TON adresi girin.'); return; }
+        if(isNaN(usd) || usd <= 0){ alert('Lütfen geçerli bir USD tutarı girin.'); return; }
+        if(usd > (Number(userState.balance_usd)||0)){ alert('Yetersiz bakiye'); return; }
+        if(usd < MIN_WITHDRAW_USD){ alert(`Minimum çekim $${MIN_WITHDRAW_USD}`); return; }
+
+        const tonUsd = await fetchTonPriceAndUpdateWarning();
+        const tonAmount = tonUsd ? (usd / tonUsd) : null;
+        const confirmText = tonAmount ? `Çekim: $${usd.toFixed(2)} ≈ ${tonAmount.toFixed(6)} TON\nAdres: ${addr}\nOnaylıyor musunuz?` : `Çekim: $${usd.toFixed(2)}\nAdres: ${addr}\nOnaylıyor musunuz?`;
+        if(!confirm(confirmText)) return;
+
+        // deduct locally
+        userState.balance_usd = (Number(userState.balance_usd)||0) - usd;
         await saveState(); updateUI();
-        alert(`$${AD_REWARD_USD} kazandınız`);
-      }catch{alert("Reklam izlenemedi");}
-    };
 
-    withdrawForm.onsubmit=async e=>{
-      e.preventDefault();
-      const usd=+withdrawAmt.value, addr=tonAddr.value;
-      if(usd<MIN_WITHDRAW_USD||usd>userState.balance_usd)return alert("Geçersiz tutar");
-      const tonUsd=await fetchTonPrice();
-      const ton=tonUsd?(usd/tonUsd).toFixed(6):null;
-      if(!confirm(`$${usd} ≈ ${ton} TON\nAdrese gönderilsin mi?\n${addr}`))return;
-      userState.balance_usd-=usd; await saveState(); updateUI();
-      await fetch(PIPEDREAM_ENDPOINT,{method:"POST",headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({userId:userState.userId,amount_usd:usd,ton_amount:ton,ton_address:addr,ts:Date.now()})});
-      alert("İsteğiniz gönderildi");
-    };
+        const payload = {
+          type:'withdraw_request',
+          userId: userState.userId,
+          amount_usd: usd,
+          ton_amount: tonAmount !== null ? Number(tonAmount.toFixed(8)) : null,
+          ton_address: addr,
+          ts: Date.now()
+        };
 
+        try{
+          await fetch(PIPEDREAM_ENDPOINT, {
+            method:'POST', headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          // append to jsonbin.requests as log (best-effort)
+          try{
+            const r = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, { headers: { 'X-Master-Key': JSONBIN_API_KEY }});
+            if(r.ok){
+              const js = await r.json(); const record = js.record || {};
+              record.requests = record.requests || []; record.requests.push(payload);
+              await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                method:'PUT', headers:{ 'Content-Type':'application/json','X-Master-Key': JSONBIN_API_KEY }, body: JSON.stringify(record)
+              });
+            }
+          }catch(e){ console.warn('jsonbin request log fail', e); }
+
+          alert('Çekim isteğiniz gönderildi.');
+          withdrawForm.reset(); fetchTonPriceAndUpdateWarning();
+        }catch(e){
+          console.error('pipedream send fail', e);
+          // refund
+          userState.balance_usd = (Number(userState.balance_usd)||0) + usd;
+          await saveState(); updateUI();
+          alert('İstek gönderilemedi. Bakiyeniz iade edildi.');
+        }
+      });
+    }
+
+    // start
     init();
+
+    // periodic price refresh
+    setInterval(fetchTonPriceAndUpdateWarning, 120000);
+
+    // Expose debug (optional)
+    window._monetag = { userState, saveState, JSONBIN_API_KEY, JSONBIN_BIN_ID };
   })();
   </script>
 </body>
-            </html>
+  </html>
