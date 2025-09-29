@@ -491,6 +491,276 @@
             }
         }
 
+        // DÜZELTİLMİŞ REFERANS SİSTEMİ
+        async function checkAndApplyReferral() {
+            debugLog('=== REFERRAL CHECK STARTED ===');
+            
+            // 1. Telegram start_param kontrolü
+            if (tg?.startParam) {
+                debugLog('Telegram startParam found: ' + tg.startParam);
+                if (tg.startParam.startsWith('ref_')) {
+                    const referrerId = tg.startParam.replace('ref_', '');
+                    debugLog('Referrer ID extracted: ' + referrerId);
+                    await applyReferralBonus(referrerId);
+                    return;
+                }
+            } else {
+                debugLog('No Telegram startParam found');
+            }
+            
+            // 2. URL parametreleri kontrolü
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = urlParams.get('start');
+            debugLog('URL start param: ' + startParam);
+            if (startParam && startParam.startsWith('ref_')) {
+                debugLog('URL start param found: ' + startParam);
+                const referrerId = startParam.replace('ref_', '');
+                await applyReferralBonus(referrerId);
+                return;
+            }
+            
+            // 3. Hash parametreleri kontrolü
+            const hashParams = window.location.hash;
+            debugLog('Hash params: ' + hashParams);
+            if (hashParams.includes('ref_')) {
+                const refMatch = hashParams.match(/ref_([a-zA-Z0-9]+)/);
+                if (refMatch) {
+                    debugLog('Hash ref param found: ' + refMatch[0]);
+                    await applyReferralBonus(refMatch[1]);
+                    return;
+                }
+            }
+            
+            debugLog('No referral parameters found in any source');
+        }
+
+        // GÜNCELLENMİŞ REFERANS BONUS UYGULAMA
+        async function applyReferralBonus(referrerId) {
+            debugLog('Applying referral bonus from: ' + referrerId);
+            
+            // Kendi kendine referans kontrolü
+            if (referrerId === userState.id?.toString()) {
+                debugLog('Self-referral detected, skipping');
+                return;
+            }
+            
+            // Çift referans kontrolü
+            if (userState.referred_by) {
+                debugLog('User already referred by: ' + userState.referred_by);
+                return;
+            }
+            
+            // Bonus zaten verilmiş mi kontrolü
+            if (userState.hasReceivedReferralBonus) {
+                debugLog('Referral bonus already received');
+                return;
+            }
+            
+            debugLog('✅ ELIGIBLE FOR REFERRAL BONUS!');
+            
+            // Yeni kullanıcıyı veritabanına kaydet (öncelikle)
+            await ensureUserInDatabase();
+            
+            // Bonusu uygula
+            userState.points += CONFIG.REFERRAL_BONUS;
+            userState.hasReceivedReferralBonus = true;
+            userState.referred_by = referrerId;
+            
+            debugLog('Referral bonus applied: +$' + CONFIG.REFERRAL_BONUS);
+            debugLog('New balance: $' + userState.points);
+            
+            // Hemen kaydet
+            await saveState();
+            
+            // Referans veren kullanıcıya da bonus ver
+            await giveBonusToReferrer(referrerId);
+            
+            // UI'ı güncelle
+            updateUI();
+            
+            // Başarı mesajını göster
+            showReferralSuccess();
+            
+            // Haptic feedback
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        // YENİ KULLANICIYI VERİTABANINA KAYDET
+        async function ensureUserInDatabase() {
+            try {
+                debugLog('Ensuring user is in database: ' + userState.id);
+                
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': CONFIG.JSONBIN_API_KEY }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    let allData = data.record || { users: [] };
+                    
+                    // Kullanıcı zaten var mı kontrol et
+                    const userExists = allData.users.find(user => user.id === userState.id);
+                    
+                    if (!userExists) {
+                        debugLog('User not found in database, adding new user');
+                        
+                        // Yeni kullanıcı objesi oluştur
+                        const newUser = {
+                            id: userState.id,
+                            username: userState.username || `User_${userState.id.substring(0, 8)}`,
+                            points: userState.points || 0,
+                            dailyAdWatchCount: userState.dailyAdWatchCount || 0,
+                            lastAdWatchDate: userState.lastAdWatchDate || new Date().toISOString().slice(0, 10),
+                            referrals: [],
+                            referralEarnings: 0,
+                            hasJoinedChannel: false,
+                            hasJoinedGroup: false,
+                            hasReceivedReferralBonus: userState.hasReceivedReferralBonus || false,
+                            refs_count: 0,
+                            referred_by: userState.referred_by || null
+                        };
+                        
+                        // Veritabanına ekle
+                        allData.users.push(newUser);
+                        
+                        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': CONFIG.JSONBIN_API_KEY
+                            },
+                            body: JSON.stringify(allData)
+                        });
+                        
+                        debugLog('New user added to database: ' + userState.id);
+                    } else {
+                        debugLog('User already exists in database');
+                    }
+                }
+            } catch (error) {
+                debugLog('Error ensuring user in database: ' + error.message);
+            }
+        }
+
+        // GÜNCELLENMİŞ REFERANS VEREN KULLANICIYA BONUS VER
+        async function giveBonusToReferrer(referrerId) {
+            try {
+                debugLog('Giving bonus to referrer: ' + referrerId);
+                
+                // Önce mevcut veriyi al
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': CONFIG.JSONBIN_API_KEY }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    let allData = data.record || { users: [] };
+                    
+                    // Referans veren kullanıcıyı bul
+                    const referrerIndex = allData.users.findIndex(user => user.id === referrerId);
+                    if (referrerIndex !== -1) {
+                        const referrerState = allData.users[referrerIndex];
+                        
+                        // Bonusu uygula
+                        referrerState.points += CONFIG.REFERRAL_BONUS;
+                        referrerState.referralEarnings += CONFIG.REFERRAL_BONUS;
+                        referrerState.refs_count = (referrerState.refs_count || 0) + 1;
+                        
+                        // Mevcut kullanıcıyı referans listesine ekle (eğer yoksa)
+                        if (!referrerState.referrals.includes(userState.id)) {
+                            referrerState.referrals.push(userState.id);
+                        }
+                        
+                        // Güncelle ve kaydet
+                        allData.users[referrerIndex] = referrerState;
+                        
+                        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': CONFIG.JSONBIN_API_KEY
+                            },
+                            body: JSON.stringify(allData)
+                        });
+                        
+                        debugLog('Bonus given to referrer: ' + referrerId);
+                        debugLog('Referrer new balance: $' + referrerState.points);
+                        debugLog('Referrer total referrals: ' + referrerState.refs_count);
+                    } else {
+                        debugLog('Referrer not found in database: ' + referrerId);
+                    }
+                }
+            } catch (error) {
+                debugLog('Error giving bonus to referrer: ' + error.message);
+            }
+        }
+
+        // REFERANS BAŞARI MESAJI
+        function showReferralSuccess() {
+            elements.referralSuccess.style.display = 'block';
+            
+            // 5 saniye sonra gizle
+            setTimeout(() => {
+                elements.referralSuccess.style.display = 'none';
+            }, 5000);
+            
+            // Popup da göster
+            showSuccess(`🎉 Welcome! You received $${CONFIG.REFERRAL_BONUS} referral bonus!`);
+        }
+
+        // GÜNCELLENMİŞ STATE YÜKLEME
+        async function loadState(userId) {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
+                    headers: {
+                        'X-Master-Key': CONFIG.JSONBIN_API_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.record && data.record.users) {
+                        const userData = data.record.users.find(user => user.id === userId);
+                        if (userData) {
+                            userState = { ...userState, ...userData };
+                            debugLog('State loaded from JSONBin for user: ' + userId);
+                            debugLog('Referrals found: ' + userState.referrals.length);
+                            debugLog('Current points: $' + userState.points);
+                            debugLog('Referred by: ' + userState.referred_by);
+                            return true;
+                        } else {
+                            debugLog('No user data found in JSONBin for: ' + userId);
+                            // Yeni kullanıcı için temel bilgileri ayarla
+                            userState.username = tg?.initDataUnsafe?.user?.username || `User_${userId.substring(0, 8)}`;
+                            userState.points = 0;
+                            userState.dailyAdWatchCount = 0;
+                            userState.referrals = [];
+                            userState.referralEarnings = 0;
+                            userState.hasJoinedChannel = false;
+                            userState.hasJoinedGroup = false;
+                            userState.hasReceivedReferralBonus = false;
+                            userState.refs_count = 0;
+                            userState.referred_by = null;
+                            userState.lastAdWatchDate = new Date().toISOString().slice(0, 10);
+                            return false;
+                        }
+                    } else {
+                        debugLog('No users array found in JSONBin');
+                        return false;
+                    }
+                } else {
+                    debugLog('JSONBin response not OK: ' + response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error loading from JSONBin:', error);
+                debugLog('Load error: ' + error.message);
+                return false;
+            }
+        }
+
         // YENİ JSONBin operations - users array yapısı için
         async function saveState() {
             if (!userState.id) {
@@ -552,207 +822,18 @@
             }
         }
 
-        async function loadState(userId) {
-            try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
-                    headers: {
-                        'X-Master-Key': CONFIG.JSONBIN_API_KEY
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.record && data.record.users) {
-                        const userData = data.record.users.find(user => user.id === userId);
-                        if (userData) {
-                            userState = { ...userState, ...userData };
-                            debugLog('State loaded from JSONBin for user: ' + userId);
-                            debugLog('Referrals found: ' + userState.referrals.length);
-                            debugLog('Current points: $' + userState.points);
-                            return true;
-                        } else {
-                            debugLog('No user data found in JSONBin for: ' + userId);
-                            return false;
-                        }
-                    } else {
-                        debugLog('No users array found in JSONBin');
-                        return false;
-                    }
-                } else {
-                    debugLog('JSONBin response not OK: ' + response.status);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error loading from JSONBin:', error);
-                debugLog('Load error: ' + error.message);
-                return false;
-            }
-        }
-
-        // DÜZELTİLMİŞ REFERANS SİSTEMİ
-        async function checkAndApplyReferral() {
-            debugLog('=== REFERRAL CHECK STARTED ===');
-            
-            // 1. Telegram start_param kontrolü
-            if (tg?.startParam) {
-                debugLog('Telegram startParam found: ' + tg.startParam);
-                if (tg.startParam.startsWith('ref_')) {
-                    const referrerId = tg.startParam.replace('ref_', '');
-                    debugLog('Referrer ID extracted: ' + referrerId);
-                    await applyReferralBonus(referrerId);
-                    return;
-                }
-            } else {
-                debugLog('No Telegram startParam found');
-            }
-            
-            // 2. URL parametreleri kontrolü
-            const urlParams = new URLSearchParams(window.location.search);
-            const startParam = urlParams.get('start');
-            debugLog('URL start param: ' + startParam);
-            if (startParam && startParam.startsWith('ref_')) {
-                debugLog('URL start param found: ' + startParam);
-                const referrerId = startParam.replace('ref_', '');
-                await applyReferralBonus(referrerId);
-                return;
-            }
-            
-            // 3. Hash parametreleri kontrolü
-            const hashParams = window.location.hash;
-            debugLog('Hash params: ' + hashParams);
-            if (hashParams.includes('ref_')) {
-                const refMatch = hashParams.match(/ref_([a-zA-Z0-9]+)/);
-                if (refMatch) {
-                    debugLog('Hash ref param found: ' + refMatch[0]);
-                    await applyReferralBonus(refMatch[1]);
-                    return;
-                }
-            }
-            
-            debugLog('No referral parameters found in any source');
-        }
-
-        // REFERANS BONUS UYGULAMA
-        async function applyReferralBonus(referrerId) {
-            debugLog('Applying referral bonus from: ' + referrerId);
-            
-            // Kendi kendine referans kontrolü
-            if (referrerId === userState.id?.toString()) {
-                debugLog('Self-referral detected, skipping');
-                return;
-            }
-            
-            // Çift referans kontrolü
-            if (userState.referrals.includes(referrerId)) {
-                debugLog('Already referred by this user: ' + referrerId);
-                return;
-            }
-            
-            // Bonus zaten verilmiş mi kontrolü
-            if (userState.hasReceivedReferralBonus) {
-                debugLog('Referral bonus already received');
-                return;
-            }
-            
-            debugLog('✅ ELIGIBLE FOR REFERRAL BONUS!');
-            
-            // Bonusu uygula
-            userState.points += CONFIG.REFERRAL_BONUS;
-            userState.referrals.push(referrerId);
-            userState.referralEarnings += CONFIG.REFERRAL_BONUS;
-            userState.hasReceivedReferralBonus = true;
-            userState.referred_by = referrerId;
-            
-            debugLog('Referral bonus applied: +$' + CONFIG.REFERRAL_BONUS);
-            debugLog('New balance: $' + userState.points);
-            debugLog('Total referrals: ' + userState.referrals.length);
-            
-            // Hemen kaydet
-            await saveState();
-            
-            // UI'ı güncelle
-            updateUI();
-            
-            // Başarı mesajını göster
-            showReferralSuccess();
-            
-            // Haptic feedback
-            if (tg?.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
-            }
-            
-            // Referans veren kullanıcıya da bonus ver
-            await giveBonusToReferrer(referrerId);
-        }
-
-        // GÜNCELLENMİŞ REFERANS VEREN KULLANICIYA BONUS VER
-        async function giveBonusToReferrer(referrerId) {
-            try {
-                debugLog('Giving bonus to referrer: ' + referrerId);
-                
-                // Önce mevcut veriyi al
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': CONFIG.JSONBIN_API_KEY }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    let allData = data.record || { users: [] };
-                    
-                    // Referans veren kullanıcıyı bul
-                    const referrerIndex = allData.users.findIndex(user => user.id === referrerId);
-                    if (referrerIndex !== -1) {
-                        const referrerState = allData.users[referrerIndex];
-                        referrerState.points += CONFIG.REFERRAL_BONUS;
-                        referrerState.referralEarnings += CONFIG.REFERRAL_BONUS;
-                        referrerState.refs_count = (referrerState.refs_count || 0) + 1;
-                        
-                        // Güncelle ve kaydet
-                        allData.users[referrerIndex] = referrerState;
-                        
-                        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': CONFIG.JSONBIN_API_KEY
-                            },
-                            body: JSON.stringify(allData)
-                        });
-                        
-                        debugLog('Bonus given to referrer: ' + referrerId);
-                    } else {
-                        debugLog('Referrer not found in database: ' + referrerId);
-                    }
-                }
-            } catch (error) {
-                debugLog('Error giving bonus to referrer: ' + error.message);
-            }
-        }
-
-        // REFERANS BAŞARI MESAJI
-        function showReferralSuccess() {
-            elements.referralSuccess.style.display = 'block';
-            
-            // 5 saniye sonra gizle
-            setTimeout(() => {
-                elements.referralSuccess.style.display = 'none';
-            }, 5000);
-            
-            // Popup da göster
-            showSuccess(`🎉 Welcome! You received $${CONFIG.REFERRAL_BONUS} referral bonus!`);
-        }
-
-        // Update referral display
+        // GÜNCELLENMİŞ REFERANS LİSTESİ GÖSTERİMİ
         function updateReferralDisplay() {
             // Update referral count
-            elements.referralCount.textContent = userState.referrals.length;
+            elements.referralCount.textContent = userState.refs_count || userState.referrals.length;
             
             // Update referrals list
             elements.referralsContainer.innerHTML = '';
             
-            if (userState.referrals.length === 0) {
+            if ((userState.refs_count === 0 || userState.referrals.length === 0) && !userState.referred_by) {
                 elements.referralsContainer.innerHTML = '<p style="text-align: center; color: var(--subtle-text-light); padding: 20px;">No referrals yet. Share your link to start earning!</p>';
             } else {
+                // Kendi referanslarını göster
                 userState.referrals.forEach((referral, index) => {
                     const referralItem = document.createElement('div');
                     referralItem.className = 'referral-item';
@@ -767,9 +848,29 @@
                     `;
                     elements.referralsContainer.appendChild(referralItem);
                 });
+                
+                // Eğer kendisi bir referans ile geldiyse, bunu da göster
+                if (userState.referred_by) {
+                    const referredByItem = document.createElement('div');
+                    referredByItem.className = 'referral-item';
+                    referredByItem.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                    referredByItem.style.color = 'white';
+                    referredByItem.style.borderRadius = '8px';
+                    referredByItem.style.margin = '5px 0';
+                    referredByItem.innerHTML = `
+                        <div class="referral-user">
+                            <div class="referral-avatar" style="background: white; color: #28a745;">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <span>You were referred by User #${userState.referred_by.substring(0, 8)}</span>
+                        </div>
+                        <div class="referral-bonus" style="color: white;">+$${CONFIG.REFERRAL_BONUS}</div>
+                    `;
+                    elements.referralsContainer.insertBefore(referredByItem, elements.referralsContainer.firstChild);
+                }
             }
             
-            debugLog('Referral display updated: ' + userState.referrals.length + ' referrals');
+            debugLog('Referral display updated: ' + (userState.refs_count || userState.referrals.length) + ' referrals');
         }
 
         // Get user ID from multiple sources
@@ -812,19 +913,19 @@
             if (user) {
                 // Use Telegram user data
                 elements.userPhoto.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
-                if (userState.referrals.length > 0) {
+                if (userState.referrals.length > 0 || userState.refs_count > 0) {
                     elements.userName.innerHTML = `${user.first_name || ''} ${user.last_name || ''} 
                         <i class="fas fa-check-circle verified-icon"></i>
-                        <span class="bonus-badge">${userState.referrals.length} ref</span>`;
+                        <span class="bonus-badge">${userState.refs_count || userState.referrals.length} ref</span>`;
                 } else {
                     elements.userName.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
                 }
             } else {
                 // Use demo data
-                if (userState.referrals.length > 0) {
+                if (userState.referrals.length > 0 || userState.refs_count > 0) {
                     elements.userName.innerHTML = `User #${userState.id?.substring(0, 8) || 'Demo'} 
                         <i class="fas fa-check-circle verified-icon"></i>
-                        <span class="bonus-badge">${userState.referrals.length} ref</span>`;
+                        <span class="bonus-badge">${userState.refs_count || userState.referrals.length} ref</span>`;
                 } else {
                     elements.userName.innerHTML = `User #${userState.id?.substring(0, 8) || 'Demo'} <i class="fas fa-check-circle verified-icon"></i>`;
                 }
@@ -852,7 +953,7 @@
 
             debugLog('UI updated successfully');
             debugLog('Current balance: $' + userState.points);
-            debugLog('Total referrals: ' + userState.referrals.length);
+            debugLog('Total referrals: ' + (userState.refs_count || userState.referrals.length));
         }
 
         // TEST REFERANS SİSTEMİ - Manuel test için
@@ -1197,28 +1298,24 @@
             userState.id = getUserId();
             debugLog('User ID set: ' + userState.id);
             
-            // ÖNCE referans kontrolü - state yüklemeden önce
-            debugLog('Checking for referral parameters FIRST...');
+            // Kullanıcı adını ayarla
+            if (tg?.initDataUnsafe?.user) {
+                userState.username = tg.initDataUnsafe.user.username || 
+                                   `${tg.initDataUnsafe.user.first_name || ''} ${tg.initDataUnsafe.user.last_name || ''}`.trim();
+            } else {
+                userState.username = `User_${userState.id.substring(0, 8)}`;
+            }
+            
+            // ÖNCE state'i yükle
+            debugLog('Loading user state for: ' + userState.id);
+            await loadState(userState.id);
+            
+            // SONRA referans kontrolü - state yüklendikten sonra
+            debugLog('Checking for referral parameters...');
             await checkAndApplyReferral();
             
-            // SONRA state'i yükle
-            debugLog('Loading user state for: ' + userState.id);
-            const stateLoaded = await loadState(userState.id);
-            
-            // Eğer state yüklenemediyse veya kullanıcı yeni ise, temel state'i ayarla
-            if (!stateLoaded) {
-                debugLog('Setting up new user state');
-                userState.points = 0;
-                userState.dailyAdWatchCount = 0;
-                userState.referrals = [];
-                userState.referralEarnings = 0;
-                userState.hasJoinedChannel = false;
-                userState.hasJoinedGroup = false;
-                userState.refs_count = 0;
-                userState.referred_by = null;
-                userState.lastAdWatchDate = new Date().toISOString().slice(0, 10);
-                // hasReceivedReferralBonus zaten checkAndApplyReferral'da ayarlanmış olabilir
-            }
+            // Yeni kullanıcıyı veritabanına kaydet (eğer yoksa)
+            await ensureUserInDatabase();
             
             // Günlük sıfırlama
             const today = new Date().toISOString().slice(0, 10);
@@ -1244,9 +1341,10 @@
             
             debugLog('=== APP INITIALIZATION COMPLETED ===');
             debugLog('Final balance: $' + userState.points);
-            debugLog('Total referrals: ' + userState.referrals.length);
+            debugLog('Total referrals: ' + (userState.refs_count || userState.referrals.length));
             debugLog('Referral earnings: $' + userState.referralEarnings);
             debugLog('Referral bonus received: ' + userState.hasReceivedReferralBonus);
+            debugLog('Referred by: ' + userState.referred_by);
         }
 
         // Uygulamayı başlat
