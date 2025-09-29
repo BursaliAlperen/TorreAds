@@ -160,12 +160,6 @@
         .loading-state { text-align: center; padding: 40px 20px; color: var(--subtle-text-light); }
         .dark-theme .loading-state { color: var(--subtle-text-dark); }
 
-        /* Referral Stats */
-        .referral-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .referral-stat-card { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 8px; text-align: center; }
-        .referral-stat-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
-        .referral-stat-label { font-size: 0.8rem; opacity: 0.9; }
-
         /* Referral Success Animation */
         .referral-success {
             background: linear-gradient(135deg, #28a745, #20c997);
@@ -267,23 +261,11 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  100</p>
+                        <p><span id="daily-ads-watched">00</span> / 100</p>
                     </div>
                     <div class="stat-card">
-                        <h3>Total Referrals</h3>
-                        <p id="referral-count">00</p>
-                    </div>
-                </div>
-
-                <!-- Referral Stats -->
-                <div class="referral-stats">
-                    <div class="referral-stat-card">
-                        <div class="referral-stat-value" id="total-referrals">0</div>
-                        <div class="referral-stat-label">Total Referrals</div>
-                    </div>
-                    <div class="referral-stat-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
-                        <div class="referral-stat-value" id="referral-earnings">$0.00</div>
-                        <div class="referral-stat-label">Referral Earnings</div>
+                        <h3>Balance</h3>
+                        <p>$<span id="user-balance">0</span></p>
                     </div>
                 </div>
 
@@ -299,7 +281,7 @@
 
                     <!-- Referral List -->
                     <div class="referral-list" id="referral-list">
-                        <h4 style="margin: 15px 0 10px 0;">Your Referrals</h4>
+                        <h4 style="margin: 15px 0 10px 0;">Your Referrals (<span id="referral-count">0</span>)</h4>
                         <div id="referrals-container">
                             <!-- Referral items will be added here -->
                         </div>
@@ -386,6 +368,8 @@
         // Global variables
         let tg = null;
         let userState = {
+            id: null,
+            username: "",
             points: 0,
             dailyAdWatchCount: 0,
             lastAdWatchDate: null,
@@ -393,15 +377,15 @@
             referralEarnings: 0,
             hasJoinedChannel: false,
             hasJoinedGroup: false,
-            userId: null,
-            username: "",
-            hasReceivedReferralBonus: false
+            hasReceivedReferralBonus: false,
+            refs_count: 0,
+            referred_by: null
         };
 
         // Configuration
         const CONFIG = {
             JSONBIN_API_KEY: "$2a$10$t0i.TuifzioNY0cd8HzoDOxB94YLcVc.gbHkv.qmFQzFJcbl9uVrK",
-            JSONBIN_BIN_ID: "68da76fad0ea881f408f1248",
+            JSONBIN_BIN_ID: "68dacebeae596e708f003c06",
             PIPEDREAM_WEBHOOK: "https://eo3h4zf914hhqv7.m.pipedream.net",
             BOT_USERNAME: "TorreAds_Bot",
             CHANNEL_LINK: "https://t.me/Torrelabs",
@@ -419,6 +403,7 @@
             userPhoto: document.getElementById('user-photo'),
             userName: document.getElementById('user-name'),
             userPoints: document.getElementById('user-points'),
+            userBalance: document.getElementById('user-balance'),
             dailyAdsWatched: document.getElementById('daily-ads-watched'),
             referralCount: document.getElementById('referral-count'),
             watchAdBtn: document.getElementById('watch-ad-btn'),
@@ -438,8 +423,6 @@
             homePage: document.getElementById('home-page'),
             debugContent: document.getElementById('debug-content'),
             referralsContainer: document.getElementById('referrals-container'),
-            totalReferrals: document.getElementById('total-referrals'),
-            referralEarnings: document.getElementById('referral-earnings'),
             referralSuccess: document.getElementById('referral-success')
         };
 
@@ -508,9 +491,9 @@
             }
         }
 
-        // JSONBin operations
+        // YENİ JSONBin operations - users array yapısı için
         async function saveState() {
-            if (!userState.userId) {
+            if (!userState.id) {
                 debugLog('No user ID for saveState');
                 return;
             }
@@ -523,17 +506,25 @@
                     }
                 });
                 
-                let allData = {};
+                let allData = { users: [] };
                 if (getResponse.ok) {
                     const data = await getResponse.json();
-                    allData = data.record || {};
+                    allData = data.record || { users: [] };
                     debugLog('Existing data loaded from JSONBin');
                 } else {
                     debugLog('No existing data in JSONBin, creating new');
                 }
                 
-                // Update user data
-                allData[userState.userId] = userState;
+                // Find user index
+                const userIndex = allData.users.findIndex(user => user.id === userState.id);
+                
+                if (userIndex !== -1) {
+                    // Update existing user
+                    allData.users[userIndex] = userState;
+                } else {
+                    // Add new user
+                    allData.users.push(userState);
+                }
                 
                 // Save updated data
                 const putResponse = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
@@ -555,7 +546,7 @@
                 console.error('Error saving to JSONBin:', error);
                 debugLog('Save error: ' + error.message);
                 // Fallback to localStorage
-                localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
+                localStorage.setItem(`userState_${userState.id}`, JSON.stringify(userState));
                 debugLog('State saved to localStorage as fallback');
                 return false;
             }
@@ -571,14 +562,20 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.record && data.record[userId]) {
-                        userState = { ...userState, ...data.record[userId] };
-                        debugLog('State loaded from JSONBin for user: ' + userId);
-                        debugLog('Referrals found: ' + userState.referrals.length);
-                        debugLog('Current points: $' + userState.points);
-                        return true;
+                    if (data.record && data.record.users) {
+                        const userData = data.record.users.find(user => user.id === userId);
+                        if (userData) {
+                            userState = { ...userState, ...userData };
+                            debugLog('State loaded from JSONBin for user: ' + userId);
+                            debugLog('Referrals found: ' + userState.referrals.length);
+                            debugLog('Current points: $' + userState.points);
+                            return true;
+                        } else {
+                            debugLog('No user data found in JSONBin for: ' + userId);
+                            return false;
+                        }
                     } else {
-                        debugLog('No user data found in JSONBin for: ' + userId);
+                        debugLog('No users array found in JSONBin');
                         return false;
                     }
                 } else {
@@ -640,7 +637,7 @@
             debugLog('Applying referral bonus from: ' + referrerId);
             
             // Kendi kendine referans kontrolü
-            if (referrerId === userState.userId?.toString()) {
+            if (referrerId === userState.id?.toString()) {
                 debugLog('Self-referral detected, skipping');
                 return;
             }
@@ -664,6 +661,7 @@
             userState.referrals.push(referrerId);
             userState.referralEarnings += CONFIG.REFERRAL_BONUS;
             userState.hasReceivedReferralBonus = true;
+            userState.referred_by = referrerId;
             
             debugLog('Referral bonus applied: +$' + CONFIG.REFERRAL_BONUS);
             debugLog('New balance: $' + userState.points);
@@ -687,7 +685,7 @@
             await giveBonusToReferrer(referrerId);
         }
 
-        // REFERANS VEREN KULLANICIYA BONUS VER
+        // GÜNCELLENMİŞ REFERANS VEREN KULLANICIYA BONUS VER
         async function giveBonusToReferrer(referrerId) {
             try {
                 debugLog('Giving bonus to referrer: ' + referrerId);
@@ -699,16 +697,18 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    let allData = data.record || {};
+                    let allData = data.record || { users: [] };
                     
                     // Referans veren kullanıcıyı bul
-                    if (allData[referrerId]) {
-                        const referrerState = allData[referrerId];
+                    const referrerIndex = allData.users.findIndex(user => user.id === referrerId);
+                    if (referrerIndex !== -1) {
+                        const referrerState = allData.users[referrerIndex];
                         referrerState.points += CONFIG.REFERRAL_BONUS;
                         referrerState.referralEarnings += CONFIG.REFERRAL_BONUS;
+                        referrerState.refs_count = (referrerState.refs_count || 0) + 1;
                         
                         // Güncelle ve kaydet
-                        allData[referrerId] = referrerState;
+                        allData.users[referrerIndex] = referrerState;
                         
                         await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
                             method: 'PUT',
@@ -746,11 +746,6 @@
         function updateReferralDisplay() {
             // Update referral count
             elements.referralCount.textContent = userState.referrals.length;
-            elements.totalReferrals.textContent = userState.referrals.length;
-            
-            // Update referral earnings
-            const totalEarnings = userState.referralEarnings || (userState.referrals.length * CONFIG.REFERRAL_BONUS);
-            elements.referralEarnings.textContent = '$' + totalEarnings.toFixed(2);
             
             // Update referrals list
             elements.referralsContainer.innerHTML = '';
@@ -827,19 +822,22 @@
             } else {
                 // Use demo data
                 if (userState.referrals.length > 0) {
-                    elements.userName.innerHTML = `User #${userState.userId?.substring(0, 8) || 'Demo'} 
+                    elements.userName.innerHTML = `User #${userState.id?.substring(0, 8) || 'Demo'} 
                         <i class="fas fa-check-circle verified-icon"></i>
                         <span class="bonus-badge">${userState.referrals.length} ref</span>`;
                 } else {
-                    elements.userName.innerHTML = `User #${userState.userId?.substring(0, 8) || 'Demo'} <i class="fas fa-check-circle verified-icon"></i>`;
+                    elements.userName.innerHTML = `User #${userState.id?.substring(0, 8) || 'Demo'} <i class="fas fa-check-circle verified-icon"></i>`;
                 }
             }
             
             elements.userPoints.textContent = userState.points.toFixed(4);
+            if (elements.userBalance) {
+                elements.userBalance.textContent = userState.points.toFixed(4);
+            }
             elements.dailyAdsWatched.textContent = userState.dailyAdWatchCount;
             
             // Generate referral link
-            const refUserId = userState.userId || 'demo';
+            const refUserId = userState.id || 'demo';
             elements.referralLink.value = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${refUserId}`;
             
             // Update referral display
@@ -884,7 +882,7 @@
 
         // MANUEL REFERANS LINKI OLUŞTURMA
         function createManualReferralLink() {
-            const userId = userState.userId || 'demo_user';
+            const userId = userState.id || 'demo_user';
             const referralLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${userId}`;
             
             debugLog('Manual referral link: ' + referralLink);
@@ -1094,7 +1092,7 @@
             
             // Prepare withdraw data
             const withdrawData = {
-                userId: userState.userId,
+                userId: userState.id,
                 username: userState.username,
                 userFirstName: tg?.initDataUnsafe?.user?.first_name || '',
                 userLastName: tg?.initDataUnsafe?.user?.last_name || '',
@@ -1196,16 +1194,16 @@
             const telegramInitialized = initTelegram();
             
             // Kullanıcı ID'sini al
-            userState.userId = getUserId();
-            debugLog('User ID set: ' + userState.userId);
+            userState.id = getUserId();
+            debugLog('User ID set: ' + userState.id);
             
             // ÖNCE referans kontrolü - state yüklemeden önce
             debugLog('Checking for referral parameters FIRST...');
             await checkAndApplyReferral();
             
             // SONRA state'i yükle
-            debugLog('Loading user state for: ' + userState.userId);
-            const stateLoaded = await loadState(userState.userId);
+            debugLog('Loading user state for: ' + userState.id);
+            const stateLoaded = await loadState(userState.id);
             
             // Eğer state yüklenemediyse veya kullanıcı yeni ise, temel state'i ayarla
             if (!stateLoaded) {
@@ -1216,6 +1214,8 @@
                 userState.referralEarnings = 0;
                 userState.hasJoinedChannel = false;
                 userState.hasJoinedGroup = false;
+                userState.refs_count = 0;
+                userState.referred_by = null;
                 userState.lastAdWatchDate = new Date().toISOString().slice(0, 10);
                 // hasReceivedReferralBonus zaten checkAndApplyReferral'da ayarlanmış olabilir
             }
