@@ -157,6 +157,249 @@
 
         /* Small Amount Warning */
         .small-amount-warning { background: #fff3cd; color: #856404; padding: 8px; border-radius: 5px; margin: 5px 0; font-size: 0.8rem; text-align: center; border: 1px solid #ffeaa7; }
+
+        /* Error Message */
+        .error-message { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; border: 1px solid #f5c6cb; }
+
+        /* Debug Info */
+        .debug-info { background: #e9ecef; color: #495057; padding: 8px; border-radius: 5px; margin: 5px 0; font-size: 0.7rem; font-family: monospace; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <header class="profile-header">
+            <div class="profile-info">
+                <img id="user-photo" src="https://i.imgur.com/placeholder.png" alt="User Photo">
+                <div class="user-details">
+                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
+                    <p> Balance: $<span id="user-points">0</span></p>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <!-- Home Page -->
+            <div id="home-page" class="page active">
+                <h2>Dashboard</h2>
+                <div id="error-message" class="error-message" style="display: none;"></div>
+                <div class="debug-info" id="debug-info"></div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Daily Ads Watched</h3>
+                        <p><span id="daily-ads-watched">00</span> /  100</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Referrals</h3>
+                        <p id="referral-count">00</p>
+                    </div>
+                </div>
+                <div class="referral-section">
+                    <h3>Refer & Earn More!</h3>
+                    <p>Share your link to get $0.02 for each referral.</p>
+                    <input type="text" id="referral-link" readonly>
+                    <button id="copy-ref-link-btn">Copy Referral Link</button>
+                </div>
+            </div>
+
+            <!-- Tasks Page -->
+            <div id="tasks-page" class="page">
+                <h2>Complete Tasks</h2>
+                <div class="small-amount-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Reklam başı kazanç: $0.0005
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-video task-icon"></i>
+                    <h3>Watch a Rewarded Ad</h3>
+                    <p>Earn $0.0005 for every ad.</p>
+                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
+                </div>
+                <div class="task-container">
+                    <i class="fab fa-telegram task-icon"></i>
+                    <h3>Join Our Channel</h3>
+                    <p>Get $0.10 bonus.</p>
+                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-users task-icon"></i>
+                    <h3>Join Our Group</h3>
+                    <p>Get $0.05 bonus.</p>
+                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+            </div>
+            
+            <!-- Withdraw Page -->
+            <div id="withdraw-page" class="page">
+                <h2>Withdraw TON</h2>
+                <p>Minimum $0.50 required to withdraw.</p>
+                
+                <div class="ton-info">
+                    <p><i class="fas fa-info-circle"></i> TON Conversion Rate</p>
+                    <div class="conversion-rate" id="ton-rate">Loading TON price...</div>
+                    <p id="ton-estimate">Enter amount to see TON estimate</p>
+                </div>
+                
+                <div id="success-message" class="success-message">
+                    <i class="fas fa-check-circle"></i> Withdrawal request submitted successfully!
+                </div>
+                
+                <form id="withdraw-form">
+                    <div class="form-group">
+                        <label for="ton-address">TON Wallet Address:</label>
+                        <input type="text" id="ton-address" placeholder="EQ... or UQ..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount to Withdraw ($):</label>
+                        <input type="number" id="amount" placeholder="0.50" step="0.01" min="0.50" required>
+                    </div>
+                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
+                        <span class="btn-text">Submit Withdraw Request</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
+        </nav>
+    </div>
+
+    <div id="loading-modal" class="modal">
+        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
+    </div>
+    
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- GigaPub Ads SDK -->
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
+    
+    <script>
+        // Global variables
+        let tg = null;
+        let userState = {
+            points: 0,
+            dailyAdWatchCount: 0,
+            lastAdWatchDate: null,
+            referrals: [],
+            hasJoinedChannel: false,
+            hasJoinedGroup: false,
+            userId: null,
+            username: ""
+        };
+
+        // Configuration
+        const CONFIG = {
+            JSONBIN_API_KEY: "$2a$10$t0i.TuifzioNY0cd8HzoDOxB94YLcVc.gbHkv.qmFQzFJcbl9uVrK",
+            JSONBIN_BIN_ID: "68da76fad0ea881f408f1248",
+            PIPEDREAM_WEBHOOK: "https://eo3h4zf914hhqv7.m.pipedream.net",
+            BOT_USERNAME: "TorreAds_Bot",
+            CHANNEL_LINK: "https://t.me/Torrelabs",
+            GROUP_LINK: "https://t.me/torreAdsChat",
+            DAILY_AD_LIMIT: 100,
+            POINTS_PER_AD: 0.0005,
+            CHANNEL_JOIN_BONUS: 0.10,
+            GROUP_JOIN_BONUS: 0.05,
+            REFERRAL_BONUS: 0.02,
+            MIN_WITHDRAW_POINTS: 0.50
+        };
+
+        // DOM Elements
+        const elements = {
+            userPhoto: document.getElementById('user-photo'),
+            userName: document.getElementById('user-name'),
+            userPoints: document.getElementById('user-points'),
+            dailyAdsWatched: document.getElementById('daily-ads-watched'),
+            referralCount: document.getElementById('referral-count'),
+            watchAdBtn: document.getElementById('watch-ad-btn'),
+            joinChannelBtn: document.getElementById('join-channel-btn'),
+            joinGroupBtn: document.getElementById('join-group-btn'),
+            withdrawForm: document.getElementById('withdraw-form'),
+            withdrawSubmitBtn: document.getElementById('withdraw-submit-btn'),
+            referralLink: document.getElementById('referral-link'),
+            copyRefLinkBtn: document.getElementById('copy-ref-link-btn'),
+            loadingModal: document.getElementById('loading-modal'),
+            tonRate: document.getElementById('ton-rate'),
+            tonEstimate: document.getElementById('ton-estimate'),
+            amountInput: document.getElementById('amount'),
+            successMessage: document.getElementById('success-message'),
+            errorMessage: document.getElementById('error-message'),
+            debugInfo: document.getElementById('debug-info')
+        };
+
+        let tonPrice = 0;
+
+        // Debug function
+        function debugLog(message) {
+            console.log('[DEBUG]', message);
+            elements.debugInfo.innerHTML += message + '<br>';
+        }
+
+        // Show error message
+        function showError(message) {
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.style.display = 'block';
+            setTimeout(() => {
+                elements.errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize Telegram Web App
+        function initTelegram() {
+            try {
+                if (window.Telegram && window.Telegram.WebApp) {
+                           .light-theme .action-btn { background-color: var(--primary-color-light); }
+        .dark-theme .action-btn { background-color: var(--primary-color-dark); }
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        .action-btn.loading .btn-text { visibility: hidden; }
+        .action-btn.loading .btn-loader { display: block; position: absolute; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Form Styles */
+        #withdraw-form .form-group { margin-bottom: 15px; }
+        #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+        #withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
+        .dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
+        .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
+        .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
+        
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
+        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
+        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
+        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
+        .light-theme .nav-btn { color: var(--subtle-text-light); }
+        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
+        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
+        .nav-btn.active { font-weight: 700; }
+        .light-theme .nav-btn.active { color: var(--primary-color-light); }
+        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
+        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
+        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
+        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        .light-theme .loader { border-top-color: var(--primary-color-light); }
+        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
+
+        /* TON Price Info */
+        .ton-info { background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        .ton-info p { margin: 5px 0; font-size: 0.9rem; }
+        .conversion-rate { font-size: 1.1rem; font-weight: bold; margin: 10px 0; }
+        
+        /* Success Message */
+        .success-message { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; display: none; }
+
+        /* Small Amount Warning */
+        .small-amount-warning { background: #fff3cd; color: #856404; padding: 8px; border-radius: 5px; margin: 5px 0; font-size: 0.8rem; text-align: center; border: 1px solid #ffeaa7; }
     </style>
 </head>
 <body>
