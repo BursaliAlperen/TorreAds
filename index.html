@@ -410,7 +410,7 @@
             POINTS_PER_AD: 0.0005,
             CHANNEL_JOIN_BONUS: 0.10,
             GROUP_JOIN_BONUS: 0.05,
-            REFERRAL_BONUS: 0.02, // 0.02 olarak güncellendi
+            REFERRAL_BONUS: 0.02,
             MIN_WITHDRAW_POINTS: 0.50
         };
 
@@ -508,7 +508,7 @@
             }
         }
 
-        // JSONBin operations - DÜZELTİLMİŞ VERSİYON
+        // JSONBin operations
         async function saveState() {
             if (!userState.userId) {
                 debugLog('No user ID for saveState');
@@ -516,7 +516,7 @@
             }
             
             try {
-                // Önce mevcut veriyi al
+                // First get current data
                 const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
                     headers: {
                         'X-Master-Key': CONFIG.JSONBIN_API_KEY
@@ -532,10 +532,10 @@
                     debugLog('No existing data in JSONBin, creating new');
                 }
                 
-                // Kullanıcı verisini güncelle
+                // Update user data
                 allData[userState.userId] = userState;
                 
-                // Güncellenmiş veriyi kaydet
+                // Save updated data
                 const putResponse = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: {
@@ -549,8 +549,7 @@
                     debugLog('State saved successfully to JSONBin');
                     return true;
                 } else {
-                    const errorText = await putResponse.text();
-                    throw new Error('Failed to save state to JSONBin: ' + putResponse.status + ' - ' + errorText);
+                    throw new Error('Failed to save state to JSONBin: ' + putResponse.status);
                 }
             } catch (error) {
                 console.error('Error saving to JSONBin:', error);
@@ -580,16 +579,7 @@
                         return true;
                     } else {
                         debugLog('No user data found in JSONBin for: ' + userId);
-                        // Yeni kullanıcı için temel state'i ayarla
-                        userState.userId = userId;
-                        userState.points = 0;
-                        userState.dailyAdWatchCount = 0;
-                        userState.referrals = [];
-                        userState.referralEarnings = 0;
-                        userState.hasJoinedChannel = false;
-                        userState.hasJoinedGroup = false;
-                        userState.hasReceivedReferralBonus = false;
-                        return true;
+                        return false;
                     }
                 } else {
                     debugLog('JSONBin response not OK: ' + response.status);
@@ -611,14 +601,18 @@
                 debugLog('Telegram startParam found: ' + tg.startParam);
                 if (tg.startParam.startsWith('ref_')) {
                     const referrerId = tg.startParam.replace('ref_', '');
+                    debugLog('Referrer ID extracted: ' + referrerId);
                     await applyReferralBonus(referrerId);
                     return;
                 }
+            } else {
+                debugLog('No Telegram startParam found');
             }
             
             // 2. URL parametreleri kontrolü
             const urlParams = new URLSearchParams(window.location.search);
             const startParam = urlParams.get('start');
+            debugLog('URL start param: ' + startParam);
             if (startParam && startParam.startsWith('ref_')) {
                 debugLog('URL start param found: ' + startParam);
                 const referrerId = startParam.replace('ref_', '');
@@ -626,32 +620,34 @@
                 return;
             }
             
-            // 3. Telegram initData kontrolü
-            if (tg?.initData) {
-                try {
-                    const initParams = new URLSearchParams(tg.initData);
-                    const startParam = initParams.get('start');
-                    if (startParam && startParam.startsWith('ref_')) {
-                        debugLog('InitData start param found: ' + startParam);
-                        const referrerId = startParam.replace('ref_', '');
-                        await applyReferralBonus(referrerId);
-                        return;
-                    }
-                } catch (error) {
-                    debugLog('Error parsing initData: ' + error.message);
+            // 3. Hash parametreleri kontrolü
+            const hashParams = window.location.hash;
+            debugLog('Hash params: ' + hashParams);
+            if (hashParams.includes('ref_')) {
+                const refMatch = hashParams.match(/ref_([a-zA-Z0-9]+)/);
+                if (refMatch) {
+                    debugLog('Hash ref param found: ' + refMatch[0]);
+                    await applyReferralBonus(refMatch[1]);
+                    return;
                 }
             }
             
-            debugLog('No referral parameters found');
+            debugLog('No referral parameters found in any source');
         }
 
-        // DÜZELTİLMİŞ REFERANS BONUS UYGULAMA
+        // REFERANS BONUS UYGULAMA
         async function applyReferralBonus(referrerId) {
             debugLog('Applying referral bonus from: ' + referrerId);
             
             // Kendi kendine referans kontrolü
             if (referrerId === userState.userId?.toString()) {
                 debugLog('Self-referral detected, skipping');
+                return;
+            }
+            
+            // Çift referans kontrolü
+            if (userState.referrals.includes(referrerId)) {
+                debugLog('Already referred by this user: ' + referrerId);
                 return;
             }
             
@@ -691,7 +687,7 @@
             await giveBonusToReferrer(referrerId);
         }
 
-        // DÜZELTİLMİŞ REFERANS VEREN KULLANICIYA BONUS VER
+        // REFERANS VEREN KULLANICIYA BONUS VER
         async function giveBonusToReferrer(referrerId) {
             try {
                 debugLog('Giving bonus to referrer: ' + referrerId);
@@ -1192,7 +1188,7 @@
             showSuccess(`Added $${amount} to balance!`);
         }
 
-        // GÜNCELLENMİŞ MAIN INITIALIZATION
+        // DÜZELTİLMİŞ MAIN INITIALIZATION
         async function initApp() {
             debugLog('=== APP INITIALIZATION STARTED ===');
             
@@ -1203,12 +1199,26 @@
             userState.userId = getUserId();
             debugLog('User ID set: ' + userState.userId);
             
-            // State'i yükle
-            debugLog('Loading user state for: ' + userState.userId);
-            await loadState(userState.userId);
-            
-            // YENİ: Referans kontrolü - HER ZAMAN ÇALIŞSIN
+            // ÖNCE referans kontrolü - state yüklemeden önce
+            debugLog('Checking for referral parameters FIRST...');
             await checkAndApplyReferral();
+            
+            // SONRA state'i yükle
+            debugLog('Loading user state for: ' + userState.userId);
+            const stateLoaded = await loadState(userState.userId);
+            
+            // Eğer state yüklenemediyse veya kullanıcı yeni ise, temel state'i ayarla
+            if (!stateLoaded) {
+                debugLog('Setting up new user state');
+                userState.points = 0;
+                userState.dailyAdWatchCount = 0;
+                userState.referrals = [];
+                userState.referralEarnings = 0;
+                userState.hasJoinedChannel = false;
+                userState.hasJoinedGroup = false;
+                userState.lastAdWatchDate = new Date().toISOString().slice(0, 10);
+                // hasReceivedReferralBonus zaten checkAndApplyReferral'da ayarlanmış olabilir
+            }
             
             // Günlük sıfırlama
             const today = new Date().toISOString().slice(0, 10);
@@ -1236,6 +1246,7 @@
             debugLog('Final balance: $' + userState.points);
             debugLog('Total referrals: ' + userState.referrals.length);
             debugLog('Referral earnings: $' + userState.referralEarnings);
+            debugLog('Referral bonus received: ' + userState.hasReceivedReferralBonus);
         }
 
         // Uygulamayı başlat
