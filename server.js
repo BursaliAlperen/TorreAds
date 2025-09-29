@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,32 +12,33 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// JSONBin Configuration - YENİ BIN ID
+// JSONBin.io Configuration
 const JSONBIN_CONFIG = {
     baseURL: 'https://api.jsonbin.io/v3/b',
     masterKey: process.env.JSONBIN_MASTER_KEY,
-    binId: "68dae2c8ae596e708f005011" // YENİ BIN ID
+    binId: process.env.JSONBIN_BIN_ID
 };
 
-console.log('🚀 Starting with NEW JSONBin ID:', JSONBIN_CONFIG.binId);
+console.log('🚀 Starting JSONBin System with ID:', JSONBIN_CONFIG.binId);
 
-// ULTIMATE JSONBin MANAGER
-class UltimateJsonBinManager {
+// JSONBin Database Manager - Tüm kullanıcı işlemleri burada
+class JsonBinDatabase {
     constructor() {
         this.baseURL = JSONBIN_CONFIG.baseURL;
         this.binId = JSONBIN_CONFIG.binId;
         this.masterKey = JSONBIN_CONFIG.masterKey;
         this.cache = null;
         this.lastFetch = 0;
-        this.cacheTimeout = 5000;
+        this.cacheTimeout = 10000; // 10 saniye cache
     }
 
+    // JSONBin API çağrısı için yardımcı fonksiyon
     async fetchWithRetry(url, options = {}, retries = 3) {
         for (let i = 0; i < retries; i++) {
             try {
                 const response = await axios({
                     url,
-                    timeout: 10000,
+                    timeout: 15000,
                     ...options,
                     headers: {
                         'Content-Type': 'application/json',
@@ -46,14 +48,16 @@ class UltimateJsonBinManager {
                 });
                 return response;
             } catch (error) {
-                console.log(`Attempt ${i + 1} failed:`, error.message);
+                console.log(`⏳ Attempt ${i + 1}/${retries} failed:`, error.message);
                 if (i === retries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
             }
         }
     }
 
+    // JSONBin'den veritabanını getir
     async getDatabase() {
+        // Cache kontrolü
         if (this.cache && Date.now() - this.lastFetch < this.cacheTimeout) {
             return this.cache;
         }
@@ -64,40 +68,29 @@ class UltimateJsonBinManager {
             
             let data = response.data.record;
             
-            // Eğer bin boşsa veya hatalıysa, yeni structure oluştur
+            // Eğer bin boşsa veya hatalıysa, yeni yapı oluştur
             if (!data || typeof data !== 'object') {
                 console.log('🆕 Creating new database structure...');
-                data = { 
-                    users: {}, 
-                    metadata: { 
-                        totalUsers: 0, 
-                        version: '4.0',
-                        createdAt: new Date().toISOString() 
-                    } 
-                };
+                data = this.createDefaultDatabase();
                 await this.saveDatabase(data);
             }
             
-            if (!data.users) data.users = {};
-            if (!data.metadata) {
-                data.metadata = { 
-                    totalUsers: Object.keys(data.users).length, 
-                    version: '4.0',
-                    createdAt: new Date().toISOString() 
-                };
-            }
+            // Veri yapısını doğrula ve gerekli alanları ekle
+            data = this.validateDatabaseStructure(data);
             
             this.cache = data;
             this.lastFetch = Date.now();
             
-            console.log(`✅ Database loaded. Users: ${Object.keys(data.users).length}`);
+            console.log(`✅ Database loaded. Total users: ${data.users.length}`);
             return data;
         } catch (error) {
-            console.error('❌ FATAL: Cannot connect to JSONBin:', error.message);
-            return { users: {}, metadata: { totalUsers: 0, version: '4.0', error: 'Connection failed' } };
+            console.error('❌ Cannot connect to JSONBin:', error.message);
+            // Fallback: varsayılan veritabanı döndür
+            return this.createDefaultDatabase();
         }
     }
 
+    // JSONBin'e veritabanını kaydet
     async saveDatabase(data) {
         try {
             console.log('💾 Saving database to JSONBin...');
@@ -112,247 +105,301 @@ class UltimateJsonBinManager {
             console.log('✅ Database saved successfully');
             return response.data;
         } catch (error) {
-            console.error('❌ FATAL: Cannot save to JSONBin:', error.message);
+            console.error('❌ Cannot save to JSONBin:', error.message);
             throw new Error('DATABASE_SAVE_FAILED: ' + error.message);
         }
     }
 
-    async getUser(userId) {
-        const database = await this.getDatabase();
-        return database.users[userId] || null;
-    }
-
-    async createUser(userId, userData) {
-        const database = await this.getDatabase();
-        
-        if (database.users[userId]) {
-            console.log('⚠️ User already exists:', userId);
-            return database.users[userId];
-        }
-
-        // Yeni kullanıcı oluştur
-        database.users[userId] = {
-            ...userData,
-            id: userId,
-            createdAt: new Date().toISOString(),
-            lastUpdated: new Date().toISOString()
-        };
-
-        // Metadata güncelle
-        database.metadata.totalUsers = Object.keys(database.users).length;
-        database.metadata.lastUpdate = new Date().toISOString();
-
-        await this.saveDatabase(database);
-        console.log('✅ New user created:', userId);
-        return database.users[userId];
-    }
-
-    async updateUser(userId, updates) {
-        const database = await this.getDatabase();
-        
-        if (!database.users[userId]) {
-            console.log('❌ User not found for update:', userId);
-            return null;
-        }
-
-        // Kullanıcıyı güncelle
-        database.users[userId] = {
-            ...database.users[userId],
-            ...updates,
-            lastUpdated: new Date().toISOString()
-        };
-
-        database.metadata.lastUpdate = new Date().toISOString();
-        await this.saveDatabase(database);
-        
-        console.log('✅ User updated:', userId);
-        return database.users[userId];
-    }
-
-    async applyReferral(userId, referrerId) {
-        const database = await this.getDatabase();
-        
-        // Validasyonlar
-        if (!database.users[userId]) throw new Error('User not found');
-        if (!database.users[referrerId]) throw new Error('Referrer not found');
-        if (userId === referrerId) throw new Error('Self-referral not allowed');
-        if (database.users[userId].hasReceivedReferralBonus) throw new Error('Already received referral bonus');
-        if (database.users[userId].referred_by) throw new Error('Already referred by someone');
-
-        console.log(`🎯 Applying referral: ${referrerId} -> ${userId}`);
-
-        // Referans alan kullanıcıyı güncelle
-        database.users[userId].points = (database.users[userId].points || 0) + 0.02;
-        database.users[userId].hasReceivedReferralBonus = true;
-        database.users[userId].referred_by = referrerId;
-
-        // Referans veren kullanıcıyı güncelle
-        if (!database.users[referrerId].referrals) {
-            database.users[referrerId].referrals = [];
-        }
-        if (!database.users[referrerId].referrals.includes(userId)) {
-            database.users[referrerId].referrals.push(userId);
-        }
-        database.users[referrerId].points = (database.users[referrerId].points || 0) + 0.02;
-        database.users[referrerId].refs_count = (database.users[referrerId].refs_count || 0) + 1;
-        database.users[referrerId].referralEarnings = (database.users[referrerId].referralEarnings || 0) + 0.02;
-
-        database.metadata.lastUpdate = new Date().toISOString();
-        await this.saveDatabase(database);
-
-        console.log('✅ Referral applied successfully');
-        return true;
-    }
-
-    async debugDatabase() {
-        const database = await this.getDatabase();
-        return {
-            totalUsers: Object.keys(database.users).length,
-            users: database.users,
-            metadata: database.metadata
+    // Varsayılan veritabanı yapısı
+    createDefaultDatabase() {
+        return { 
+            users: [],
+            metadata: { 
+                totalUsers: 0,
+                totalBalance: 0,
+                totalReferrals: 0,
+                version: '2.0',
+                createdAt: new Date().toISOString(),
+                lastUpdate: new Date().toISOString()
+            } 
         };
     }
-}
 
-const db = new UltimateJsonBinManager();
-
-// ROUTES
-
-// Debug endpoint
-app.get('/api/debug/database', async (req, res) => {
-    try {
-        const debugInfo = await db.debugDatabase();
-        res.json({
-            success: true,
-            ...debugInfo
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Get or create user
-app.get('/api/user/:userId', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        console.log('\n=== GET USER ===', userId);
-
-        let user = await db.getUser(userId);
+    // Veritabanı yapısını doğrula
+    validateDatabaseStructure(data) {
+        if (!Array.isArray(data.users)) data.users = [];
+        if (!data.metadata) data.metadata = {};
         
-        if (user) {
-            console.log('✅ Existing user returned');
-            res.json({
-                success: true,
-                data: user
-            });
-        } else {
-            console.log('🆕 Creating new user');
-            const newUser = {
-                id: userId,
-                username: `user_${userId.substring(0, 8)}`,
-                points: 0,
-                dailyAdWatchCount: 0,
-                lastAdWatchDate: new Date().toISOString().split('T')[0],
-                referrals: [],
-                referralEarnings: 0,
-                hasJoinedChannel: false,
-                hasJoinedGroup: false,
-                hasReceivedReferralBonus: false,
-                refs_count: 0,
-                referred_by: null
+        // Metadata alanlarını kontrol et
+        data.metadata.totalUsers = data.users.length;
+        data.metadata.totalBalance = data.users.reduce((sum, user) => sum + (user.balance || 0), 0);
+        data.metadata.totalReferrals = data.users.reduce((sum, user) => sum + (user.refs_count || 0), 0);
+        data.metadata.lastUpdate = new Date().toISOString();
+        
+        if (!data.metadata.version) data.metadata.version = '2.0';
+        if (!data.metadata.createdAt) data.metadata.createdAt = new Date().toISOString();
+        
+        return data;
+    }
+
+    // Kullanıcıyı UID ile bul
+    async getUser(uid) {
+        const database = await this.getDatabase();
+        return database.users.find(user => user.uid === uid) || null;
+    }
+
+    // Tüm kullanıcıları getir
+    async getAllUsers() {
+        const database = await this.getDatabase();
+        return database.users;
+    }
+
+    // Yeni kullanıcı kaydet
+    async registerUser(uid, username, name, referrer = null) {
+        const database = await this.getDatabase();
+        
+        // Kullanıcı zaten var mı kontrol et
+        const existingUser = database.users.find(user => user.uid === uid);
+        if (existingUser) {
+            return { 
+                success: false, 
+                message: "❌ User already exists", 
+                user: existingUser 
             };
-
-            const createdUser = await db.createUser(userId, newUser);
-            
-            res.json({
-                success: true,
-                data: createdUser,
-                isNew: true
-            });
-        }
-    } catch (error) {
-        console.error('❌ GET USER ERROR:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Apply referral
-app.post('/api/user/:userId/apply-referral', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const { referrerId } = req.body;
-
-        console.log('\n=== APPLY REFERRAL ===', { userId, referrerId });
-
-        if (!referrerId) {
-            return res.json({
-                success: false,
-                error: 'Referrer ID required'
-            });
         }
 
-        await db.applyReferral(userId, referrerId);
-        
-        res.json({
-            success: true,
-            message: 'Referral bonus applied successfully',
-            bonus: 0.02
-        });
-
-    } catch (error) {
-        console.error('❌ REFERRAL ERROR:', error.message);
-        res.json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Add points
-app.post('/api/user/:userId/add-points', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const { points, type } = req.body;
-
-        console.log('\n=== ADD POINTS ===', { userId, points, type });
-
-        const user = await db.getUser(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'User not found'
-            });
-        }
-
-        const updates = {
-            points: (user.points || 0) + points
+        // Yeni kullanıcı objesi oluştur
+        const newUser = {
+            uid: uid,
+            username: username,
+            name: name,
+            balance: parseFloat(process.env.WELCOME_BONUS) || 0,
+            referrer: referrer,
+            refs_count: 0,
+            referrals: [],
+            totalEarned: parseFloat(process.env.WELCOME_BONUS) || 0,
+            created_at: new Date().toISOString(),
+            last_update: new Date().toISOString(),
+            last_activity: new Date().toISOString(),
+            status: 'active'
         };
 
-        if (type === 'ad_watch') {
-            const today = new Date().toISOString().split('T')[0];
-            if (user.lastAdWatchDate !== today) {
-                updates.dailyAdWatchCount = 1;
-                updates.lastAdWatchDate = today;
-            } else {
-                updates.dailyAdWatchCount = (user.dailyAdWatchCount || 0) + 1;
+        // Kullanıcıyı veritabanına ekle
+        database.users.push(newUser);
+
+        // Referans varsa, referrer'ın bilgilerini güncelle
+        if (referrer) {
+            const referrerUser = database.users.find(user => user.uid === referrer);
+            if (referrerUser) {
+                referrerUser.refs_count = (referrerUser.refs_count || 0) + 1;
+                referrerUser.referrals.push(uid);
+                referrerUser.last_update = new Date().toISOString();
+                
+                // Referans bonusu ekle
+                referrerUser.balance += parseFloat(process.env.REFERRAL_BONUS) || 0;
+                referrerUser.totalEarned += parseFloat(process.env.REFERRAL_BONUS) || 0;
+                
+                // Yeni kullanıcıya da referans bonusu ekle
+                newUser.balance += parseFloat(process.env.REFERRAL_BONUS) || 0;
+                newUser.totalEarned += parseFloat(process.env.REFERRAL_BONUS) || 0;
             }
         }
 
-        const updatedUser = await db.updateUser(userId, updates);
+        // Metadata güncelle
+        database.metadata.totalUsers = database.users.length;
+        database.metadata.totalBalance = database.users.reduce((sum, user) => sum + user.balance, 0);
+        database.metadata.totalReferrals = database.users.reduce((sum, user) => sum + (user.refs_count || 0), 0);
+        database.metadata.lastUpdate = new Date().toISOString();
+
+        // Veritabanını kaydet
+        await this.saveDatabase(database);
+        
+        return { 
+            success: true, 
+            message: "✅ User registered successfully", 
+            user: newUser 
+        };
+    }
+
+    // Bakiye güncelle
+    async updateBalance(uid, amount) {
+        const database = await this.getDatabase();
+        const user = database.users.find(user => user.uid === uid);
+        
+        if (!user) {
+            return { 
+                success: false, 
+                message: "❌ User not found" 
+            };
+        }
+
+        const newBalance = user.balance + parseFloat(amount);
+        user.balance = newBalance;
+        
+        // Eğer pozitif miktar eklendiyse total earned'a ekle
+        if (parseFloat(amount) > 0) {
+            user.totalEarned += parseFloat(amount);
+        }
+        
+        user.last_update = new Date().toISOString();
+        user.last_activity = new Date().toISOString();
+
+        // Metadata güncelle
+        database.metadata.totalBalance = database.users.reduce((sum, user) => sum + user.balance, 0);
+        database.metadata.lastUpdate = new Date().toISOString();
+
+        await this.saveDatabase(database);
+        
+        return { 
+            success: true, 
+            message: `💰 Balance updated: $${newBalance.toFixed(2)}`, 
+            balance: newBalance, 
+            user: user 
+        };
+    }
+
+    // İsim güncelle
+    async updateName(uid, newName) {
+        const database = await this.getDatabase();
+        const user = database.users.find(user => user.uid === uid);
+        
+        if (!user) {
+            return { 
+                success: false, 
+                message: "❌ User not found" 
+            };
+        }
+
+        const oldName = user.name;
+        user.name = newName;
+        user.last_update = new Date().toISOString();
+        user.last_activity = new Date().toISOString();
+
+        database.metadata.lastUpdate = new Date().toISOString();
+        await this.saveDatabase(database);
+        
+        return { 
+            success: true, 
+            message: `✏️ Name updated: ${oldName} → ${newName}`, 
+            user: user 
+        };
+    }
+
+    // Kullanıcı sil
+    async deleteUser(uid) {
+        const database = await this.getDatabase();
+        const userIndex = database.users.findIndex(user => user.uid === uid);
+        
+        if (userIndex === -1) {
+            return { 
+                success: false, 
+                message: "❌ User not found" 
+            };
+        }
+
+        const deletedUser = database.users[userIndex];
+        
+        // Eğer kullanıcı birisi tarafından referans edilmişse, referrer'ın bilgilerini güncelle
+        if (deletedUser.referrer) {
+            const referrer = database.users.find(user => user.uid === deletedUser.referrer);
+            if (referrer && referrer.refs_count > 0) {
+                referrer.refs_count -= 1;
+                referrer.referrals = referrer.referrals.filter(ref => ref !== uid);
+                referrer.last_update = new Date().toISOString();
+            }
+        }
+
+        // Kullanıcıyı listeden çıkar
+        database.users.splice(userIndex, 1);
+
+        // Metadata güncelle
+        database.metadata.totalUsers = database.users.length;
+        database.metadata.totalBalance = database.users.reduce((sum, user) => sum + user.balance, 0);
+        database.metadata.totalReferrals = database.users.reduce((sum, user) => sum + (user.refs_count || 0), 0);
+        database.metadata.lastUpdate = new Date().toISOString();
+
+        await this.saveDatabase(database);
+        
+        return { 
+            success: true, 
+            message: "🗑️ User deleted successfully", 
+            user: deletedUser 
+        };
+    }
+
+    // Kullanıcının referanslarını getir
+    async getUserReferrals(uid) {
+        const database = await this.getDatabase();
+        return database.users.filter(user => user.referrer === uid);
+    }
+
+    // Referanslı kullanıcıları getir (kimler bu kullanıcıyı referans etmiş)
+    async getReferredUsers(uid) {
+        const database = await this.getDatabase();
+        return database.users.filter(user => user.referrer === uid);
+    }
+
+    // Veritabanı istatistiklerini getir
+    async getDatabaseStats() {
+        const database = await this.getDatabase();
+        const totalBalance = database.users.reduce((sum, user) => sum + user.balance, 0);
+        const totalReferrals = database.users.reduce((sum, user) => sum + (user.refs_count || 0), 0);
+        const activeUsers = database.users.filter(user => user.status === 'active').length;
+        
+        return {
+            totalUsers: database.users.length,
+            totalBalance: totalBalance,
+            totalReferrals: totalReferrals,
+            activeUsers: activeUsers,
+            metadata: database.metadata
+        };
+    }
+
+    // Kullanıcı aktivitesini güncelle
+    async updateUserActivity(uid) {
+        const database = await this.getDatabase();
+        const user = database.users.find(user => user.uid === uid);
+        
+        if (user) {
+            user.last_activity = new Date().toISOString();
+            database.metadata.lastUpdate = new Date().toISOString();
+            await this.saveDatabase(database);
+        }
+    }
+
+    // Top kullanıcıları getir (bakiye veya referans sayısına göre)
+    async getTopUsers(by = 'balance', limit = 10) {
+        const database = await this.getDatabase();
+        const users = [...database.users];
+        
+        if (by === 'balance') {
+            users.sort((a, b) => b.balance - a.balance);
+        } else if (by === 'referrals') {
+            users.sort((a, b) => (b.refs_count || 0) - (a.refs_count || 0));
+        }
+        
+        return users.slice(0, limit);
+    }
+}
+
+// Database instance oluştur
+const db = new JsonBinDatabase();
+
+// ==================== ROUTES ====================
+
+// Debug endpoint - Tüm veritabanını göster
+app.get('/api/debug/database', async (req, res) => {
+    try {
+        const stats = await db.getDatabaseStats();
+        const users = await db.getAllUsers();
         
         res.json({
             success: true,
-            data: updatedUser
+            stats: stats,
+            users: users,
+            timestamp: new Date().toISOString()
         });
-
     } catch (error) {
-        console.error('❌ ADD POINTS ERROR:', error);
         res.status(500).json({
             success: false,
             error: error.message
@@ -360,20 +407,19 @@ app.post('/api/user/:userId/add-points', async (req, res) => {
     }
 });
 
-// Update user
-app.post('/api/user/:userId', async (req, res) => {
+// Kullanıcı bilgilerini getir
+app.get('/api/user/:uid', async (req, res) => {
     try {
-        const userId = req.params.userId;
-        const updates = req.body;
-
-        console.log('\n=== UPDATE USER ===', { userId, updates });
-
-        const updatedUser = await db.updateUser(userId, updates);
+        const uid = req.params.uid;
+        const user = await db.getUser(uid);
         
-        if (updatedUser) {
+        if (user) {
+            // Aktiviteyi güncelle
+            await db.updateUserActivity(uid);
+            
             res.json({
                 success: true,
-                data: updatedUser
+                data: user
             });
         } else {
             res.status(404).json({
@@ -382,7 +428,6 @@ app.post('/api/user/:userId', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('❌ UPDATE USER ERROR:', error);
         res.status(500).json({
             success: false,
             error: error.message
@@ -390,22 +435,178 @@ app.post('/api/user/:userId', async (req, res) => {
     }
 });
 
-// TON price
-app.get('/api/ton-price', async (req, res) => {
+// Yeni kullanıcı kaydet
+app.post('/api/user/register', async (req, res) => {
     try {
-        const response = await axios.get(
-            'https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd',
-            { timeout: 5000 }
-        );
+        const { uid, username, name, referrer } = req.body;
+        
+        if (!uid || !username || !name) {
+            return res.status(400).json({
+                success: false,
+                error: 'UID, username, and name are required'
+            });
+        }
+
+        const result = await db.registerUser(uid, username, name, referrer || null);
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json(result);
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Bakiye güncelle
+app.post('/api/user/:uid/balance', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const { amount } = req.body;
+        
+        if (typeof amount !== 'number' && isNaN(parseFloat(amount))) {
+            return res.status(400).json({
+                success: false,
+                error: 'Amount must be a valid number'
+            });
+        }
+
+        const result = await db.updateBalance(uid, parseFloat(amount));
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// İsim güncelle
+app.post('/api/user/:uid/name', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const { name } = req.body;
+        
+        if (!name || name.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                error: 'Name is required'
+            });
+        }
+
+        const result = await db.updateName(uid, name.trim());
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Kullanıcı sil
+app.delete('/api/user/:uid', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const result = await db.deleteUser(uid);
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Kullanıcının referanslarını getir
+app.get('/api/user/:uid/referrals', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const referrals = await db.getUserReferrals(uid);
         
         res.json({
             success: true,
-            price: response.data['the-open-network']?.usd || 2.50
+            data: referrals,
+            count: referrals.length
         });
     } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Tüm kullanıcıları getir
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await db.getAllUsers();
+        
         res.json({
             success: true,
-            price: 2.50
+            data: users,
+            count: users.length
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Top kullanıcıları getir
+app.get('/api/users/top', async (req, res) => {
+    try {
+        const { by = 'balance', limit = 10 } = req.query;
+        const topUsers = await db.getTopUsers(by, parseInt(limit));
+        
+        res.json({
+            success: true,
+            data: topUsers,
+            by: by,
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// İstatistikleri getir
+app.get('/api/stats', async (req, res) => {
+    try {
+        const stats = await db.getDatabaseStats();
+        
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -413,14 +614,20 @@ app.get('/api/ton-price', async (req, res) => {
 // Health check
 app.get('/health', async (req, res) => {
     try {
-        const database = await db.getDatabase();
+        const stats = await db.getDatabaseStats();
+        
         res.json({ 
             status: 'OK', 
             database: {
-                totalUsers: Object.keys(database.users).length,
-                lastUpdate: database.metadata.lastUpdate
+                totalUsers: stats.totalUsers,
+                totalBalance: stats.totalBalance,
+                lastUpdate: stats.metadata.lastUpdate
             },
-            timestamp: new Date().toISOString()
+            server: {
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                timestamp: new Date().toISOString()
+            }
         });
     } catch (error) {
         res.status(500).json({
@@ -430,19 +637,10 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// Reset database
+// Veritabanını resetle
 app.post('/api/reset-database', async (req, res) => {
     try {
-        const newDatabase = {
-            users: {},
-            metadata: {
-                createdAt: new Date().toISOString(),
-                totalUsers: 0,
-                version: '5.0',
-                reset: true
-            }
-        };
-        
+        const newDatabase = db.createDefaultDatabase();
         await db.saveDatabase(newDatabase);
         
         res.json({
@@ -457,9 +655,24 @@ app.post('/api/reset-database', async (req, res) => {
     }
 });
 
-// Serve main page
+// Ana sayfa
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.json({
+        message: '🚀 Referral & Balance Management System API',
+        version: '2.0',
+        endpoints: {
+            '/api/debug/database': 'Get full database',
+            '/api/user/:uid': 'Get user by UID',
+            '/api/user/register': 'Register new user',
+            '/api/user/:uid/balance': 'Update user balance',
+            '/api/user/:uid/name': 'Update user name',
+            '/api/user/:uid/referrals': 'Get user referrals',
+            '/api/users': 'Get all users',
+            '/api/users/top': 'Get top users',
+            '/api/stats': 'Get system stats',
+            '/health': 'Health check'
+        }
+    });
 });
 
 // 404 handler
@@ -475,26 +688,26 @@ app.use((error, req, res, next) => {
     console.error('💥 SERVER ERROR:', error);
     res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error: ' + error.message
     });
 });
 
-// Start server
+// Sunucuyu başlat
 app.listen(PORT, async () => {
     console.log('\n🚀 ==================================');
-    console.log('💰 TORRE EARN APP - YENİ DATABASE');
+    console.log('💰 REFERRAL & BALANCE MANAGEMENT SYSTEM');
     console.log('🚀 ==================================');
     console.log(`📍 Port: ${PORT}`);
-    console.log(`📦 Yeni JSONBin: ${JSONBIN_CONFIG.binId}`);
+    console.log(`📦 JSONBin ID: ${JSONBIN_CONFIG.binId}`);
     console.log(`🌐 Server: http://localhost:${PORT}`);
     console.log(`❤️  Health: http://localhost:${PORT}/health`);
     console.log(`🐛 Debug: http://localhost:${PORT}/api/debug/database`);
     console.log('==================================\n');
 
-    // Test connection
+    // Bağlantı testi
     try {
-        const database = await db.getDatabase();
-        console.log(`✅ Yeni database bağlantısı: ${Object.keys(database.users).length} kullanıcı`);
+        const stats = await db.getDatabaseStats();
+        console.log(`✅ Database connected: ${stats.totalUsers} users, $${stats.totalBalance.toFixed(2)} total balance`);
     } catch (error) {
         console.log('❌ Database test failed:', error.message);
     }
