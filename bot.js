@@ -11,206 +11,143 @@ app.use(express.json());
 // Telegram Bot
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-// JSONBin.io Configuration
-const JSONBIN_CONFIG = {
-    apiKey: process.env.JSONBIN_API_KEY,
-    binId: process.env.JSONBIN_BIN_ID,
-    baseURL: 'https://api.jsonbin.io/v3/b'
+// Server API Configuration
+const SERVER_CONFIG = {
+    baseURL: process.env.SERVER_URL || 'http://localhost:3000'
 };
 
-// JSONBin.io Helper Functions
-class JsonBinManager {
+// API Helper Functions
+class ApiManager {
     constructor() {
-        this.headers = {
-            'Content-Type': 'application/json',
-            'X-Master-Key': JSONBIN_CONFIG.apiKey
-        };
+        this.baseURL = SERVER_CONFIG.baseURL;
     }
 
-    async getData() {
+    async apiCall(endpoint, options = {}) {
         try {
-            const response = await axios.get(`${JSONBIN_CONFIG.baseURL}/${JSONBIN_CONFIG.binId}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_CONFIG.apiKey }
-            });
-            return response.data.record || { users: {} };
-        } catch (error) {
-            console.error('JSONBin get error:', error.message);
-            return { users: {} };
-        }
-    }
-
-    async saveData(data) {
-        try {
-            const response = await axios.put(`${JSONBIN_CONFIG.baseURL}/${JSONBIN_CONFIG.binId}`, data, {
-                headers: this.headers
+            const response = await axios({
+                url: `${this.baseURL}${endpoint}`,
+                timeout: 10000,
+                ...options
             });
             return response.data;
         } catch (error) {
-            console.error('JSONBin save error:', error.message);
+            console.error(`API call failed: ${endpoint}`, error.message);
             throw error;
         }
     }
 
-    async getUser(userId) {
-        const data = await this.getData();
-        return data.users[userId] || null;
-    }
-
-    async createUser(userData) {
-        const data = await this.getData();
-        data.users[userData.userId] = userData;
-        await this.saveData(data);
-        return userData;
-    }
-
-    async updateUser(userId, updates) {
-        const data = await this.getData();
-        if (data.users[userId]) {
-            data.users[userId] = { ...data.users[userId], ...updates };
-            await this.saveData(data);
-            return data.users[userId];
+    async getUser(uid) {
+        try {
+            const response = await this.apiCall(`/api/user/${uid}`);
+            return response.success ? response.data : null;
+        } catch (error) {
+            return null;
         }
-        return null;
     }
 
-    async addReferral(referrerId, referredUserId) {
-        const data = await this.getData();
-        
-        if (data.users[referrerId]) {
-            // Add referral to referrer's list
-            if (!data.users[referrerId].referrals) {
-                data.users[referrerId].referrals = [];
-            }
-            
-            // Prevent duplicate referrals
-            if (!data.users[referrerId].referrals.includes(referredUserId)) {
-                data.users[referrerId].referrals.push(referredUserId);
-                
-                // Add bonus points to referrer
-                data.users[referrerId].points += parseFloat(process.env.REFERRAL_BONUS);
-                
-                await this.saveData(data);
-                return true;
-            }
+    async registerUser(uid, username, name, referrer = null) {
+        try {
+            const response = await this.apiCall('/api/user/register', {
+                method: 'POST',
+                data: { uid, username, name, referrer }
+            });
+            return response;
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-        return false;
     }
 
-    async addPoints(userId, points) {
-        const data = await this.getData();
-        if (data.users[userId]) {
-            data.users[userId].points += points;
-            await this.saveData(data);
-            return data.users[userId].points;
+    async updateBalance(uid, amount) {
+        try {
+            const response = await this.apiCall(`/api/user/${uid}/balance`, {
+                method: 'POST',
+                data: { amount }
+            });
+            return response;
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-        return null;
     }
 
-    async deductPoints(userId, points) {
-        const data = await this.getData();
-        if (data.users[userId] && data.users[userId].points >= points) {
-            data.users[userId].points -= points;
-            await this.saveData(data);
-            return data.users[userId].points;
+    async getUserReferrals(uid) {
+        try {
+            const response = await this.apiCall(`/api/user/${uid}/referrals`);
+            return response.success ? response.data : [];
+        } catch (error) {
+            return [];
         }
-        return null;
+    }
+
+    async getStats() {
+        try {
+            const response = await this.apiCall('/api/stats');
+            return response.success ? response.data : null;
+        } catch (error) {
+            return null;
+        }
     }
 }
 
-const jsonBin = new JsonBinManager();
+const api = new ApiManager();
 
-// Generate unique referral code
-function generateRefCode(userId) {
-    return `REF${userId.toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
-}
+// Bot Komutları
 
-// Bot Commands
+// /start komutu
 bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id.toString();
     const username = msg.from.username || msg.from.first_name;
-    const startParam = match[1]; // Referral code from deep link
+    const startParam = match[1]; // Referans kodu
 
     try {
-        let user = await jsonBin.getUser(userId);
+        let user = await api.getUser(userId);
         let isNewUser = false;
-        let referralApplied = false;
+        let referrerId = null;
 
-        // Create new user if doesn't exist
-        if (!user) {
-            const refCode = generateRefCode(userId);
-            user = await jsonBin.createUser({
-                userId: userId,
-                username: username,
-                refCode: refCode,
-                referredBy: null,
-                referrals: [],
-                points: parseFloat(process.env.WELCOME_BONUS),
-                totalEarned: parseFloat(process.env.WELCOME_BONUS),
-                hasJoinedChannel: false,
-                hasJoinedGroup: false,
-                dailyAdsWatched: 0,
-                lastAdDate: null,
-                joinedAt: new Date().toISOString(),
-                lastActivity: new Date().toISOString()
-            });
-            isNewUser = true;
+        // Referans parametresini işle
+        if (startParam && startParam.startsWith('REF')) {
+            referrerId = startParam.replace('REF', '').slice(0, -3);
         }
 
-        // Handle referral if start parameter exists and user is new
-        if (startParam && startParam.startsWith('REF') && isNewUser) {
-            const referrerCode = startParam;
+        // Yeni kullanıcı kaydet
+        if (!user) {
+            const registerResult = await api.registerUser(userId, username, msg.from.first_name, referrerId);
             
-            // Find referrer by code
-            const data = await jsonBin.getData();
-            const referrer = Object.values(data.users).find(u => u.refCode === referrerCode);
-            
-            if (referrer && referrer.userId !== userId) { // Prevent self-referral
-                user.referredBy = referrer.userId;
-                await jsonBin.updateUser(userId, { referredBy: referrer.userId });
-                
-                // Add bonus to referrer
-                await jsonBin.addReferral(referrer.userId, userId);
-                referralApplied = true;
+            if (registerResult.success) {
+                user = registerResult.user;
+                isNewUser = true;
+            } else {
+                await bot.sendMessage(chatId, '❌ Kullanıcı oluşturulamadı. Lütfen tekrar deneyin.');
+                return;
             }
         }
 
-        // Update last activity
-        await jsonBin.updateUser(userId, { lastActivity: new Date().toISOString() });
-
-        // Send welcome message with referral info
-        const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${user.refCode}`;
+        // Hoş geldin mesajı
+        const referralCode = `REF${userId}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+        const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${referralCode}`;
         
-        let message = `🎉 *Hoş Geldiniz ${username}!* 🎉\n\n`;
-        message += `💰 *Bakiyeniz:* $${user.points.toFixed(2)}\n`;
+        let message = `🎉 *Hoş Geldiniz ${user.name || username}!* 🎉\n\n`;
+        message += `💰 *Bakiyeniz:* $${user.balance.toFixed(2)}\n`;
+        message += `👥 *Referans Sayınız:* ${user.refs_count || 0}\n`;
+        message += `🏦 *Toplam Kazanç:* $${user.totalEarned?.toFixed(2) || user.balance.toFixed(2)}\n\n`;
         
-        if (isNewUser) {
-            message += `🎁 *Hoş geldin bonusu:* $${process.env.WELCOME_BONUS}\n`;
+        if (user.referrer) {
+            const referrer = await api.getUser(user.referrer);
+            message += `📋 *Sizi Davet Eden:* ${referrer ? referrer.name : 'Bilinmiyor'}\n\n`;
         }
         
-        if (referralApplied) {
-            message += `👥 *Referans bonusu:* $${process.env.REFERRAL_BONUS}\n`;
-        }
-        
-        message += `\n📊 *İstatistikler:*\n`;
-        message += `• Toplam Kazanç: $${user.totalEarned?.toFixed(2) || '0.00'}\n`;
-        message += `• Referanslar: ${user.referrals?.length || 0}\n`;
-        message += `• Günlük Reklam: ${user.dailyAdsWatched || 0}/100\n`;
-        
-        message += `\n🔗 *Referans Linkiniz:*\n\`${referralLink}\`\n\n`;
+        message += `🔗 *Referans Linkiniz:*\n\`${referralLink}\`\n\n`;
         message += `Bu linki paylaşarak arkadaşlarınızı davet edin ve her biri için *$${process.env.REFERRAL_BONUS}* kazanın!`;
 
         const keyboard = {
             inline_keyboard: [
                 [
-                    { 
-                        text: "📱 Mini App'i Aç", 
-                        web_app: { url: `https://your-domain.com/mini-app?user=${userId}` } 
-                    }
-                ],
-                [
                     { text: "👥 Referanslarım", callback_data: "my_referrals" },
                     { text: "💰 Bakiyem", callback_data: "my_balance" }
+                ],
+                [
+                    { text: "📊 İstatistikler", callback_data: "stats" },
+                    { text: "🏆 Sıralama", callback_data: "leaderboard" }
                 ],
                 [
                     { text: "📢 Kanalımız", url: "https://t.me/Torrelabs" },
@@ -230,6 +167,76 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     }
 });
 
+// /balance komutu
+bot.onText(/\/balance/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id.toString();
+
+    try {
+        const user = await api.getUser(userId);
+        if (!user) {
+            await bot.sendMessage(chatId, '❌ Kullanıcı bulunamadı. Lütfen /start yazarak kaydolun.');
+            return;
+        }
+
+        const message = `💰 *Bakiye Bilgileriniz*\n\n` +
+                       `💵 Mevcut Bakiye: $${user.balance.toFixed(2)}\n` +
+                       `🏦 Toplam Kazanç: $${user.totalEarned?.toFixed(2) || user.balance.toFixed(2)}\n` +
+                       `👥 Referans Sayısı: ${user.refs_count || 0}\n` +
+                       `📤 Minimum Çekim: $${process.env.MIN_WITHDRAW}\n\n` +
+                       `💡 Daha fazla kazanmak için referanslarınızı davet edin!`;
+
+        await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+
+    } catch (error) {
+        console.error('Balance command error:', error);
+        await bot.sendMessage(chatId, '❌ Bir hata oluştu.');
+    }
+});
+
+// /referrals komutu
+bot.onText(/\/referrals/, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id.toString();
+
+    try {
+        const user = await api.getUser(userId);
+        if (!user) {
+            await bot.sendMessage(chatId, '❌ Kullanıcı bulunamadı.');
+            return;
+        }
+
+        const referrals = await api.getUserReferrals(userId);
+        const referralEarnings = referrals.length * parseFloat(process.env.REFERRAL_BONUS);
+        const referralCode = `REF${userId}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+        const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${referralCode}`;
+        
+        let message = `📊 *Referans Bilgileriniz*\n\n`;
+        message += `👥 Toplam Referans: ${referrals.length}\n`;
+        message += `💰 Referans Kazancı: $${referralEarnings.toFixed(2)}\n\n`;
+        
+        if (referrals.length > 0) {
+            message += `📋 Son 10 Referans:\n`;
+            referrals.slice(0, 10).forEach((ref, index) => {
+                message += `${index + 1}. ${ref.name} (@${ref.username})\n`;
+            });
+            if (referrals.length > 10) {
+                message += `... ve ${referrals.length - 10} kişi daha\n`;
+            }
+            message += `\n`;
+        }
+        
+        message += `🔗 *Referans Linkiniz:*\n\`${referralLink}\`\n\n`;
+        message += `Her referans için *$${process.env.REFERRAL_BONUS}* kazanıyorsunuz!`;
+
+        await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+
+    } catch (error) {
+        console.error('Referrals command error:', error);
+        await bot.sendMessage(chatId, '❌ Bir hata oluştu.');
+    }
+});
+
 // Callback queries
 bot.on('callback_query', async (callbackQuery) => {
     const message = callbackQuery.message;
@@ -237,19 +244,34 @@ bot.on('callback_query', async (callbackQuery) => {
     const data = callbackQuery.data;
 
     try {
-        const user = await jsonBin.getUser(userId);
-        if (!user) return;
+        const user = await api.getUser(userId);
+        if (!user) {
+            await bot.answerCallbackQuery(callbackQuery.id, { text: '❌ Kullanıcı bulunamadı' });
+            return;
+        }
 
         switch (data) {
             case 'my_referrals':
-                const referralCount = user.referrals?.length || 0;
-                const referralEarnings = referralCount * parseFloat(process.env.REFERRAL_BONUS);
-                const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${user.refCode}`;
+                const referrals = await api.getUserReferrals(userId);
+                const referralEarnings = referrals.length * parseFloat(process.env.REFERRAL_BONUS);
+                const referralCode = `REF${userId}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+                const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${referralCode}`;
                 
                 let referralMessage = `📊 *Referans Bilgileriniz*\n\n`;
-                referralMessage += `👥 Toplam Referans: ${referralCount}\n`;
-                referralMessage += `💰 Referans Kazancı: $${referralEarnings.toFixed(2)}\n`;
-                referralMessage += `🎯 Hedef: Daha fazla arkadaş davet et!\n\n`;
+                referralMessage += `👥 Toplam Referans: ${referrals.length}\n`;
+                referralMessage += `💰 Referans Kazancı: $${referralEarnings.toFixed(2)}\n\n`;
+                
+                if (referrals.length > 0) {
+                    referralMessage += `📋 Son 5 Referans:\n`;
+                    referrals.slice(0, 5).forEach((ref, index) => {
+                        referralMessage += `${index + 1}. ${ref.name} (@${ref.username})\n`;
+                    });
+                    if (referrals.length > 5) {
+                        referralMessage += `... ve ${referrals.length - 5} kişi daha\n`;
+                    }
+                    referralMessage += `\n`;
+                }
+                
                 referralMessage += `🔗 *Referans Linkiniz:*\n\`${referralLink}\`\n\n`;
                 referralMessage += `Her referans için *$${process.env.REFERRAL_BONUS}* kazanıyorsunuz!`;
 
@@ -263,13 +285,48 @@ bot.on('callback_query', async (callbackQuery) => {
 
             case 'my_balance':
                 let balanceMessage = `💰 *Bakiye Bilgileriniz*\n\n`;
-                balanceMessage += `💵 Mevcut Bakiye: $${user.points.toFixed(2)}\n`;
-                balanceMessage += `🏦 Toplam Kazanç: $${user.totalEarned?.toFixed(2) || '0.00'}\n`;
+                balanceMessage += `💵 Mevcut Bakiye: $${user.balance.toFixed(2)}\n`;
+                balanceMessage += `🏦 Toplam Kazanç: $${user.totalEarned?.toFixed(2) || user.balance.toFixed(2)}\n`;
+                balanceMessage += `👥 Referans Sayısı: ${user.refs_count || 0}\n`;
                 balanceMessage += `📤 Minimum Çekim: $${process.env.MIN_WITHDRAW}\n\n`;
-                balanceMessage += `💡 Mini App içinden reklam izleyerek ve görevleri tamamlayarak daha fazla kazanabilirsiniz!`;
+                balanceMessage += `💡 Daha fazla kazanmak için referanslarınızı davet edin!`;
 
                 await bot.answerCallbackQuery(callbackQuery.id);
                 await bot.editMessageText(balanceMessage, {
+                    chat_id: message.chat.id,
+                    message_id: message.message_id,
+                    parse_mode: 'Markdown'
+                });
+                break;
+
+            case 'stats':
+                const stats = await api.getStats();
+                let statsMessage = `📈 *Sistem İstatistikleri*\n\n`;
+                if (stats) {
+                    statsMessage += `👥 Toplam Kullanıcı: ${stats.totalUsers}\n`;
+                    statsMessage += `💰 Toplam Bakiye: $${stats.totalBalance.toFixed(2)}\n`;
+                    statsMessage += `🔗 Toplam Referans: ${stats.totalReferrals}\n`;
+                    statsMessage += `🕒 Son Güncelleme: ${new Date(stats.metadata.lastUpdate).toLocaleString('tr-TR')}\n`;
+                } else {
+                    statsMessage += `❌ İstatistikler yüklenemedi\n`;
+                }
+
+                await bot.answerCallbackQuery(callbackQuery.id);
+                await bot.editMessageText(statsMessage, {
+                    chat_id: message.chat.id,
+                    message_id: message.message_id,
+                    parse_mode: 'Markdown'
+                });
+                break;
+
+            case 'leaderboard':
+                // Bu kısım için API endpoint eklenmeli
+                let leaderboardMessage = `🏆 *Liderlik Tablosu*\n\n`;
+                leaderboardMessage += `⏳ Yakında eklenecek...\n\n`;
+                leaderboardMessage += `Şimdilik /referrals komutu ile referans sayınızı görüntüleyebilirsiniz.`;
+
+                await bot.answerCallbackQuery(callbackQuery.id);
+                await bot.editMessageText(leaderboardMessage, {
                     chat_id: message.chat.id,
                     message_id: message.message_id,
                     parse_mode: 'Markdown'
@@ -285,7 +342,7 @@ bot.on('callback_query', async (callbackQuery) => {
 // API Routes for Mini App
 app.get('/api/user/:userId', async (req, res) => {
     try {
-        const user = await jsonBin.getUser(req.params.userId);
+        const user = await api.getUser(req.params.userId);
         if (user) {
             res.json({ success: true, data: user });
         } else {
@@ -298,125 +355,24 @@ app.get('/api/user/:userId', async (req, res) => {
 
 app.post('/api/user/:userId/points', async (req, res) => {
     try {
-        const { points, type } = req.body;
-        const user = await jsonBin.getUser(req.params.userId);
+        const { points } = req.body;
+        const result = await api.updateBalance(req.params.userId, points);
         
-        if (user) {
-            // Check daily ad limit
-            const today = new Date().toISOString().slice(0, 10);
-            if (type === 'ad_watch') {
-                if (user.lastAdDate !== today) {
-                    user.dailyAdsWatched = 0;
-                    user.lastAdDate = today;
-                }
-                if (user.dailyAdsWatched >= 100) {
-                    return res.json({ success: false, error: 'Daily ad limit reached' });
-                }
-                user.dailyAdsWatched++;
-            }
-
-            const newPoints = await jsonBin.addPoints(req.params.userId, points);
-            await jsonBin.updateUser(req.params.userId, { 
-                totalEarned: (user.totalEarned || 0) + points,
-                dailyAdsWatched: user.dailyAdsWatched,
-                lastAdDate: user.lastAdDate
-            });
-
-            res.json({ success: true, newBalance: newPoints });
+        if (result.success) {
+            res.json({ success: true, newBalance: result.balance });
         } else {
-            res.status(404).json({ success: false, error: 'User not found' });
+            res.status(400).json({ success: false, error: result.error });
         }
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-app.post('/api/user/:userId/withdraw', async (req, res) => {
-    try {
-        const { amount, tonAddress } = req.body;
-        const user = await jsonBin.getUser(req.params.userId);
-        
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
-
-        if (amount < parseFloat(process.env.MIN_WITHDRAW)) {
-            return res.json({ success: false, error: `Minimum withdrawal is $${process.env.MIN_WITHDRAW}` });
-        }
-
-        if (user.points < amount) {
-            return res.json({ success: false, error: 'Insufficient balance' });
-        }
-
-        // Validate TON address
-        if (!tonAddress.match(/^(EQ|UQ)[a-zA-Z0-9_-]{48}$/)) {
-            return res.json({ success: false, error: 'Invalid TON address' });
-        }
-
-        const newBalance = await jsonBin.deductPoints(req.params.userId, amount);
-        
-        // Send withdrawal notification to admin
-        const adminMessage = `💸 *Yeni Çekim Talebi!*\n\n` +
-                           `👤 Kullanıcı: ${user.username}\n` +
-                           `🆔 ID: ${user.userId}\n` +
-                           `💵 Miktar: $${amount}\n` +
-                           `👛 TON Adresi: ${tonAddress}\n` +
-                           `⏰ Zaman: ${new Date().toLocaleString('tr-TR')}`;
-
-        await bot.sendMessage(process.env.ADMIN_CHAT_ID || user.userId, adminMessage, { parse_mode: 'Markdown' });
-
-        res.json({ success: true, newBalance: newBalance });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/user/:userId/update-task', async (req, res) => {
-    try {
-        const { taskType, completed } = req.body;
-        const user = await jsonBin.getUser(req.params.userId);
-        
-        if (user) {
-            const updates = {};
-            let bonus = 0;
-
-            switch (taskType) {
-                case 'join_channel':
-                    if (!user.hasJoinedChannel && completed) {
-                        updates.hasJoinedChannel = true;
-                        bonus = parseFloat(process.env.CHANNEL_JOIN_BONUS);
-                    }
-                    break;
-                case 'join_group':
-                    if (!user.hasJoinedGroup && completed) {
-                        updates.hasJoinedGroup = true;
-                        bonus = parseFloat(process.env.GROUP_JOIN_BONUS);
-                    }
-                    break;
-            }
-
-            if (bonus > 0) {
-                await jsonBin.addPoints(req.params.userId, bonus);
-                await jsonBin.updateUser(req.params.userId, {
-                    ...updates,
-                    totalEarned: (user.totalEarned || 0) + bonus
-                });
-            }
-
-            res.json({ success: true, bonus: bonus });
-        } else {
-            res.status(404).json({ success: false, error: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
+// Sunucuyu başlat
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🤖 Bot is running as @${process.env.BOT_USERNAME}`);
+    console.log(`🤖 Bot server running on port ${PORT}`);
+    console.log(`🔗 Bot is running as @${process.env.BOT_USERNAME}`);
 });
 
 // Error handling
