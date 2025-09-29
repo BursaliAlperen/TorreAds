@@ -143,6 +143,10 @@
             background-color: rgba(10, 132, 255, 0.1);
             border: 1px solid rgba(10, 132, 255, 0.2);
         }
+
+        .test-btn {
+            background-color: #ff6b00 !important;
+        }
     </style>
 </head>
 <body>
@@ -165,7 +169,7 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  25</p>
+                        <p><span id="daily-ads-watched">00</span> /  100</p>
                     </div>
                     <div class="stat-card">
                         <h3>Total Referrals</h3>
@@ -186,19 +190,25 @@
                 <div class="task-container">
                     <i class="fas fa-video task-icon"></i>
                     <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn $0.25 for every ad.</p>
+                    <p>Earn $0.02 for every ad.</p>
                     <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-bolt task-icon"></i>
+                    <h3>Test Ad (Debug Mode)</h3>
+                    <p>Test ad system - $0.02</p>
+                    <button id="test-ad-btn" class="action-btn test-btn">Test Ad</button>
                 </div>
                 <div class="task-container">
                     <i class="fab fa-telegram task-icon"></i>
                     <h3>Join Our Channel</h3>
-                    <p>Get $10 bonus.</p>
+                    <p>Get $0.02 bonus.</p>
                     <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
                 </div>
                 <div class="task-container">
                     <i class="fas fa-users task-icon"></i>
                     <h3>Join Our Group</h3>
-                    <p>Get $2 bonus.</p>
+                    <p>Get $0.02 bonus.</p>
                     <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
                 </div>
             </div>
@@ -247,6 +257,24 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- GigaPub Ad Script -->
     <script src="https://ad.gigapub.tech/script?id=3305"></script>
+    
+    <!-- Backup Ad Script -->
+    <script>
+        // Backup reklam fonksiyonu
+        window.showGiga = window.showGiga || function(placement) {
+            console.log("Using backup ad function for placement:", placement);
+            return new Promise((resolve, reject) => {
+                // Test modu - %80 başarı oranı
+                setTimeout(() => {
+                    if (Math.random() > 0.2) { // %80 başarı oranı
+                        resolve();
+                    } else {
+                        reject(new Error("No ad available in backup system"));
+                    }
+                }, 1500);
+            });
+        };
+    </script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const tg = window.Telegram.WebApp;
@@ -256,7 +284,7 @@
         const JSONBIN_BIN_ID = 'takaapp';
 
         // --- App Configuration ---
-        const BOT_USERNAME = "TorreAds_Bot"; // Yeni bot username
+        const BOT_USERNAME = "TorreAds_Bot";
         const PIPEDREAM_WEBHOOK_URL = "https://eo3h4zf914hhqv7.m.pipedream.net";
         const CHANNEL_LINK = "https://t.me/trickmimicrojob";
         const GROUP_LINK = "https://t.me/+XOFG-KodIfkzMDc1";
@@ -274,6 +302,7 @@
         const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
         const referralCountElem = document.getElementById('referral-count');
         const watchAdBtn = document.getElementById('watch-ad-btn');
+        const testAdBtn = document.getElementById('test-ad-btn');
         const joinChannelBtn = document.getElementById('join-channel-btn');
         const joinGroupBtn = document.getElementById('join-group-btn');
         const withdrawForm = document.getElementById('withdraw-form');
@@ -331,75 +360,83 @@
                 }
             } catch (error) {
                 console.error('Load error:', error);
+                // Initialize empty data if loading fails
+                appData = { users: {}, referrals: [], withdrawals: [], transactions: [] };
             }
         };
+
         // --- Core Functions ---
-const initApp = async () => {
-    tg.ready();
-    tg.expand();
-    document.body.className = `${tg.colorScheme}-theme`;
+        const initApp = async () => {
+            tg.ready();
+            tg.expand();
+            document.body.className = `${tg.colorScheme}-theme`;
 
-    const user = tg.initDataUnsafe.user;
-    if (!user || !user.id) {
-        tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
-        return;
-    }
-    
-    await loadData();
-    
-    userState.userId = user.id;
-    
-    // Initialize or load user data
-    if (!appData.users[user.id]) {
-        appData.users[user.id] = {
-            telegram_id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            username: user.username,
-            photo_url: user.photo_url,
-            balance: 0,
-            daily_ad_count: 0,
-            last_ad_date: null,
-            has_joined_channel: false,
-            has_joined_group: false,
-            referral_code: `ref_${user.id}_${Date.now()}`, // Her kullanıcıya özel ref kodu
-            referred_by: null,
-            created_at: new Date().toISOString()
+            // Reklam script kontrolü
+            console.log("GigaPub available:", typeof window.showGiga);
+            
+            const user = tg.initDataUnsafe.user;
+            if (!user || !user.id) {
+                tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
+                return;
+            }
+            
+            await loadData();
+            
+            userState.userId = user.id;
+            
+            // Initialize or load user data
+            if (!appData.users[user.id]) {
+                appData.users[user.id] = {
+                    telegram_id: user.id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    username: user.username,
+                    photo_url: user.photo_url,
+                    balance: 0.10, // Test için 10 cent başlangıç bonusu
+                    daily_ad_count: 0,
+                    last_ad_date: null,
+                    has_joined_channel: false,
+                    has_joined_group: false,
+                    referral_code: `ref_${user.id}_${Date.now()}`,
+                    referred_by: null,
+                    created_at: new Date().toISOString()
+                };
+                await saveData();
+                tg.showAlert("🎉 Welcome! You received $0.10 welcome bonus!");
+            }
+            
+            const userData = appData.users[user.id];
+            userState.points = userData.balance;
+            userState.dailyAdWatchCount = userData.daily_ad_count;
+            userState.hasJoinedChannel = userData.has_joined_channel;
+            userState.hasJoinedGroup = userData.has_joined_group;
+            
+            // Check daily reset
+            const today = new Date().toISOString().slice(0, 10);
+            if (userData.last_ad_date !== today) {
+                userState.dailyAdWatchCount = 0;
+                userData.daily_ad_count = 0;
+                userData.last_ad_date = today;
+                await saveData();
+            }
+            
+            // Check referral
+            checkReferral(user.id);
+            
+            await updateTONPrice();
+            updateUI();
+            setupNavigation();
+            setupEventListeners();
         };
-        await saveData();
-    }
-    
-    const userData = appData.users[user.id];
-    userState.points = userData.balance;
-    userState.dailyAdWatchCount = userData.daily_ad_count;
-    userState.hasJoinedChannel = userData.has_joined_channel;
-    userState.hasJoinedGroup = userData.has_joined_group;
-    
-    // Check daily reset
-    const today = new Date().toISOString().slice(0, 10);
-    if (userData.last_ad_date !== today) {
-        userState.dailyAdWatchCount = 0;
-        userData.daily_ad_count = 0;
-        userData.last_ad_date = today;
-        await saveData();
-    }
-    
-    // Check referral
-    checkReferral(user.id);
-    
-    await updateTONPrice();
-    updateUI();
-    setupNavigation();
-    setupEventListeners();
-};
-
-const checkReferral = (userId) => {
+        const checkReferral = (userId) => {
     const initData = tg.initData;
     if (initData) {
         const urlParams = new URLSearchParams(initData);
         const startParam = urlParams.get('start');
         if (startParam && startParam.startsWith('ref_')) {
-            const referrerId = startParam.substring(4).split('_')[0]; // Sadece user ID'yi al
+            const refParts = startParam.substring(4).split('_');
+            const referrerId = refParts[0]; // Sadece user ID'yi al
+            
             if (referrerId && referrerId !== userId.toString() && appData.users[referrerId]) {
                 // Update referred user
                 appData.users[userId].referred_by = referrerId;
@@ -457,15 +494,13 @@ const updateUI = () => {
     referralCountElem.textContent = referralCount;
 
     // Her kullanıcıya özel ref link
-    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}_${Date.now()}`;
-
-    // Update referral section text
-    document.querySelector('.referral-section p').textContent = 
-        `Share your link to get $${REFERRAL_BONUS.toFixed(2)} for each referral.`;
+    const userData = appData.users[userState.userId];
+    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=${userData.referral_code}`;
 
     // Update task descriptions
-    document.querySelectorAll('.task-container p')[1].textContent = `Get $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`;
-    document.querySelectorAll('.task-container p')[2].textContent = `Get $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`;
+    document.querySelector('.task-container:nth-child(1) p').textContent = `Earn $${POINTS_PER_AD.toFixed(2)} for every ad.`;
+    document.querySelector('.task-container:nth-child(3) p').textContent = `Get $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`;
+    document.querySelector('.task-container:nth-child(4) p').textContent = `Get $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`;
 
     // Update task button states
     if (userState.hasJoinedChannel) {
@@ -476,8 +511,12 @@ const updateUI = () => {
         joinGroupBtn.textContent = 'Bonus Claimed';
         joinGroupBtn.disabled = true;
     }
+
+    // Update ad limit display
+    dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
 };
-        // TON Price API
+
+// TON Price API
 const updateTONPrice = async () => {
     try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
@@ -505,23 +544,27 @@ const updateTONConversionInfo = () => {
 
 const setupEventListeners = () => {
     watchAdBtn.addEventListener('click', handleWatchAd);
+    testAdBtn.addEventListener('click', handleTestAd);
     joinChannelBtn.addEventListener('click', handleJoinChannel);
     joinGroupBtn.addEventListener('click', handleJoinGroup);
     withdrawForm.addEventListener('submit', handleWithdraw);
     copyRefLinkBtn.addEventListener('click', copyReferralLink);
     amountInput.addEventListener('input', updateTONConversionInfo);
 };
-
-const handleWatchAd = async () => {
+        const handleWatchAd = async () => {
     if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-        tg.showAlert("You have reached your daily ad watch limit (100 ads)."); return;
+        tg.showAlert(`You have reached your daily ad watch limit (${DAILY_AD_LIMIT} ads).`); 
+        return;
     }
+    
     loadingModal.style.display = 'flex';
     
-    // Önce reklamı deneyelim
     try {
-        // Method 1: Parametresiz deneyelim
+        console.log("Attempting to show ad...");
+        
+        // Önce parametresiz deneyelim
         await window.showGiga();
+        console.log("Ad shown successfully");
         
         // Başarılı olursa ödül ver
         userState.points += POINTS_PER_AD;
@@ -544,14 +587,16 @@ const handleWatchAd = async () => {
         await saveData();
         updateUI();
         tg.HapticFeedback.notificationOccurred('success');
-        tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
+        tg.showAlert(`🎉 Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
         
     } catch (error) {
         console.error("Ad error details:", error);
         
         // Method 2: Farklı placement deneyelim
         try {
+            console.log("Trying with 'rewarded' placement...");
             await window.showGiga("rewarded");
+            console.log("Ad shown successfully with rewarded placement");
             
             // Başarılı olursa ödül ver
             userState.points += POINTS_PER_AD;
@@ -572,64 +617,53 @@ const handleWatchAd = async () => {
             await saveData();
             updateUI();
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
+            tg.showAlert(`🎉 Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
             
         } catch (secondError) {
             console.error("Second ad error:", secondError);
             
-            // Method 3: Test modunda çalıştıralım
-            tg.showAlert("No ads available at the moment. Adding test credit...");
-            
-            // Test için otomatik ödül ver
-            userState.points += POINTS_PER_AD;
-            userState.dailyAdWatchCount++;
-            
-            appData.users[userState.userId].balance = userState.points;
-            appData.users[userState.userId].daily_ad_count = userState.dailyAdWatchCount;
-            appData.users[userState.userId].last_ad_date = new Date().toISOString().slice(0, 10);
-            
-            appData.transactions.push({
-                user_id: userState.userId,
-                type: 'ad_watch',
-                amount: POINTS_PER_AD,
-                description: 'Test ad credit',
-                created_at: new Date().toISOString()
-            });
-            
-            await saveData();
-            updateUI();
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert(`Test mode: You've earned $${POINTS_PER_AD.toFixed(2)}.`);
+            // Reklam gösterilemedi, kullanıcıyı bilgilendir
+            tg.showAlert("❌ No ads available at the moment. Please try the Test Ad button or try again later.");
         }
     } finally {
         loadingModal.style.display = 'none';
     }
 };
-        // Add transaction
-        appData.transactions.push({
-            user_id: userState.userId,
-            type: 'ad_watch',
-            amount: POINTS_PER_AD,
-            description: 'Rewarded ad watch',
-            created_at: new Date().toISOString()
-        });
-        
-        await saveData();
-        updateUI();
-        tg.HapticFeedback.notificationOccurred('success');
-        tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
-    }).catch((e) => {
-        tg.showAlert("Ad could not be loaded. Please try again later.");
-        console.error("Ad error:", e);
-    }).finally(() => {
-        loadingModal.style.display = 'none';
+
+const handleTestAd = async () => {
+    if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+        tg.showAlert(`You have reached your daily ad watch limit (${DAILY_AD_LIMIT} ads).`); 
+        return;
+    }
+    
+    // Test modu - her zaman ödül ver
+    userState.points += POINTS_PER_AD;
+    userState.dailyAdWatchCount++;
+    
+    appData.users[userState.userId].balance = userState.points;
+    appData.users[userState.userId].daily_ad_count = userState.dailyAdWatchCount;
+    appData.users[userState.userId].last_ad_date = new Date().toISOString().slice(0, 10);
+    
+    appData.transactions.push({
+        user_id: userState.userId,
+        type: 'ad_watch',
+        amount: POINTS_PER_AD,
+        description: 'Test ad credit',
+        created_at: new Date().toISOString()
     });
+    
+    await saveData();
+    updateUI();
+    tg.HapticFeedback.notificationOccurred('success');
+    tg.showAlert(`✅ Test successful! You earned $${POINTS_PER_AD.toFixed(2)}.`);
 };
 
 const handleJoinChannel = async () => {
     if(userState.hasJoinedChannel) {
-        tg.showAlert('You have already claimed this bonus.'); return;
+        tg.showAlert('You have already claimed this bonus.'); 
+        return;
     }
+    
     tg.openTelegramLink(CHANNEL_LINK);
     setTimeout(async () => {
         userState.points += CHANNEL_JOIN_BONUS;
@@ -647,15 +681,17 @@ const handleJoinChannel = async () => {
         });
         
         await saveData();
-        tg.showAlert(`Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
+        tg.showAlert(`✅ Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
         updateUI();
     }, 3000);
 };
 
 const handleJoinGroup = async () => {
     if(userState.hasJoinedGroup) {
-        tg.showAlert('You have already claimed this bonus.'); return;
+        tg.showAlert('You have already claimed this bonus.'); 
+        return;
     }
+    
     tg.openTelegramLink(GROUP_LINK);
     setTimeout(async () => {
         userState.points += GROUP_JOIN_BONUS;
@@ -673,7 +709,151 @@ const handleJoinGroup = async () => {
         });
         
         await saveData();
-        tg.showAlert(`Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
+        tg.showAlert(`✅ Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
         updateUI();
     }, 3000);
 };
+                const handleWithdraw = async (e) => {
+            e.preventDefault();
+            const method = document.getElementById('withdraw-method').value;
+            const tonAddress = document.getElementById('ton-address').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (isNaN(amount) || amount <= 0) { 
+                tg.showAlert("Please enter a valid amount."); 
+                return; 
+            }
+            if (amount < MIN_WITHDRAW_POINTS) { 
+                tg.showAlert(`Minimum withdrawal is $${MIN_WITHDRAW_POINTS.toFixed(2)}.`); 
+                return; 
+            }
+            if (amount > userState.points) { 
+                tg.showAlert("You don't have enough balance."); 
+                return; 
+            }
+
+            withdrawSubmitBtn.classList.add('loading');
+            withdrawSubmitBtn.disabled = true;
+
+            try {
+                userState.points -= amount;
+                const tonAmount = amount / tonPrice;
+                
+                // Update user balance
+                appData.users[userState.userId].balance = userState.points;
+                
+                // Add withdrawal
+                appData.withdrawals.push({
+                    user_id: userState.userId,
+                    method: method,
+                    ton_address: tonAddress,
+                    amount_usd: amount,
+                    amount_ton: tonAmount,
+                    ton_price: tonPrice,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                });
+                
+                // Add transaction
+                appData.transactions.push({
+                    user_id: userState.userId,
+                    type: 'withdrawal',
+                    amount: -amount,
+                    description: `Withdrawal request - ${tonAmount.toFixed(6)} TON`,
+                    created_at: new Date().toISOString()
+                });
+                
+                await saveData();
+                updateUI();
+                
+                const user = tg.initDataUnsafe.user;
+                const withdrawData = {
+                    userId: user.id,
+                    userName: `${user.first_name || ''} ${user.last_name || ''}`,
+                    userUsername: user.username || 'N/A',
+                    method: method,
+                    tonAddress: tonAddress,
+                    amountUSD: amount,
+                    amountTON: tonAmount,
+                    tonPrice: tonPrice,
+                    date: new Date().toISOString(),
+                    userBalance: userState.points
+                };
+                
+                try {
+                    const response = await fetch(PIPEDREAM_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(withdrawData)
+                    });
+                    
+                    if (response.ok) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("✅ Withdrawal request submitted successfully! You will receive your TON within 24 hours.");
+                        withdrawForm.reset();
+                        updateTONConversionInfo();
+                    } else { 
+                        throw new Error('Failed to submit request to payment system');
+                    }
+                } catch (error) {
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    tg.showAlert("⚠️ Withdrawal recorded! Payment system is busy, but your request will be processed within 24 hours.");
+                }
+            } catch (error) {
+                tg.HapticFeedback.notificationOccurred('error');
+                tg.showAlert("❌ Error processing withdrawal. Please try again.");
+                // Rollback points if error occurs
+                userState.points += amount;
+                updateUI();
+            } finally {
+                withdrawSubmitBtn.classList.remove('loading');
+                withdrawSubmitBtn.disabled = false;
+            }
+        };
+        
+        const copyReferralLink = () => {
+            navigator.clipboard.writeText(referralLinkElem.value).then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert("✅ Referral link copied to clipboard!");
+            }).catch(() => {
+                // Fallback for older browsers
+                referralLinkElem.select();
+                document.execCommand('copy');
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert("✅ Referral link copied!");
+            });
+        };
+
+        const setupNavigation = () => {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const pages = document.querySelectorAll('.page');
+            
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    
+                    // Tüm sayfa ve butonları resetle
+                    pages.forEach(page => page.classList.remove('active'));
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Aktif sayfa ve butonu ayarla
+                    document.getElementById(pageId).classList.add('active');
+                    button.classList.add('active');
+                    
+                    // TON fiyatını güncelle (withdraw sayfasına geçerse)
+                    if (pageId === 'withdraw-page') {
+                        updateTONPrice();
+                    }
+                });
+            });
+        };
+
+        // Uygulamayı başlat
+        initApp().catch(error => {
+            console.error("App initialization error:", error);
+            tg.showAlert("Error loading app. Please try again.");
+        });
+    });
+</script>
+</body>
+</html>
