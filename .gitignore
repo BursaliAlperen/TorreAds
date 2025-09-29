@@ -27,9 +27,6 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Dependency directories
-node_modules/
-
 # Optional npm cache directory
 .npm
 
@@ -41,12 +38,6 @@ node_modules/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
 
 # macOS
 .DS_Store
