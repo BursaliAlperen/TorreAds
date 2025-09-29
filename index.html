@@ -1,255 +1,204 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TorreAds - Earn TON</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ton Withdraw & Ads App</title>
 
-    <style>
-        :root {
-            --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #f4f4f9;
-            --secondary-bg-light: #ffffff;
-            --text-color-light: #1c1c1e;
-            --subtle-text-light: #6d6d72;
-            --primary-color-light: #0098ea;
-            --border-color-light: #e0e0e0;
-            --bg-color-dark: #121212;
-            --secondary-bg-dark: #1c1c1e;
-            --text-color-dark: #ffffff;
-            --subtle-text-dark: #8e8e93;
-            --primary-color-dark: #0098ea;
-            --border-color-dark: #38383a;
-        }
+  <!-- GigaPub Reklam Scripti -->
+  <script src="https://ad.gigapub.tech/script?id=986"></script>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font-family);
-            transition: background-color 0.3s, color 0.3s;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+  <!-- Google font + FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
-        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
-
-        .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid; }
-        .light-theme .profile-header { border-bottom-color: var(--border-color-light); }
-        .dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
-        .profile-info { display: flex; align-items: center; gap: 15px; }
-        #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
-        .light-theme #user-photo { border-color: var(--primary-color-light); }
-        .dark-theme #user-photo { border-color: var(--primary-color-dark); }
-        .user-details h1 { font-size: 1.2rem; font-weight: 700; }
-        .verified-icon { font-size: 1rem; margin-left: 5px; }
-        .light-theme .verified-icon { color: var(--primary-color-light); }
-        .dark-theme .verified-icon { color: var(--primary-color-dark); }
-        .user-details p { font-size: 0.9rem; font-weight: 600; }
-        .light-theme .user-details p { color: var(--subtle-text-light); }
-        .dark-theme .user-details p { color: var(--subtle-text-dark); }
-        main { padding: 15px; }
-.page { display: none; }
-.page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-h2 { font-size: 1.5rem; margin-bottom: 15px; }
-
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-.stat-card { padding: 20px; border-radius: 12px; text-align: center; }
-.light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
-.light-theme .stat-card h3 { color: var(--subtle-text-light); }
-.dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
-.stat-card p { font-size: 1.5rem; font-weight: 700; }
-.light-theme .stat-card p { color: var(--primary-color-light); }
-.dark-theme .stat-card p { color: var(--primary-color-dark); }
-.referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
-.light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.referral-section h3 { text-align: center; }
-#referral-link { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
-.light-theme #referral-link { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
-.dark-theme #referral-link { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-#copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; }
-.light-theme #copy-ref-link-btn { background-color: var(--primary-color-light); }
-.dark-theme #copy-ref-link-btn { background-color: var(--primary-color-dark); }
-        .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-.task-container:last-child { margin-bottom: 0; }
-.light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.task-icon { font-size: 3rem; margin-bottom: 15px; }
-.light-theme .task-icon { color: var(--primary-color-light); }
-.dark-theme .task-icon { color: var(--primary-color-dark); }
-.task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
-.task-container p { font-size: 0.9rem; margin-bottom: 20px; }
-.light-theme .task-container p { color: var(--subtle-text-light); }
-.dark-theme .task-container p { color: var(--subtle-text-dark); }
-
-.action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
-.light-theme .action-btn { background-color: var(--primary-color-light); }
-.dark-theme .action-btn { background-color: var(--primary-color-dark); }
-.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-.action-btn.loading .btn-text { visibility: hidden; }
-.action-btn.loading .btn-loader { display: block; position: absolute; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-#withdraw-form .form-group { margin-bottom: 15px; }
-#withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
-#withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
-.light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
-.dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
-.light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
-.dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
-                .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
-        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
-        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
-        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
-        .light-theme .nav-btn { color: var(--subtle-text-light); }
-        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
-        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
-        .nav-btn.active { font-weight: 700; }
-        .light-theme .nav-btn.active { color: var(--primary-color-light); }
-        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
-
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
-        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
-        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
-        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
-        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        .light-theme .loader { border-top-color: var(--primary-color-light); }
-        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
-        
-        .ton-price-info { 
-            padding: 10px; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            text-align: center; 
-            font-size: 0.9rem;
-        }
-        .light-theme .ton-price-info { 
-            background-color: rgba(0, 152, 234, 0.1); 
-            border: 1px solid rgba(0, 152, 234, 0.2);
-        }
-        .dark-theme .ton-price-info { 
-            background-color: rgba(0, 152, 234, 0.15); 
-            border: 1px solid rgba(0, 152, 234, 0.3);
-        }
-        .ton-price-info p { margin: 5px 0; }
-        
-        .currency-symbol { font-weight: 700; }
-        .light-theme .currency-symbol { color: var(--primary-color-light); }
-        .dark-theme .currency-symbol { color: var(--primary-color-dark); }
-    </style>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --accent:#0a84ff; --muted:#666; --success:#1db954;
+    }
+    *{box-sizing:border-box}
+    body{font-family:"Nunito",sans-serif;margin:0;background:var(--bg);color:#111}
+    #app{max-width:520px;margin:0 auto;padding-bottom:80px}
+    header{display:flex;align-items:center;padding:18px;border-bottom:1px solid #e6eaf0;background:var(--card)}
+    #user-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;margin-right:12px;border:2px solid var(--accent)}
+    h1{font-size:1.1rem;margin:0}
+    p.sub{margin:4px 0 0;color:var(--muted);font-weight:600}
+    main{padding:16px}
+    .grid{display:grid;gap:12px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid #e6eaf0}
+    .stat{display:flex;justify-content:space-between;align-items:center}
+    .big{font-size:1.35rem;font-weight:700;color:var(--accent)}
+    #referral-link{flex:1;padding:10px;border-radius:8px;border:1px dashed #cfd8e3;background:#fafbff;font-size:0.9rem}
+    button.btn{padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    .task{display:flex;flex-direction:column;gap:10px}
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);max-width:520px;margin:0 auto;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #e6eaf0}
+    .nav-btn{background:transparent;border:0;display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer}
+    .nav-btn.active{color:var(--accent);font-weight:700}
+    form .form-group{margin-bottom:12px}
+    label{display:block;font-weight:700;margin-bottom:6px}
+    input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;background:#fff}
+    .note{font-size:0.9rem;color:#333;background:#fff;padding:10px;border-radius:8px;border:1px solid #f0f0f0}
+    .loader{width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;display:inline-block}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  </style>
 </head>
 <body>
-    <div id="app">
-        <header class="profile-header">
-            <div class="profile-info">
-                <img id="user-photo" src="" alt="User Photo">
-                <div class="user-details">
-                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
-                    <p>Balance: <span class="currency-symbol">$</span><span id="user-points">0</span></p>
-                </div>
-            </div>
-        </header>
+  <div id="app" class="card">
+    <header>
+      <img id="user-photo" src="https://i.imgur.com/placeholder.png" alt="user">
+      <div>
+        <h1 id="user-name">Yükleniyor... <i class="fas fa-check-circle" style="color:var(--accent);margin-left:6px"></i></h1>
+        <p class="sub"> Balance: $<span id="user-balance">0.00</span></p>
+      </div>
+    </header>
 
-        <main id="main-content">
-            <!-- Home Page -->
-            <div id="home-page" class="page active">
-                <h2>Dashboard</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  100</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Referrals</h3>
-                        <p id="referral-count">00</p>
-                    </div>
-                </div>
-                <div class="referral-section">
-                    <h3>Refer & Earn More!</h3>
-                    <p>Share your link to get <span class="currency-symbol">$</span>0.01 for each referral.</p>
-                    <input type="text" id="referral-link" readonly>
-                    <button id="copy-ref-link-btn">Copy Referral Link</button>
-                </div>
+    <main id="main-content">
+      <!-- Dashboard -->
+      <section id="home-page" class="page">
+        <h2>Kontrol Paneli</h2>
+        <div class="grid">
+          <div class="card stat">
+            <div><div class="big" id="daily-ads-watched">0</div><div class="small">Günlük Reklam</div></div>
+            <div><div class="big" id="referral-count">0</div><div class="small">Referrals</div></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="referral-link" readonly value="">
+              <button id="copy-ref-link-btn" class="btn">Kopyala</button>
             </div>
+            <p style="font-size:0.9rem;margin-top:6px">Her referans için $0.02 kazanırsınız.</p>
+          </div>
+        </div>
+      </section>
 
-            <!-- Tasks Page -->
-            <div id="tasks-page" class="page">
-                <h2>Complete Tasks</h2>
-                <div class="task-container">
-                    <i class="fas fa-video task-icon"></i>
-                    <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn <span class="currency-symbol">$</span>0.0005 for every ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
-                </div>
-                <div class="task-container">
-                    <i class="fab fa-telegram task-icon"></i>
-                    <h3>Join Our Channel</h3>
-                    <p>Get <span class="currency-symbol">$</span>0.02 bonus.</p>
-                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-                <div class="task-container">
-                    <i class="fas fa-users task-icon"></i>
-                    <h3>Join Our Group</h3>
-                    <p>Get <span class="currency-symbol">$</span>0.02 bonus.</p>
-                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-            </div>
-            
-            <!-- Withdraw Page -->
-            <div id="withdraw-page" class="page">
-                <h2>Withdraw TON</h2>
-                <p>Minimum <span class="currency-symbol">$</span>1.00 required to withdraw.</p>
-                
-                <div class="ton-price-info">
-                    <p>Current TON Price: <span id="ton-price">Loading...</span></p>
-                    <p id="ton-conversion">Your withdrawal will be converted to TON</p>
-                </div>
-                
-                <form id="withdraw-form">
-                    <div class="form-group">
-                        <label for="withdraw-method">Method:</label>
-                        <select id="withdraw-method" required>
-                            <option value="TON">TON Coin</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="account-number">TON Wallet Address:</label>
-                        <input type="text" id="account-number" placeholder="e.g., EQ..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="amount">Amount to Withdraw ($):</label>
-                        <input type="number" id="amount" placeholder="e.g., 1.00" step="0.01" min="1.00" required>
-                    </div>
-                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
-                        <span class="btn-text">Submit Request</span>
-                        <span class="btn-loader"></span>
-                    </button>
-                </form>
-            </div>
-        </main>
+      <!-- Tasks -->
+      <section id="tasks-page" class="page" style="display:none">
+        <h2>Görevler</h2>
+        <div class="card task">
+          <div><strong>Reklam İzle</strong> – $0.25 kazan</div>
+          <button id="watch-ad-btn" class="btn">Reklam İzle</button>
+        </div>
+        <div class="card task">
+          <div><strong>Join Kanal / Grup</strong></div>
+          <a href="https://t.me/Torrelabs" target="_blank" class="btn">Kanal</a>
+          <a href="https://t.me/torreAdsChat" target="_blank" class="btn">Grup</a>
+        </div>
+      </section>
 
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
-            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-        </nav>
-    </div>
+      <!-- Withdraw -->
+      <section id="withdraw-page" class="page" style="display:none">
+        <h2>Withdraw (TON)</h2>
+        <form id="withdraw-form" class="card">
+          <div class="form-group">
+            <label for="withdraw-amount">Tutar ($)</label>
+            <input type="number" id="withdraw-amount" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="ton-address">TON Adresi</label>
+            <input type="text" id="ton-address" required>
+          </div>
+          <div class="note" id="ton-warning">Güncel TON fiyatı alınıyor...</div>
+          <button id="withdraw-submit-btn" class="btn" type="submit">Çekim İsteği Gönder</button>
+        </form>
+      </section>
+    </main>
 
-    <div id="loading-modal" class="modal">
-        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
-    </div>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://ad.gigapub.tech/script?id=986"></script>
-    
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i>Home</button>
+      <button class="nav-btn" data-page="tasks-page"><i class="fas fa-play"></i>Görev</button>
+      <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i>Withdraw</button>
+    </nav>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+  (function(){
+    const PIPEDREAM_ENDPOINT = "https://eo3h4zf914hhqv7.m.pipedream.net";
+    const JSONBIN_API_KEY = "$2a$10$KD.7qzKquuA6yJbLsBORROtwmYc/e8dVxXzczpiSFvypxIU9nai9G";
+    const JSONBIN_BIN_ID = "68da76fad0ea881f408f1248";
+    const REF_REWARD_USD = 0.02, AD_REWARD_USD = 0.25, MIN_WITHDRAW_USD = 0.02;
+    const PRICE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd";
+
+    const tg = window.Telegram.WebApp || {initDataUnsafe:{}, ready:()=>{}};
+    let userState = { balance_usd:0, referrals:[], dailyAds:0, userId:null };
+
+    const balEl=document.getElementById('user-balance'),
+          refCount=document.getElementById('referral-count'),
+          refLink=document.getElementById('referral-link'),
+          watchAdBtn=document.getElementById('watch-ad-btn'),
+          withdrawForm=document.getElementById('withdraw-form'),
+          withdrawAmt=document.getElementById('withdraw-amount'),
+          tonAddr=document.getElementById('ton-address'),
+          tonWarn=document.getElementById('ton-warning');
+
+    function updateUI(){
+      balEl.textContent = userState.balance_usd.toFixed(2);
+      refCount.textContent = userState.referrals.length;
+      refLink.value = `${location.origin}${location.pathname}?start=ref_${userState.userId}`;
+    }
+
+    async function saveState(){
+      localStorage.setItem("user_"+userState.userId, JSON.stringify(userState));
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method:"PUT",
+        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY},
+        body:JSON.stringify({users:{[userState.userId]:userState}})
+      }).catch(()=>{});
+    }
+
+    async function loadState(){
+      const local=localStorage.getItem("user_"+userState.userId);
+      if(local){userState=JSON.parse(local);return;}
+      try{
+        const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`,{headers:{'X-Master-Key':JSONBIN_API_KEY}});
+        const j=await r.json();
+        if(j.record && j.record.users && j.record.users[userState.userId]){
+          userState=j.record.users[userState.userId];
+        }
+      }catch{}
+    }
+
+    async function fetchTonPrice(){
+      try{
+        const r=await fetch(PRICE_URL); const d=await r.json();
+        return d.toncoin.usd;
+      }catch{return null;}
+    }
+
+    async function init(){
+      tg.ready();
+      const user=tg.initDataUnsafe.user||{id:"guest"};
+      userState.userId=user.id;
+      await loadState();
+      updateUI();
+      const tonUsd=await fetchTonPrice();
+      tonWarn.textContent = tonUsd?`1 TON = $${tonUsd}`:"Fiyat alınamadı";
+    }
+
+    watchAdBtn.onclick=async()=>{
+      try{
+        await window.showGiga();
+        userState.balance_usd+=AD_REWARD_USD;
+        await saveState(); updateUI();
+        alert(`$${AD_REWARD_USD} kazandınız`);
+      }catch{alert("Reklam izlenemedi");}
+    };
+
+    withdrawForm.onsubmit=async e=>{
+      e.preventDefault();
+      const usd=+withdrawAmt.value, addr=tonAddr.value;
+      if(usd<MIN_WITHDRAW_USD||usd>userState.balance_usd)return alert("Geçersiz tutar");
+      const tonUsd=await fetchTonPrice();
+      const ton=tonUsd?(usd/tonUsd).toFixed(6):null;
+      if(!confirm(`$${usd} ≈ ${ton} TON\nAdrese gönderilsin mi?\n${addr}`))return;
+      userState.balance_usd-=usd; await saveState(); updateUI();
+      await fetch(PIPEDREAM_ENDPOINT,{method:"POST",headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({userId:userState.userId,amount_usd:usd,ton_amount:ton,ton_address:addr,ts:Date.now()})});
+      alert("İsteğiniz gönderildi");
+    };
+
+    init();
+  })();
+  </script>
+</body>
+            </html>
