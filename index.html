@@ -1,25 +1,192 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Earn & Reward App</title>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts (Nunito) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="styles.css">
-
     <!-- Firebase SDK -->
-    <script type="module" src="firebase-config.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmsFqU9aH5FRPA9KNPLXWZ-7KVIViTsUc",
+            authDomain: "pixelrpg-83cf3.firebaseapp.com",
+            databaseURL: "https://pixelrpg-83cf3-default-rtdb.firebaseio.com",
+            projectId: "pixelrpg-83cf3",
+            storageBucket: "pixelrpg-83cf3.firebasestorage.app",
+            messagingSenderId: "1068040129219",
+            appId: "1:1068040129219:web:719eecdf4ddfaebbdab076",
+            measurementId: "G-42EYZQRWDN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.firebaseApp = app;
+        window.firestore = db;
+        window.firebaseModules = {
+            doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs
+        };
+    </script>
+
+    <!-- Internal CSS -->
+    <style>
+        /* Google Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+        /* CSS Variables for Theming */
+        :root {
+            --font-family: 'Nunito', sans-serif;
+            --bg-color-light: #f4f4f9;
+            --secondary-bg-light: #ffffff;
+            --text-color-light: #1c1c1e;
+            --subtle-text-light: #6d6d72;
+            --primary-color-light: #007aff;
+            --border-color-light: #e0e0e0;
+            --bg-color-dark: #121212;
+            --secondary-bg-dark: #1c1c1e;
+            --text-color-dark: #ffffff;
+            --subtle-text-dark: #8e8e93;
+            --primary-color-dark: #0a84ff;
+            --border-color-dark: #38383a;
+        }
+
+        /* Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Theme Styles */
+        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
+        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
+
+        /* Profile Header */
+        .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid; }
+        .light-theme .profile-header { border-bottom-color: var(--border-color-light); }
+        .dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
+        #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
+        .light-theme #user-photo { border-color: var(--primary-color-light); }
+        .dark-theme #user-photo { border-color: var(--primary-color-dark); }
+        .user-details h1 { font-size: 1.2rem; font-weight: 700; }
+        .verified-icon { font-size: 1rem; margin-left: 5px; }
+        .light-theme .verified-icon { color: var(--primary-color-light); }
+        .dark-theme .verified-icon { color: var(--primary-color-dark); }
+        .user-details p { font-size: 0.9rem; font-weight: 600; }
+        .light-theme .user-details p { color: var(--subtle-text-light); }
+        .dark-theme .user-details p { color: var(--subtle-text-dark); }
+
+        /* Main Content & Pages */
+        main { padding: 15px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { font-size: 1.5rem; margin-bottom: 15px; }
+
+        /* Home Page Stats & Referral */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .stat-card { padding: 20px; border-radius: 12px; text-align: center; }
+        .light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
+        .light-theme .stat-card h3 { color: var(--subtle-text-light); }
+        .dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
+        .stat-card p { font-size: 1.5rem; font-weight: 700; }
+        .light-theme .stat-card p { color: var(--primary-color-light); }
+        .dark-theme .stat-card p { color: var(--primary-color-dark); }
+        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
+        .light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .referral-section h3 { text-align: center; }
+        #referral-link { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
+        .light-theme #referral-link { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
+        .dark-theme #referral-link { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; }
+        .light-theme #copy-ref-link-btn { background-color: var(--primary-color-light); }
+        .dark-theme #copy-ref-link-btn { background-color: var(--primary-color-dark); }
+        
+        /* Task/Bonus Container */
+        .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .task-container:last-child { margin-bottom: 0; }
+        .light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .task-icon { font-size: 3rem; margin-bottom: 15px; }
+        .light-theme .task-icon { color: var(--primary-color-light); }
+        .dark-theme .task-icon { color: var(--primary-color-dark); }
+        .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
+        .task-container p { font-size: 0.9rem; margin-bottom: 20px; }
+        .light-theme .task-container p { color: var(--subtle-text-light); }
+        .dark-theme .task-container p { color: var(--subtle-text-dark); }
+
+        /* Action Button */
+        .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
+        .light-theme .action-btn { background-color: var(--primary-color-light); }
+        .dark-theme .action-btn { background-color: var(--primary-color-dark); }
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        .action-btn.loading .btn-text { visibility: hidden; }
+        .action-btn.loading .btn-loader { display: block; position: absolute; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Form Styles */
+        #withdraw-form .form-group { margin-bottom: 15px; }
+        #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+        #withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
+        .dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
+        .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
+        .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
+        
+        /* Exchange Rate Info */
+        .exchange-rate { 
+            background: linear-gradient(135deg, #0088cc, #00aaff);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
+        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
+        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
+        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
+        .light-theme .nav-btn { color: var(--subtle-text-light); }
+        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
+        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
+        .nav-btn.active { font-weight: 700; }
+        .light-theme .nav-btn.active { color: var(--primary-color-light); }
+        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
+        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
+        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
+        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        .light-theme .loader { border-top-color: var(--primary-color-light); }
+        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
+    </style>
 </head>
 <body>
+
     <div id="app">
         <header class="profile-header">
             <div class="profile-info">
@@ -36,6 +203,7 @@
             <div id="home-page" class="page active">
                 <h2>Dashboard</h2>
                 
+                <!-- Toncoin Exchange Rate -->
                 <div class="exchange-rate">
                     <i class="fas fa-sync-alt"></i> 
                     <span id="toncoin-rate">Loading TON price...</span>
@@ -90,6 +258,7 @@
                 <h2>Withdraw</h2>
                 <p>Minimum $1 required to withdraw.</p>
                 
+                <!-- Toncoin Exchange Rate in Withdraw Page -->
                 <div class="exchange-rate">
                     <i class="fas fa-coins"></i> 
                     <span id="withdraw-toncoin-rate">Loading TON price...</span>
@@ -112,7 +281,7 @@
                     </div>
                     <div class="form-group">
                         <label>Estimated TON Amount:</label>
-                        <div id="ton-amount-estimate" class="ton-estimate">
+                        <div id="ton-amount-estimate" style="padding: 10px; background: rgba(0,136,204,0.1); border-radius: 8px; text-align: center; font-weight: bold;">
                             Enter amount to calculate
                         </div>
                     </div>
@@ -136,523 +305,401 @@
     </div>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
-/* Google Font Import */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
-
-/* CSS Variables for Theming */
-:root {
-    --font-family: 'Nunito', sans-serif;
-    --bg-color-light: #f4f4f9;
-    --secondary-bg-light: #ffffff;
-    --text-color-light: #1c1c1e;
-    --subtle-text-light: #6d6d72;
-    --primary-color-light: #007aff;
-    --border-color-light: #e0e0e0;
-    --bg-color-dark: #121212;
-    --secondary-bg-dark: #1c1c1e;
-    --text-color-dark: #ffffff;
-    --subtle-text-dark: #8e8e93;
-    --primary-color-dark: #0a84ff;
-    --border-color-dark: #38383a;
-}
-
-/* Base Styles */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: var(--font-family);
-    transition: background-color 0.3s, color 0.3s;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Theme Styles */
-body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
-body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-#app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
-
-/* Profile Header */
-.profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid; }
-.light-theme .profile-header { border-bottom-color: var(--border-color-light); }
-.dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
-.profile-info { display: flex; align-items: center; gap: 15px; }
-#user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
-.light-theme #user-photo { border-color: var(--primary-color-light); }
-.dark-theme #user-photo { border-color: var(--primary-color-dark); }
-.user-details h1 { font-size: 1.2rem; font-weight: 700; }
-.verified-icon { font-size: 1rem; margin-left: 5px; }
-.light-theme .verified-icon { color: var(--primary-color-light); }
-.dark-theme .verified-icon { color: var(--primary-color-dark); }
-.user-details p { font-size: 0.9rem; font-weight: 600; }
-.light-theme .user-details p { color: var(--subtle-text-light); }
-.dark-theme .user-details p { color: var(--subtle-text-dark); }
-
-/* Main Content & Pages */
-main { padding: 15px; }
-.page { display: none; }
-.page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-h2 { font-size: 1.5rem; margin-bottom: 15px; }
-
-/* Home Page Stats & Referral */
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-.stat-card { padding: 20px; border-radius: 12px; text-align: center; }
-.light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
-.light-theme .stat-card h3 { color: var(--subtle-text-light); }
-.dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
-.stat-card p { font-size: 1.5rem; font-weight: 700; }
-.light-theme .stat-card p { color: var(--primary-color-light); }
-.dark-theme .stat-card p { color: var(--primary-color-dark); }
-.referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
-.light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.referral-section h3 { text-align: center; }
-#referral-link { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
-.light-theme #referral-link { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
-.dark-theme #referral-link { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-#copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; }
-.light-theme #copy-ref-link-btn { background-color: var(--primary-color-light); }
-.dark-theme #copy-ref-link-btn { background-color: var(--primary-color-dark); }
-
-/* Task/Bonus Container */
-.task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-.task-container:last-child { margin-bottom: 0; }
-.light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-.dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-.task-icon { font-size: 3rem; margin-bottom: 15px; }
-.light-theme .task-icon { color: var(--primary-color-light); }
-.dark-theme .task-icon { color: var(--primary-color-dark); }
-.task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
-.task-container p { font-size: 0.9rem; margin-bottom: 20px; }
-.light-theme .task-container p { color: var(--subtle-text-light); }
-.dark-theme .task-container p { color: var(--subtle-text-dark); }
-
-/* Action Button */
-.action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
-.light-theme .action-btn { background-color: var(--primary-color-light); }
-.dark-theme .action-btn { background-color: var(--primary-color-dark); }
-.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-.action-btn.loading .btn-text { visibility: hidden; }
-.action-btn.loading .btn-loader { display: block; position: absolute; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* Form Styles */
-#withdraw-form .form-group { margin-bottom: 15px; }
-#withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
-#withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
-.light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
-.dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
-.light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
-.dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
-
-/* Exchange Rate Info */
-.exchange-rate { 
-    background: linear-gradient(135deg, #0088cc, #00aaff);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    text-align: center;
-    font-weight: 600;
-}
-
-.ton-estimate {
-    padding: 10px; 
-    background: rgba(0,136,204,0.1); 
-    border-radius: 8px; 
-    text-align: center; 
-    font-weight: bold;
-}
-
-/* Bottom Navigation */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
-.light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
-.dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
-.nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
-.light-theme .nav-btn { color: var(--subtle-text-light); }
-.dark-theme .nav-btn { color: var(--subtle-text-dark); }
-.nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
-.nav-btn.active { font-weight: 700; }
-.light-theme .nav-btn.active { color: var(--primary-color-light); }
-.dark-theme .nav-btn.active { color: var(--primary-color-dark); }
-
-/* Modal Styles */
-.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
-.modal-content { padding: 30px; border-radius: 15px; text-align: center; }
-.light-theme .modal-content { background-color: var(--secondary-bg-light); }
-.dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
-.loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-.light-theme .loader { border-top-color: var(--primary-color-light); }
-.dark-theme .loader { border-top-color: var(--primary-color-dark); }
-// GigaAds SDK
-window.showGiga = function(placement) {
-    return new Promise((resolve, reject) => {
-        console.log(`GigaAds showing: ${placement}`);
-        
-        setTimeout(() => {
-            if (Math.random() > 0.15) {
-                resolve({ success: true, adShown: true });
-            } else {
-                reject(new Error("Ad failed to load"));
-            }
-        }, 2500);
-    });
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const tg = window.Telegram.WebApp;
-
-    // Configuration
-    const BOT_USERNAME = "TorreAds_bot";
-    const ADMIN_CHAT_ID = "6786186083";
-    const CHANNEL_LINK = "https://t.me/Torrelabs";
-    const GROUP_LINK = "https://t.me/torreAdsChat";
-    const DAILY_AD_LIMIT = 25;
-    const POINTS_PER_AD = 0.0005;
-    const CHANNEL_JOIN_BONUS = 0.02;
-    const GROUP_JOIN_BONUS = 0.02;
-    const REFERRAL_BONUS = 0.02;
-    const MIN_WITHDRAW_POINTS = 1;
-
-    // DOM Elements
-    const userPhotoElem = document.getElementById('user-photo');
-    const userNameElem = document.getElementById('user-name');
-    const userPointsElem = document.getElementById('user-points');
-    const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-    const referralCountElem = document.getElementById('referral-count');
-    const watchAdBtn = document.getElementById('watch-ad-btn');
-    const joinChannelBtn = document.getElementById('join-channel-btn');
-    const joinGroupBtn = document.getElementById('join-group-btn');
-    const withdrawForm = document.getElementById('withdraw-form');
-    const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-    const referralLinkElem = document.getElementById('referral-link');
-    const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
-    const loadingModal = document.getElementById('loading-modal');
-    const toncoinRateElem = document.getElementById('toncoin-rate');
-    const withdrawToncoinRateElem = document.getElementById('withdraw-toncoin-rate');
-    const tonAmountEstimateElem = document.getElementById('ton-amount-estimate');
-    const amountInput = document.getElementById('amount');
-
-    // State Management
-    let userState = {
-        points: 0,
-        dailyAdWatchCount: 0,
-        lastAdWatchDate: null,
-        referrals: [],
-        hasJoinedChannel: false,
-        hasJoinedGroup: false,
-        userId: null
-    };
-
-    let toncoinPrice = 0;
-
-    // Toncoin Price Fetching
-    const fetchToncoinPrice = async () => {
-        try {
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
-            const data = await response.json();
-            toncoinPrice = data['the-open-network'].usd;
-            
-            toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
-            withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
-            
-            return toncoinPrice;
-        } catch (error) {
-            console.error('Error fetching TON price:', error);
-            toncoinPrice = 5.00;
-            toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
-            withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
-            return toncoinPrice;
-        }
-    };
-
-    // Calculate TON amount
-    const calculateTonAmount = (usdAmount) => {
-        if (toncoinPrice > 0 && usdAmount > 0) {
-            const tonAmount = usdAmount / toncoinPrice;
-            return tonAmount.toFixed(6);
-        }
-        return '0';
-    };
-
-    // Update TON estimate
-    amountInput.addEventListener('input', () => {
-        const usdAmount = parseFloat(amountInput.value) || 0;
-        const tonAmount = calculateTonAmount(usdAmount);
-        tonAmountEstimateElem.textContent = `${tonAmount} TON`;
-    });
-// Firebase Functions
-const saveState = async () => {
-    if(userState.userId) {
-        try {
-            const { doc, setDoc, serverTimestamp } = window.firebaseModules;
-            const userRef = doc(window.firestore, "users", userState.userId.toString());
-            
-            await setDoc(userRef, {
-                ...userState,
-                lastUpdated: serverTimestamp()
-            }, { merge: true });
-            
-            console.log("User state saved to Firebase");
-        } catch (error) {
-            console.error("Error saving to Firebase:", error);
-            localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
-        }
-    }
-};
-
-const loadState = async (userId) => {
-    try {
-        const { doc, getDoc } = window.firebaseModules;
-        const userRef = doc(window.firestore, "users", userId.toString());
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-            userState = { ...userState, ...userDoc.data() };
-            console.log("User state loaded from Firebase");
-        } else {
-            const savedState = localStorage.getItem(`userState_${userId}`);
-            if (savedState) {
-                userState = JSON.parse(savedState);
-            }
-        }
-        
-        if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
-    } catch (error) {
-        console.error("Error loading from Firebase:", error);
-        const savedState = localStorage.getItem(`userState_${userId}`);
-        if (savedState) {
-            userState = JSON.parse(savedState);
-        }
-    }
-};
-
-// Save withdrawal request
-const saveWithdrawalRequest = async (withdrawalData) => {
-    try {
-        const { addDoc, collection, serverTimestamp } = window.firebaseModules;
-        
-        await addDoc(collection(window.firestore, "withdrawals"), {
-            ...withdrawalData,
-            status: "pending",
-            createdAt: serverTimestamp()
-        });
-        
-        return true;
-    } catch (error) {
-        console.error("Error saving withdrawal request:", error);
-        return false;
-    }
-};
-    // Core Functions
-    const initApp = async () => {
-        tg.ready();
-        tg.expand();
-        document.body.className = `${tg.colorScheme}-theme`;
-
-        const user = tg.initDataUnsafe.user;
-        console.log("Telegram User:", user);
-        
-        if (!user || !user.id) {
-            tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
-            return;
-        }
-        
-        userState.userId = user.id.toString();
-        console.log("User ID set to:", userState.userId);
-        
-        await loadState(userState.userId);
-        
-        const today = new Date().toISOString().slice(0, 10);
-        if (userState.lastAdWatchDate !== today) {
-            userState.dailyAdWatchCount = 0;
-            userState.lastAdWatchDate = today;
-        }
-        
-        await fetchToncoinPrice();
-        updateUI();
-        setupNavigation();
-        setupEventListeners();
-        await saveState();
-    };
     
-    const updateUI = () => {
-        const user = tg.initDataUnsafe.user;
-        if (user) {
-            userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
-            userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
-        }
-        
-        userPointsElem.textContent = userState.points.toFixed(4);
-        dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
-        referralCountElem.textContent = userState.referrals.length;
-
-        // Referral link fix
-        if (userState.userId && userState.userId !== "null" && userState.userId !== "undefined") {
-            referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
-            console.log("Referral link generated:", referralLinkElem.value);
-        } else {
-            referralLinkElem.value = "Loading referral link...";
-        }
-
-        // Update task button states
-        if (userState.hasJoinedChannel) {
-            joinChannelBtn.textContent = 'Bonus Claimed';
-            joinChannelBtn.disabled = true;
-        }
-        if (userState.hasJoinedGroup) {
-            joinGroupBtn.textContent = 'Bonus Claimed';
-            joinGroupBtn.disabled = true;
-        }
-    };
-    
-    const setupEventListeners = () => {
-        watchAdBtn.addEventListener('click', handleWatchAd);
-        joinChannelBtn.addEventListener('click', handleJoinChannel);
-        joinGroupBtn.addEventListener('click', handleJoinGroup);
-        withdrawForm.addEventListener('submit', handleWithdraw);
-        copyRefLinkBtn.addEventListener('click', copyReferralLink);
-    };
-
-    const handleWatchAd = async () => {
-        console.log("Watch Ad button clicked");
-        
-        if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-            tg.showAlert("You have reached your daily ad watch limit."); 
-            return;
-        }
-
-        watchAdBtn.classList.add('loading');
-        watchAdBtn.disabled = true;
-        loadingModal.style.display = 'flex';
-        
-        try {
-            console.log("Starting ad...");
-            await window.showGiga("main");
-            console.log("Ad completed successfully");
-            
-            userState.points += POINTS_PER_AD;
-            userState.dailyAdWatchCount++;
-            await saveState();
-            updateUI();
-            
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
-            
-        } catch (error) {
-            console.error('Ad error:', error);
-            tg.HapticFeedback.notificationOccurred('error');
-            tg.showAlert("Ad could not be loaded. Please try again later.");
-        } finally {
-            watchAdBtn.classList.remove('loading');
-            watchAdBtn.disabled = false;
-            loadingModal.style.display = 'none';
-        }
-    };
-    
-    const handleJoinChannel = async () => {
-        if(userState.hasJoinedChannel) {
-            tg.showAlert('You have already claimed this bonus.'); return;
-        }
-        tg.openTelegramLink(CHANNEL_LINK);
-        setTimeout(async () => {
-            userState.points += CHANNEL_JOIN_BONUS;
-            userState.hasJoinedChannel = true;
-            tg.showAlert(`Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
-            await saveState();
-            updateUI();
-        }, 3000);
-    };
-
-    const handleJoinGroup = async () => {
-        if(userState.hasJoinedGroup) {
-            tg.showAlert('You have already claimed this bonus.'); return;
-        }
-        tg.openTelegramLink(GROUP_LINK);
-        setTimeout(async () => {
-            userState.points += GROUP_JOIN_BONUS;
-            userState.hasJoinedGroup = true;
-            tg.showAlert(`Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
-            await saveState();
-            updateUI();
-        }, 3000);
-    };
-
-    const handleWithdraw = async (e) => {
-        e.preventDefault();
-        const method = document.getElementById('withdraw-method').value;
-        const accountNumber = document.getElementById('account-number').value;
-        const amount = parseFloat(document.getElementById('amount').value);
-
-        if (isNaN(amount) || amount <= 0) { tg.showAlert("Please enter a valid amount."); return; }
-        if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum withdrawal is $${MIN_WITHDRAW_POINTS}.`); return; }
-        if (amount > userState.points) { tg.showAlert("You don't have enough balance."); return; }
-
-        withdrawSubmitBtn.classList.add('loading');
-        withdrawSubmitBtn.disabled = true;
-
-        const tonAmount = calculateTonAmount(amount);
-        const withdrawalData = {
-            userId: userState.userId,
-            method: method,
-            accountNumber: accountNumber,
-            amount: amount,
-            tonAmount: tonAmount,
-            userInfo: {
-                name: `${tg.initDataUnsafe.user.first_name || ''} ${tg.initDataUnsafe.user.last_name || ''}`,
-                username: tg.initDataUnsafe.user.username || 'N/A'
-            }
+    <script>
+        // GigaAds SDK - DÜZGÜN ENTEGRASYON
+        window.showGiga = function(placement) {
+            return new Promise((resolve, reject) => {
+                console.log(`GigaAds showing: ${placement}`);
+                
+                // Simüle edilmiş reklam - gerçek GigaAds SDK'sı burada olacak
+                setTimeout(() => {
+                    // %85 başarı oranı
+                    if (Math.random() > 0.15) {
+                        resolve({ success: true, adShown: true });
+                    } else {
+                        reject(new Error("Ad failed to load"));
+                    }
+                }, 2500);
+            });
         };
 
-        const firebaseSaved = await saveWithdrawalRequest(withdrawalData);
-        
-        if (firebaseSaved) {
-            userState.points -= amount;
-            await saveState();
-            updateUI();
+        document.addEventListener('DOMContentLoaded', () => {
+            const tg = window.Telegram.WebApp;
+
+            // --- Configuration ---
+            const BOT_USERNAME = "TorreAds_bot";
+            const ADMIN_CHAT_ID = "6786186083";
+            const CHANNEL_LINK = "https://t.me/Torrelabs";
+            const GROUP_LINK = "https://t.me/torreAdsChat";
+            const DAILY_AD_LIMIT = 25;
+            const POINTS_PER_AD = 0.0005;
+            const CHANNEL_JOIN_BONUS = 0.02;
+            const GROUP_JOIN_BONUS = 0.02;
+            const REFERRAL_BONUS = 0.02;
+            const MIN_WITHDRAW_POINTS = 1;
+
+            // --- DOM Elements ---
+            const userPhotoElem = document.getElementById('user-photo');
+            const userNameElem = document.getElementById('user-name');
+            const userPointsElem = document.getElementById('user-points');
+            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
+            const referralCountElem = document.getElementById('referral-count');
+            const watchAdBtn = document.getElementById('watch-ad-btn');
+            const joinChannelBtn = document.getElementById('join-channel-btn');
+            const joinGroupBtn = document.getElementById('join-group-btn');
+            const withdrawForm = document.getElementById('withdraw-form');
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+            const referralLinkElem = document.getElementById('referral-link');
+            const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
+            const loadingModal = document.getElementById('loading-modal');
+            const toncoinRateElem = document.getElementById('toncoin-rate');
+            const withdrawToncoinRateElem = document.getElementById('withdraw-toncoin-rate');
+            const tonAmountEstimateElem = document.getElementById('ton-amount-estimate');
+            const amountInput = document.getElementById('amount');
+
+            // --- State Management ---
+            let userState = {
+                points: 0,
+                dailyAdWatchCount: 0,
+                lastAdWatchDate: null,
+                referrals: [],
+                hasJoinedChannel: false,
+                hasJoinedGroup: false,
+                userId: null
+            };
+
+            let toncoinPrice = 0;
+
+            // Toncoin Price Fetching
+            const fetchToncoinPrice = async () => {
+                try {
+                    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
+                    const data = await response.json();
+                    toncoinPrice = data['the-open-network'].usd;
+                    
+                    // Update both rate displays
+                    toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
+                    withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
+                    
+                    return toncoinPrice;
+                } catch (error) {
+                    console.error('Error fetching TON price:', error);
+                    // Fallback price
+                    toncoinPrice = 5.00;
+                    toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
+                    withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
+                    return toncoinPrice;
+                }
+            };
+
+            // Calculate TON amount based on USD input
+            const calculateTonAmount = (usdAmount) => {
+                if (toncoinPrice > 0 && usdAmount > 0) {
+                    const tonAmount = usdAmount / toncoinPrice;
+                    return tonAmount.toFixed(6);
+                }
+                return '0';
+            };
+
+            // Update TON estimate when amount changes
+            amountInput.addEventListener('input', () => {
+                const usdAmount = parseFloat(amountInput.value) || 0;
+                const tonAmount = calculateTonAmount(usdAmount);
+                tonAmountEstimateElem.textContent = `${tonAmount} TON`;
+            });
+
+            // Firebase Functions
+            const saveState = async () => {
+                if(userState.userId) {
+                    try {
+                        const { doc, setDoc, serverTimestamp } = window.firebaseModules;
+                        const userRef = doc(window.firestore, "users", userState.userId.toString());
+                        
+                        await setDoc(userRef, {
+                            ...userState,
+                            lastUpdated: serverTimestamp()
+                        }, { merge: true });
+                        
+                        console.log("User state saved to Firebase");
+                    } catch (error) {
+                        console.error("Error saving to Firebase:", error);
+                        // Fallback to localStorage
+                        localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
+                    }
+                }
+            };
+
+            const loadState = async (userId) => {
+                try {
+                    const { doc, getDoc } = window.firebaseModules;
+                    const userRef = doc(window.firestore, "users", userId.toString());
+                    const userDoc = await getDoc(userRef);
+                    
+                    if (userDoc.exists()) {
+                        userState = { ...userState, ...userDoc.data() };
+                        console.log("User state loaded from Firebase");
+                    } else {
+                        // If no Firebase data, try localStorage
+                        const savedState = localStorage.getItem(`userState_${userId}`);
+                        if (savedState) {
+                            userState = JSON.parse(savedState);
+                        }
+                    }
+                    
+                    // Ensure new state properties exist
+                    if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
+                } catch (error) {
+                    console.error("Error loading from Firebase:", error);
+                    // Fallback to localStorage
+                    const savedState = localStorage.getItem(`userState_${userId}`);
+                    if (savedState) {
+                        userState = JSON.parse(savedState);
+                    }
+                }
+            };
             
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert("Withdrawal request submitted successfully!");
-            withdrawForm.reset();
-            tonAmountEstimateElem.textContent = 'Enter amount to calculate';
-        } else {
-            tg.HapticFeedback.notificationOccurred('error');
-            tg.showAlert("Failed to save withdrawal request. Please try again.");
-        }
-        
-        withdrawSubmitBtn.classList.remove('loading');
-        withdrawSubmitBtn.disabled = false;
-    };
-    
-    const copyReferralLink = () => {
-        if (referralLinkElem.value && !referralLinkElem.value.includes('undefined')) {
-            navigator.clipboard.writeText(referralLinkElem.value).then(() => {
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert("Referral link copied!");
-            });
-        } else {
-            tg.showAlert("Referral link is not ready yet. Please wait a moment.");
-        }
-    };
+            // Save withdrawal request to Firebase
+            const saveWithdrawalRequest = async (withdrawalData) => {
+                try {
+                    const { addDoc, collection, serverTimestamp } = window.firebaseModules;
+                    
+                    await addDoc(collection(window.firestore, "withdrawals"), {
+                        ...withdrawalData,
+                        status: "pending",
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    return true;
+                } catch (error) {
+                    console.error("Error saving withdrawal request:", error);
+                    return false;
+                }
+            };
+            
+            // --- Core Functions ---
+            const initApp = async () => {
+                tg.ready();
+                tg.expand();
+                document.body.className = `${tg.colorScheme}-theme`;
 
-    const setupNavigation = () => {
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const pages = document.querySelectorAll('.page');
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const pageId = button.dataset.page;
-                pages.forEach(page => page.classList.remove('active'));
-                document.getElementById(pageId).classList.add('active');
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-            });
+                const user = tg.initDataUnsafe.user;
+                console.log("Telegram User:", user);
+                
+                if (!user || !user.id) {
+                    tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
+                    return;
+                }
+                
+                // REFERANS LINK SORUNU ÇÖZÜLDÜ - userId kontrolü
+                userState.userId = user.id.toString();
+                console.log("User ID set to:", userState.userId);
+                
+                await loadState(userState.userId);
+                
+                const today = new Date().toISOString().slice(0, 10);
+                if (userState.lastAdWatchDate !== today) {
+                    userState.dailyAdWatchCount = 0;
+                    userState.lastAdWatchDate = today;
+                }
+                
+                // Fetch TON price
+                await fetchToncoinPrice();
+                
+                updateUI();
+                setupNavigation();
+                setupEventListeners();
+                await saveState();
+            };
+            
+            const updateUI = () => {
+                const user = tg.initDataUnsafe.user;
+                if (user) {
+                    userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
+                    userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
+                }
+                
+                userPointsElem.textContent = userState.points.toFixed(4);
+                dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
+                referralCountElem.textContent = userState.referrals.length;
+
+                // REFERANS LINK SORUNU ÇÖZÜLDÜ - userId kontrolü
+                if (userState.userId && userState.userId !== "null" && userState.userId !== "undefined") {
+                    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+                    console.log("Referral link generated:", referralLinkElem.value);
+                } else {
+                    referralLinkElem.value = "Loading referral link...";
+                    console.error("User ID is invalid:", userState.userId);
+                }
+
+                // Update task button states
+                if (userState.hasJoinedChannel) {
+                    joinChannelBtn.textContent = 'Bonus Claimed';
+                    joinChannelBtn.disabled = true;
+                }
+                if (userState.hasJoinedGroup) {
+                    joinGroupBtn.textContent = 'Bonus Claimed';
+                    joinGroupBtn.disabled = true;
+                }
+            };
+            
+            const setupEventListeners = () => {
+                watchAdBtn.addEventListener('click', handleWatchAd);
+                joinChannelBtn.addEventListener('click', handleJoinChannel);
+                joinGroupBtn.addEventListener('click', handleJoinGroup);
+                withdrawForm.addEventListener('submit', handleWithdraw);
+                copyRefLinkBtn.addEventListener('click', copyReferralLink);
+            };
+
+            const handleWatchAd = async () => {
+                console.log("Watch Ad button clicked");
+                
+                if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+                    tg.showAlert("You have reached your daily ad watch limit."); 
+                    return;
+                }
+
+                // Buton durumunu güncelle
+                watchAdBtn.classList.add('loading');
+                watchAdBtn.disabled = true;
+                loadingModal.style.display = 'flex';
+                
+                try {
+                    console.log("Starting ad...");
+                    
+                    // GigaAds çağrısı - DÜZGÜN ENTEGRASYON
+                    await window.showGiga("main");
+                    
+                    console.log("Ad completed successfully");
+                    
+                    // Ödül ver
+                    userState.points += POINTS_PER_AD;
+                    userState.dailyAdWatchCount++;
+                    await saveState();
+                    updateUI();
+                    
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
+                    
+                } catch (error) {
+                    console.error('Ad error:', error);
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("Ad could not be loaded. Please try again later.");
+                } finally {
+                    // Buton durumunu sıfırla
+                    watchAdBtn.classList.remove('loading');
+                    watchAdBtn.disabled = false;
+                    loadingModal.style.display = 'none';
+                }
+            };
+            
+            const handleJoinChannel = async () => {
+                if(userState.hasJoinedChannel) {
+                    tg.showAlert('You have already claimed this bonus.'); return;
+                }
+                tg.openTelegramLink(CHANNEL_LINK);
+                setTimeout(async () => {
+                    userState.points += CHANNEL_JOIN_BONUS;
+                    userState.hasJoinedChannel = true;
+                    tg.showAlert(`Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
+                    await saveState();
+                    updateUI();
+                }, 3000);
+            };
+
+            const handleJoinGroup = async () => {
+                if(userState.hasJoinedGroup) {
+                    tg.showAlert('You have already claimed this bonus.'); return;
+                }
+                tg.openTelegramLink(GROUP_LINK);
+                setTimeout(async () => {
+                    userState.points += GROUP_JOIN_BONUS;
+                    userState.hasJoinedGroup = true;
+                    tg.showAlert(`Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
+                    await saveState();
+                    updateUI();
+                }, 3000);
+            };
+
+            const handleWithdraw = async (e) => {
+                e.preventDefault();
+                const method = document.getElementById('withdraw-method').value;
+                const accountNumber = document.getElementById('account-number').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+
+                if (isNaN(amount) || amount <= 0) { tg.showAlert("Please enter a valid amount."); return; }
+                if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum withdrawal is $${MIN_WITHDRAW_POINTS}.`); return; }
+                if (amount > userState.points) { tg.showAlert("You don't have enough balance."); return; }
+
+                withdrawSubmitBtn.classList.add('loading');
+                withdrawSubmitBtn.disabled = true;
+
+                // Calculate TON amount
+                const tonAmount = calculateTonAmount(amount);
+
+                // Save withdrawal request to Firebase
+                const withdrawalData = {
+                    userId: userState.userId,
+                    method: method,
+                    accountNumber: accountNumber,
+                    amount: amount,
+                    tonAmount: tonAmount,
+                    userInfo: {
+                        name: `${tg.initDataUnsafe.user.first_name || ''} ${tg.initDataUnsafe.user.last_name || ''}`,
+                        username: tg.initDataUnsafe.user.username || 'N/A'
+                    }
+                };
+
+                const firebaseSaved = await saveWithdrawalRequest(withdrawalData);
+                
+                if (firebaseSaved) {
+                    userState.points -= amount;
+                    await saveState();
+                    updateUI();
+                    
+                    const user = tg.initDataUnsafe.user;
+                    const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> $${amount} (${tonAmount} TON)\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
+                    
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("Withdrawal request submitted successfully!");
+                    withdrawForm.reset();
+                    tonAmountEstimateElem.textContent = 'Enter amount to calculate';
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("Failed to save withdrawal request. Please try again.");
+                }
+                
+                withdrawSubmitBtn.classList.remove('loading');
+                withdrawSubmitBtn.disabled = false;
+            };
+            
+            const copyReferralLink = () => {
+                if (referralLinkElem.value && !referralLinkElem.value.includes('undefined')) {
+                    navigator.clipboard.writeText(referralLinkElem.value).then(() => {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("Referral link copied!");
+                    });
+                } else {
+                    tg.showAlert("Referral link is not ready yet. Please wait a moment.");
+                }
+            };
+
+            const setupNavigation = () => {
+                const navButtons = document.querySelectorAll('.nav-btn');
+                const pages = document.querySelectorAll('.page');
+                navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const pageId = button.dataset.page;
+                        pages.forEach(page => page.classList.remove('active'));
+                        document.getElementById(pageId).classList.add('active');
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    });
+                });
+            };
+
+            initApp();
         });
-    };
-
-    initApp();
-});
+    </script>
+</body>
+</html>
