@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn & Reward App</title>
+    <title>TorreAds - Earn & Reward</title>
     
     <!-- Google Fonts (Nunito) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -170,6 +170,11 @@
         .light-theme .ton-conversion { color: var(--primary-color-light); }
         .dark-theme .ton-conversion { color: var(--primary-color-dark); }
         .ton-conversion strong { font-weight: 700; }
+        
+        /* Small Balance Warning */
+        .balance-warning { background-color: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 0.8rem; border: 1px solid rgba(255, 193, 7, 0.3); }
+        .light-theme .balance-warning { color: #856404; }
+        .dark-theme .balance-warning { color: #ffd54f; }
     </style>
 </head>
 <body>
@@ -192,13 +197,20 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  25</p>
+                        <p><span id="daily-ads-watched">00</span> /  50</p>
                     </div>
                     <div class="stat-card">
                         <h3>Total Referrals</h3>
                         <p id="referral-count">00</p>
                     </div>
                 </div>
+                
+                <!-- Balance Warning -->
+                <div class="balance-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Low earnings per ad ($0.0005) - Use referrals to earn more!
+                </div>
+                
                 <div class="referral-section">
                     <h3>Refer & Earn More!</h3>
                     <p>Share your link to get $0.02 for each referral.</p>
@@ -218,22 +230,29 @@
             <!-- Tasks Page -->
             <div id="tasks-page" class="page">
                 <h2>Complete Tasks</h2>
+                
+                <!-- Balance Warning -->
+                <div class="balance-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Low earnings per ad - Use referrals to earn more!
+                </div>
+                
                 <div class="task-container">
                     <i class="fas fa-video task-icon"></i>
                     <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn $0.25 for every ad.</p>
+                    <p>Earn $0.0005 for every ad.</p>
                     <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
                 </div>
                 <div class="task-container">
                     <i class="fab fa-telegram task-icon"></i>
                     <h3>Join Our Channel</h3>
-                    <p>Get $10 bonus.</p>
+                    <p>Get $0.02 bonus.</p>
                     <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
                 </div>
                 <div class="task-container">
                     <i class="fas fa-users task-icon"></i>
                     <h3>Join Our Group</h3>
-                    <p>Get $2 bonus.</p>
+                    <p>Get $0.02 bonus.</p>
                     <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
                 </div>
             </div>
@@ -290,19 +309,20 @@
             const tg = window.Telegram.WebApp;
 
             // --- Configuration ---
-            const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
-            const BOT_USERNAME = "Takamakerbd_bot";
-            const ADMIN_CHAT_ID = "6786186083";
-            const CHANNEL_LINK = "https://t.me/trickmimicrojob";
-            const GROUP_LINK = "https://t.me/+XOFG-KodIfkzMDc1";
+            const BOT_USERNAME = "TorreAds_Bot";
             const PIPEDREAM_WEBHOOK = "https://eo3h4zf914hhqv7.m.pipedream.net";
             
-            const DAILY_AD_LIMIT = 25;
-            const POINTS_PER_AD = 0.25;
-            const CHANNEL_JOIN_BONUS = 10;
-            const GROUP_JOIN_BONUS = 2;
+            // Updated earning rates
+            const DAILY_AD_LIMIT = 50; // Increased limit for low earnings
+            const POINTS_PER_AD = 0.0005; // Very low ad earnings
+            const CHANNEL_JOIN_BONUS = 0.02;
+            const GROUP_JOIN_BONUS = 0.02;
             const MIN_WITHDRAW_POINTS = 1;
             const REFERRAL_BONUS = 0.02; // $0.02 per referral
+            
+            // Updated links
+            const CHANNEL_LINK = "https://t.me/torreAdsChat";
+            const GROUP_LINK = "https://t.me/Torrelabs";
             
             // JSONBin.io Configuration
             const JSONBIN_BIN_ID = "68dae2c8ae596e708f005011";
@@ -539,7 +559,7 @@
                     userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
                 }
                 
-                userPointsElem.textContent = userState.points.toFixed(2);
+                userPointsElem.textContent = userState.points.toFixed(4);
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
@@ -610,7 +630,7 @@
                     saveState();
                     updateUI();
                     tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
+                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
                   })
                   .catch(e => {
                     tg.showAlert("Ad could not be loaded. Please try again later.");
