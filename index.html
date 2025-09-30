@@ -474,6 +474,35 @@
                 }
             };
 
+            const getUserByReferralCode = async (referralCode) => {
+                try {
+                    const response = await fetch(JSONBIN_API_URL + '/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load data from JSONBin');
+                    }
+                    
+                    const data = await response.json();
+                    const allUsers = data.record;
+                    
+                    // Find user with matching referral code
+                    for (const [userId, userData] of Object.entries(allUsers)) {
+                        if (userData.referralCode === referralCode) {
+                            return { userId, userData };
+                        }
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('Error getting user by referral code:', error);
+                    return null;
+                }
+            };
+
             const saveState = () => {
                 saveStateToJSONBin();
             };
@@ -524,17 +553,11 @@
                 
                 userState.userId = user.id;
                 
-                // Check for referral parameter
+                // Check for referral parameter - now using referral code
                 const startParam = tg.initDataUnsafe.start_param;
-                if (startParam) {
-                    if (startParam.startsWith('ref_')) {
-                        const referrerId = startParam.substring(4);
-                        userState.referredBy = referrerId;
-                    } else if (startParam.startsWith('code_')) {
-                        const referralCode = startParam.substring(5);
-                        // Handle referral code logic here
-                        processReferralByCode(referralCode);
-                    }
+                if (startParam && startParam.startsWith('ref_')) {
+                    const referralCode = startParam.substring(4);
+                    userState.referredBy = referralCode;
                 }
                 
                 // Generate referral code if not exists
@@ -552,7 +575,7 @@
                 
                 // Process referral if this is a new user referred by someone
                 if (userState.referredBy && userState.referrals.length === 0) {
-                    processReferral(userState.referredBy);
+                    processReferralByCode(userState.referredBy);
                 }
                 
                 // Fetch TON price
@@ -575,10 +598,10 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
-                // Use userId for referral link (as shown in your screenshot)
-                referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+                // Use referralCode for referral link instead of userId
+                referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.referralCode}`;
                 
-                // Display referral code separately
+                // Display referral code
                 referralCodeDisplay.textContent = userState.referralCode || 'Generating...';
 
                 // Update task button states
@@ -781,12 +804,14 @@
                 return Math.random().toString(36).substring(2, 8).toUpperCase();
             };
             
-            const processReferral = async (referrerId) => {
+            const processReferralByCode = async (referralCode) => {
                 try {
-                    // Get referrer's data
-                    const referrer = await getUserFromJSONBin(referrerId);
+                    // Find user by referral code
+                    const referrerData = await getUserByReferralCode(referralCode);
                     
-                    if (referrer) {
+                    if (referrerData) {
+                        const { userId: referrerId, userData: referrer } = referrerData;
+                        
                         // Add bonus to referrer
                         referrer.points += REFERRAL_BONUS;
                         
@@ -808,42 +833,6 @@
                         userState.points += REFERRAL_BONUS;
                         
                         tg.showAlert(`You received $${REFERRAL_BONUS.toFixed(2)} bonus for being referred!`);
-                    }
-                } catch (error) {
-                    console.error('Error processing referral:', error);
-                }
-            };
-
-            // New function to handle referral by code
-            const processReferralByCode = async (referralCode) => {
-                try {
-                    // Get all users to find who has this referral code
-                    const response = await fetch(JSONBIN_API_URL + '/latest', {
-                        method: 'GET',
-                        headers: {
-                            'X-Master-Key': JSONBIN_API_KEY
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load data from JSONBin');
-                    }
-                    
-                    const data = await response.json();
-                    const allUsers = data.record;
-                    
-                    // Find user with matching referral code
-                    let referrerId = null;
-                    for (const [userId, userData] of Object.entries(allUsers)) {
-                        if (userData.referralCode === referralCode) {
-                            referrerId = userId;
-                            break;
-                        }
-                    }
-                    
-                    if (referrerId) {
-                        userState.referredBy = referrerId;
-                        processReferral(referrerId);
                     }
                 } catch (error) {
                     console.error('Error processing referral by code:', error);
