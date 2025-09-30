@@ -1,0 +1,17 @@
+# Basic security
+Options -Indexes
+
+# Rewrite rules for Render
+RewriteEngine On
+
+# Health check endpoint
+RewriteRule ^health$ - [L]
+
+# API endpoints
+RewriteRule ^api/(.*)$ index.php?api=$1 [QSA,L]
+
+# Bot webhook
+RewriteRule ^webhook/(.*)$ index.php?webhook=$1 [QSA,L]
+
+# Main bot endpoint
+RewriteRule ^$ index.php [L]
