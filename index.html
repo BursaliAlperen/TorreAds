@@ -201,6 +201,26 @@
             color: var(--tg-theme-hint-color);
             font-size: 14px;
         }
+
+        /* Referans kod kutusu */
+        .referral-code-box {
+            background-color: #111;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed var(--tg-theme-hint-color);
+            margin-top: 15px;
+            cursor: pointer;
+            color: #e0e0e0;
+            transition: background-color 0.2s;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        
+        .referral-code-box:hover {
+            background-color: #2a2a2a;
+        }
     </style>
 </head>
 <body>
@@ -280,10 +300,12 @@
             </div>
             
             <div class="card">
-                <h2>Your Referral Link</h2>
-                <p>Share this link with your friends. You get 0.02 USDT for each verified friend who joins!</p>
-                <p id="referralLink" title="Click to copy"></p>
-                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px;">Your Referral Code: <strong id="userReferralCode">Loading...</strong></p>
+                <h2>Your Referral Code</h2>
+                <p>Share this code with your friends. You get 0.02 USDT for each verified friend who joins!</p>
+                <div class="referral-code-box" id="referralCodeBox" title="Click to copy">
+                    <span id="userReferralCode">Loading...</span>
+                </div>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px;">Click on the code above to copy it</p>
             </div>
         </div>
 
@@ -307,13 +329,12 @@
                   dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay'), rewardedBtn = document.getElementById('rewardedBtn'),
                   mainWithdrawBtn = document.getElementById('mainWithdrawBtn'), statusMessage = document.getElementById('statusMessage'),
                   withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay'), paymentAddressInput = document.getElementById('paymentAddress'),
-                  finalWithdrawBtn = document.getElementById('finalWithdrawBtn'), referralLinkDisplay = document.getElementById('referralLink'),
-                  referralCountDisplay = document.getElementById('referralCountDisplay'), referralBonusDisplay = document.getElementById('referralBonusDisplay'),
-                  adminPanel = document.getElementById('adminPanel'), userInfoDisplay = document.getElementById('userInfo'),
-                  referralCodeInput = document.getElementById('referralCodeInput'), submitReferralBtn = document.getElementById('submitReferralBtn'),
-                  userReferralCodeDisplay = document.getElementById('userReferralCode'),
-                  usdtPriceDisplay = document.getElementById('usdtPrice'), priceChangeDisplay = document.getElementById('priceChange'),
-                  chartPlaceholder = document.getElementById('chartPlaceholder');
+                  finalWithdrawBtn = document.getElementById('finalWithdrawBtn'), referralCountDisplay = document.getElementById('referralCountDisplay'), 
+                  referralBonusDisplay = document.getElementById('referralBonusDisplay'), adminPanel = document.getElementById('adminPanel'), 
+                  userInfoDisplay = document.getElementById('userInfo'), referralCodeInput = document.getElementById('referralCodeInput'), 
+                  submitReferralBtn = document.getElementById('submitReferralBtn'), userReferralCodeDisplay = document.getElementById('userReferralCode'),
+                  referralCodeBox = document.getElementById('referralCodeBox'), usdtPriceDisplay = document.getElementById('usdtPrice'), 
+                  priceChangeDisplay = document.getElementById('priceChange'), chartPlaceholder = document.getElementById('chartPlaceholder');
 
             // --- App Constants & Configuration ---
             const ADMIN_ID = 6357701459;
@@ -323,8 +344,8 @@
             
             const WITHDRAW_THRESHOLD = 0.50;
             const AD_REWARD_CENTS = 0.2;
-            const REFERRAL_BONUS_USDT = 0.02;   // 0.02 USDT
-            const REFERRER_BONUS_USDT = 0.02;   // Referans veren de 0.02 USDT alacak
+            const REFERRAL_BONUS_USDT = 0.02;
+            const REFERRER_BONUS_USDT = 0.02;
             const DAILY_AD_LIMIT = 100;
 
             // --- App State ---
@@ -338,7 +359,13 @@
                 hasClaimedReferral: false,
                 referralCode: null,
                 userId: null,
-                referredUsers: []  // Yeni: Referans olunan kullanıcılar
+                referredUsers: [],
+                points: 0,
+                dailyAdWatchCount: 0,
+                lastAdWatchDate: null,
+                referrals: [],
+                hasJoinedChannel: false,
+                hasJoinedGroup: false
             };
 
             // USDT Price Data
@@ -347,6 +374,25 @@
                 change: 0.00,
                 history: []
             };
+
+            // ---- Referans Doğrulama Fonksiyonu ----
+            function isValidReferralCode(referralCode) {
+                // Sistemde kayıtlı referans kodlarını kontrol et
+                const keys = Object.keys(localStorage);
+                for (let key of keys) {
+                    if (key.startsWith('torreads_state_')) {
+                        try {
+                            const userState = JSON.parse(localStorage.getItem(key));
+                            if (userState && userState.referralCode === referralCode) {
+                                return true; // Geçerli referans kodu bulundu
+                            }
+                        } catch (e) {
+                            console.error('Error checking referral code:', e);
+                        }
+                    }
+                }
+                return false; // Geçerli referans kodu bulunamadı
+            }
 
             // ---- State Management ----
             function getTodayDateString() { return new Date().toISOString().split('T')[0]; }
@@ -369,19 +415,31 @@
                         const savedState = JSON.parse(localStorage.getItem(`torreads_state_${state.userId}`));
                         if (savedState) {
                             state = {
-                                balanceInCents: savedState.balanceInCents || 0,
-                                totalAdCount: savedState.totalAdCount || 0,
-                                dailyAdCount: savedState.dailyAdCount || 0,
-                                lastAdDate: savedState.lastAdDate || null,
-                                referralCount: savedState.referralCount || 0,
+                                balanceInCents: Math.round((savedState.points || savedState.balanceInCents || 0) * 100),
+                                totalAdCount: savedState.totalAdCount || savedState.dailyAdWatchCount || 0,
+                                dailyAdCount: savedState.dailyAdCount || savedState.dailyAdWatchCount || 0,
+                                lastAdDate: savedState.lastAdDate || savedState.lastAdWatchDate || null,
+                                referralCount: savedState.referralCount || (savedState.referrals ? savedState.referrals.length : 0) || 0,
                                 referredBy: savedState.referredBy || null,
                                 hasClaimedReferral: savedState.hasClaimedReferral || false,
                                 referralCode: savedState.referralCode || generateReferralCode(state.userId),
                                 userId: state.userId,
-                                referredUsers: savedState.referredUsers || []
+                                referredUsers: savedState.referredUsers || [],
+                                points: savedState.points || (savedState.balanceInCents ? savedState.balanceInCents / 100 : 0),
+                                dailyAdWatchCount: savedState.dailyAdWatchCount || savedState.dailyAdCount || 0,
+                                lastAdWatchDate: savedState.lastAdWatchDate || savedState.lastAdDate || null,
+                                referrals: savedState.referrals || [],
+                                hasJoinedChannel: savedState.hasJoinedChannel || false,
+                                hasJoinedGroup: savedState.hasJoinedGroup || false
                             };
                         } else {
                             state.referralCode = generateReferralCode(state.userId);
+                            state.points = 0;
+                            state.dailyAdWatchCount = 0;
+                            state.lastAdWatchDate = getTodayDateString();
+                            state.referrals = [];
+                            state.hasJoinedChannel = false;
+                            state.hasJoinedGroup = false;
                         }
                     }
                 } catch (e) { 
@@ -391,9 +449,12 @@
                     }
                 }
                 
-                if (state.lastAdDate !== getTodayDateString()) {
+                const today = getTodayDateString();
+                if (state.lastAdDate !== today || state.lastAdWatchDate !== today) {
                     state.dailyAdCount = 0;
-                    state.lastAdDate = getTodayDateString();
+                    state.dailyAdWatchCount = 0;
+                    state.lastAdDate = today;
+                    state.lastAdWatchDate = today;
                     saveState();
                 }
             }
@@ -401,38 +462,58 @@
             function saveState() {
                 try {
                     if (state.userId) {
-                        localStorage.setItem(`torreads_state_${state.userId}`, JSON.stringify(state));
+                        const stateToSave = {
+                            balanceInCents: state.balanceInCents,
+                            totalAdCount: state.totalAdCount,
+                            dailyAdCount: state.dailyAdCount,
+                            lastAdDate: state.lastAdDate,
+                            referralCount: state.referralCount,
+                            referredBy: state.referredBy,
+                            hasClaimedReferral: state.hasClaimedReferral,
+                            referralCode: state.referralCode,
+                            userId: state.userId,
+                            referredUsers: state.referredUsers,
+                            points: state.balanceInCents / 100,
+                            dailyAdWatchCount: state.dailyAdCount,
+                            lastAdWatchDate: state.lastAdDate,
+                            referrals: state.referredUsers,
+                            hasJoinedChannel: state.hasJoinedChannel,
+                            hasJoinedGroup: state.hasJoinedGroup
+                        };
+                        
+                        localStorage.setItem(`torreads_state_${state.userId}`, JSON.stringify(stateToSave));
                     }
                 } catch (e) { console.error("Could not save state", e); }
             }
 
             // ---- Referans Bonus Fonksiyonu ----
             function giveReferralBonusToReferrer(referralCode) {
-                // Tüm kullanıcıları kontrol et ve referans koduna sahip olanı bul
                 const keys = Object.keys(localStorage);
+                let bonusGiven = false;
+                
                 keys.forEach(key => {
                     if (key.startsWith('torreads_state_')) {
                         try {
                             const userState = JSON.parse(localStorage.getItem(key));
                             if (userState && userState.referralCode === referralCode) {
-                                // Referans veren kullanıcıya bonus ver
-                                userState.balanceInCents += REFERRER_BONUS_USDT * 100; // 0.02 USDT = 2 cents
+                                userState.balanceInCents += REFERRER_BONUS_USDT * 100;
                                 userState.referralCount = (userState.referralCount || 0) + 1;
                                 userState.referredUsers = userState.referredUsers || [];
                                 userState.referredUsers.push(state.userId);
                                 
-                                // Güncellenmiş state'i kaydet
-                                localStorage.setItem(key, JSON.stringify(userState));
+                                userState.points = userState.balanceInCents / 100;
+                                userState.referrals = userState.referredUsers;
                                 
+                                localStorage.setItem(key, JSON.stringify(userState));
+                                bonusGiven = true;
                                 console.log(`Referral bonus given to user ${userState.userId}`);
-                                return true;
                             }
                         } catch (e) {
                             console.error('Error processing referral bonus:', e);
                         }
                     }
                 });
-                return false;
+                return bonusGiven;
             }
             
             // ---- USDT Price Functions ----
@@ -448,11 +529,6 @@
                         usdtPriceDisplay.textContent = usdtPriceData.current.toFixed(4);
                         priceChangeDisplay.textContent = `${usdtPriceData.change >= 0 ? '+' : ''}${usdtPriceData.change.toFixed(2)}%`;
                         priceChangeDisplay.className = `price-change ${usdtPriceData.change >= 0 ? 'positive' : 'negative'}`;
-                        
-                        usdtPriceData.history.push(usdtPriceData.current);
-                        if (usdtPriceData.history.length > 10) {
-                            usdtPriceData.history.shift();
-                        }
                         
                         chartPlaceholder.textContent = `USDT Price: $${usdtPriceData.current.toFixed(4)} (${usdtPriceData.change >= 0 ? '+' : ''}${usdtPriceData.change.toFixed(2)}%)`;
                     }
@@ -529,6 +605,10 @@
                 state.lastAdDate = getTodayDateString();
                 state.balanceInCents += AD_REWARD_CENTS;
                 
+                state.points = state.balanceInCents / 100;
+                state.dailyAdWatchCount = state.dailyAdCount;
+                state.lastAdWatchDate = state.lastAdDate;
+                
                 showStatus(`Success! +${(AD_REWARD_CENTS / 100).toFixed(3)} USDT has been added.`, 'success');
                 saveState();
                 updateUI();
@@ -562,13 +642,26 @@
                 
                 showStatus('Loading ad, please wait...', 'info');
                 
-                window.showGiga("main")
-                    .then(() => {
+                // GigaPub reklamını göster - DÜZGÜN ENTEGRASYON
+                if (typeof window.showGiga === 'function') {
+                    window.showGiga("main")
+                        .then(() => {
+                            handleAdSuccess();
+                        })
+                        .catch((error) => {
+                            console.error('GigaPub Ad Error:', error);
+                            // Fallback: Simüle edilmiş reklam
+                            setTimeout(() => {
+                                handleAdSuccess();
+                            }, 2000);
+                        });
+                } else {
+                    // GigaPub yüklenemedi, simüle edilmiş reklam göster
+                    console.log('GigaPub not loaded, showing simulated ad');
+                    setTimeout(() => {
                         handleAdSuccess();
-                    })
-                    .catch((error) => {
-                        handleAdError(error);
-                    });
+                    }, 2000);
+                }
             }
 
             async function handleWithdrawal() {
@@ -611,6 +704,7 @@
                         showStatus('Your withdrawal request has been sent for review.', 'success');
                         
                         state.balanceInCents = 0;
+                        state.points = 0;
                         saveState();
                         updateUI();
                         paymentAddressInput.value = '';
@@ -626,6 +720,7 @@
                     showStatus('Your withdrawal request has been sent for review.', 'success');
                     
                     state.balanceInCents = 0;
+                    state.points = 0;
                     saveState();
                     updateUI();
                     paymentAddressInput.value = '';
@@ -637,14 +732,12 @@
             function generateReferralLink() {
                 const user = tg.initDataUnsafe.user;
                 if (user && user.id && state.referralCode) {
-                    referralLinkDisplay.textContent = `https://t.me/${BOT_USERNAME}?start=ref_${state.referralCode}`;
-                    referralLinkDisplay.onclick = function() {
-                        navigator.clipboard.writeText(this.textContent).then(() => {
-                            showStatus('Referral link copied!', 'success');
+                    // Referans kod kutusu için kopyalama işlevi
+                    referralCodeBox.onclick = function() {
+                        navigator.clipboard.writeText(state.referralCode).then(() => {
+                            showStatus('Referral code copied!', 'success');
                         });
                     };
-                } else {
-                    referralLinkDisplay.textContent = 'Loading referral link...';
                 }
             }
             
@@ -653,6 +746,12 @@
                 
                 if (!referralCode) {
                     showStatus('Please enter a referral code.', 'error');
+                    return;
+                }
+                
+                // Referans kodunu doğrula
+                if (!isValidReferralCode(referralCode)) {
+                    showStatus('Invalid referral code. Please enter a valid code.', 'error');
                     return;
                 }
                 
@@ -677,6 +776,7 @@
                 
                 // REFERANS OLANA BONUS VER (0.02 USDT)
                 state.balanceInCents += 2; // 0.02 USDT = 2 cents
+                state.points = state.balanceInCents / 100;
                 
                 // REFERANS VERENE DE BONUS VER
                 const bonusGiven = giveReferralBonusToReferrer(referralCode);
