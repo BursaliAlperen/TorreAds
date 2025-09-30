@@ -553,6 +553,9 @@
                 
                 userState.userId = user.id;
                 
+                // Önce state'i yükle
+                loadState(user.id);
+                
                 // Check for referral parameter - now using referral code
                 const startParam = tg.initDataUnsafe.start_param;
                 if (startParam && startParam.startsWith('ref_')) {
@@ -560,12 +563,13 @@
                     userState.referredBy = referralCode;
                 }
                 
-                // Generate referral code if not exists
+                // Generate referral code if not exists - SADECE İLK DEFA
                 if (!userState.referralCode) {
-                    userState.referralCode = generateReferralCode();
+                    userState.referralCode = generateStableReferralCode(user.id);
+                    console.log("Yeni referral code oluşturuldu:", userState.referralCode);
+                } else {
+                    console.log("Mevcut referral code kullanılıyor:", userState.referralCode);
                 }
-                
-                loadState(user.id);
                 
                 const today = new Date().toISOString().slice(0, 10);
                 if (userState.lastAdWatchDate !== today) {
@@ -599,10 +603,13 @@
                 referralCountElem.textContent = userState.referrals.length;
 
                 // Use referralCode for referral link instead of userId
-                referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.referralCode}`;
-                
-                // Display referral code
-                referralCodeDisplay.textContent = userState.referralCode || 'Generating...';
+                if (userState.referralCode) {
+                    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.referralCode}`;
+                    referralCodeDisplay.textContent = userState.referralCode;
+                } else {
+                    referralLinkElem.value = "Generating...";
+                    referralCodeDisplay.textContent = "Generating...";
+                }
 
                 // Update task button states
                 if (userState.hasJoinedChannel) {
@@ -799,9 +806,27 @@
                 });
             };
             
-            // Referral System Functions
-            const generateReferralCode = () => {
-                return Math.random().toString(36).substring(2, 8).toUpperCase();
+            // Referral System Functions - STABLE VERSION
+            const generateStableReferralCode = (userId) => {
+                // userId'yi kullanarak sabit bir referral code oluştur
+                let hash = 0;
+                for (let i = 0; i < userId.toString().length; i++) {
+                    const char = userId.toString().charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                
+                // Hash'i 6 karakterlik bir string'e dönüştür
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                let tempHash = Math.abs(hash);
+                
+                for (let i = 0; i < 6; i++) {
+                    result += chars[tempHash % chars.length];
+                    tempHash = Math.floor(tempHash / chars.length);
+                }
+                
+                return result;
             };
             
             const processReferralByCode = async (referralCode) => {
