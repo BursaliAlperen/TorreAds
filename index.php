@@ -1,406 +1,786 @@
-<?php
-// TorreAds Bot - Webhook Sistemi
-header('Content-Type: application/json');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Earn & Reward App</title>
+    
+    <!-- Google Fonts (Nunito) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-// Bot configuration
-define('BOT_TOKEN', getenv('BOT_TOKEN') ?: 'YOUR_BOT_TOKEN_HERE');
-define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
-define('USERS_FILE', 'users.json');
-define('ERROR_LOG', 'error.log');
-define('MIN_WITHDRAWAL', 0.01);
-define('REFERRAL_BONUS', 0.005);
-define('AD_EARNINGS', 0.0005);
-define('DAILY_LIMIT', 50);
-define('API_SECRET', 'torreads_secret_2024');
+    <!-- Reklam Scripti -->
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
 
-// Error logging
-function logError($message) {
-    $timestamp = date('Y-m-d H:i:s');
-    file_put_contents(ERROR_LOG, "[$timestamp] ERROR: $message\n", FILE_APPEND);
-    error_log($message); // Render log için
-}
+    <!-- Internal CSS -->
+    <style>
+        /* Google Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
-function logMessage($message) {
-    $timestamp = date('Y-m-d H:i:s');
-    file_put_contents(ERROR_LOG, "[$timestamp] INFO: $message\n", FILE_APPEND);
-    error_log($message); // Render log için
-}
-
-// Data management
-function loadUsers() {
-    try {
-        if (!file_exists(USERS_FILE)) {
-            file_put_contents(USERS_FILE, json_encode([]));
-            chmod(USERS_FILE, 0666);
+        /* CSS Variables for Theming */
+        :root {
+            --font-family: 'Nunito', sans-serif;
+            --bg-color-light: #f4f4f9;
+            --secondary-bg-light: #ffffff;
+            --text-color-light: #1c1c1e;
+            --subtle-text-light: #6d6d72;
+            --primary-color-light: #007aff;
+            --border-color-light: #e0e0e0;
+            --bg-color-dark: #121212;
+            --secondary-bg-dark: #1c1c1e;
+            --text-color-dark: #ffffff;
+            --subtle-text-dark: #8e8e93;
+            --primary-color-dark: #0a84ff;
+            --border-color-dark: #38383a;
         }
-        $data = json_decode(file_get_contents(USERS_FILE), true) ?: [];
-        return $data;
-    } catch (Exception $e) {
-        logError("Load users failed: " . $e->getMessage());
-        return [];
-    }
-}
 
-function saveUsers($users) {
-    try {
-        file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
-        return true;
-    } catch (Exception $e) {
-        logError("Save users failed: " . $e->getMessage());
-        return false;
-    }
-}
-
-// Send message to Telegram
-function sendMessage($chat_id, $text, $keyboard = null, $parse_mode = 'HTML') {
-    try {
-        $params = [
-            'chat_id' => $chat_id,
-            'text' => $text,
-            'parse_mode' => $parse_mode
-        ];
-        
-        if ($keyboard) {
-            $params['reply_markup'] = json_encode([
-                'inline_keyboard' => $keyboard
-            ]);
+        /* Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        
-        $url = API_URL . 'sendMessage';
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        
-        return true;
-    } catch (Exception $e) {
-        logError("Send message failed for chat $chat_id: " . $e->getMessage());
-        return false;
-    }
-}
 
-// Answer callback query
-function answerCallback($callback_id, $text = null) {
-    try {
-        $params = ['callback_query_id' => $callback_id];
-        if ($text) $params['text'] = $text;
+        /* Theme Styles */
+        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
+        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
+
+        /* Profile Header */
+        .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid; }
+        .light-theme .profile-header { border-bottom-color: var(--border-color-light); }
+        .dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
+        #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
+        .light-theme #user-photo { border-color: var(--primary-color-light); }
+        .dark-theme #user-photo { border-color: var(--primary-color-dark); }
+        .user-details h1 { font-size: 1.2rem; font-weight: 700; }
+        .verified-icon { font-size: 1rem; margin-left: 5px; }
+        .light-theme .verified-icon { color: var(--primary-color-light); }
+        .dark-theme .verified-icon { color: var(--primary-color-dark); }
+        .user-details p { font-size: 0.9rem; font-weight: 600; }
+        .light-theme .user-details p { color: var(--subtle-text-light); }
+        .dark-theme .user-details p { color: var(--subtle-text-dark); }
+
+        /* Main Content & Pages */
+        main { padding: 15px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { font-size: 1.5rem; margin-bottom: 15px; }
+
+        /* Home Page Stats & Referral */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .stat-card { padding: 20px; border-radius: 12px; text-align: center; }
+        .light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
+        .light-theme .stat-card h3 { color: var(--subtle-text-light); }
+        .dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
+        .stat-card p { font-size: 1.5rem; font-weight: 700; }
+        .light-theme .stat-card p { color: var(--primary-color-light); }
+        .dark-theme .stat-card p { color: var(--primary-color-dark); }
+        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
+        .light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .referral-section h3 { text-align: center; }
+        #referral-link { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
+        .light-theme #referral-link { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
+        .dark-theme #referral-link { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; }
+        .light-theme #copy-ref-link-btn { background-color: var(--primary-color-light); }
+        .dark-theme #copy-ref-link-btn { background-color: var(--primary-color-dark); }
         
-        $url = API_URL . 'answerCallbackQuery';
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_exec($ch);
-        curl_close($ch);
+        /* Task/Bonus Container */
+        .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .task-container:last-child { margin-bottom: 0; }
+        .light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .task-icon { font-size: 3rem; margin-bottom: 15px; }
+        .light-theme .task-icon { color: var(--primary-color-light); }
+        .dark-theme .task-icon { color: var(--primary-color-dark); }
+        .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
+        .task-container p { font-size: 0.9rem; margin-bottom: 20px; }
+        .light-theme .task-container p { color: var(--subtle-text-light); }
+        .dark-theme .task-container p { color: var(--subtle-text-dark); }
+
+        /* Action Button */
+        .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
+        .light-theme .action-btn { background-color: var(--primary-color-light); }
+        .dark-theme .action-btn { background-color: var(--primary-color-dark); }
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        .action-btn.loading .btn-text { visibility: hidden; }
+        .action-btn.loading .btn-loader { display: block; position: absolute; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Form Styles */
+        #withdraw-form .form-group { margin-bottom: 15px; }
+        #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
+        #withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
+        .dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
+        .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
+        .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
         
-        return true;
-    } catch (Exception $e) {
-        logError("Answer callback failed: " . $e->getMessage());
-        return false;
-    }
-}
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
+        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
+        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
+        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
+        .light-theme .nav-btn { color: var(--subtle-text-light); }
+        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
+        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
+        .nav-btn.active { font-weight: 700; }
+        .light-theme .nav-btn.active { color: var(--primary-color-light); }
+        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
 
-// Main keyboard
-function getMainKeyboard() {
-    return [
-        [
-            ['text' => '📱 Reklam İzle', 'web_app' => ['url' => 'https://torreads.onrender.com/mini-app.html']],
-            ['text' => '💰 Bakiye', 'callback_data' => 'balance']
-        ],
-        [
-            ['text' => '👥 Referans', 'callback_data' => 'referrals'],
-            ['text' => '💳 Para Çek', 'callback_data' => 'withdraw']
-        ],
-        [
-            ['text' => '📊 İstatistik', 'callback_data' => 'stats'],
-            ['text' => 'ℹ️ Yardım', 'callback_data' => 'help']
-        ]
-    ];
-}
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
+        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
+        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
+        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        .light-theme .loader { border-top-color: var(--primary-color-light); }
+        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
+        
+        /* Referrals List */
+        .referrals-list { margin-top: 20px; }
+        .referral-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; }
+        .light-theme .referral-item { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
+        .dark-theme .referral-item { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
+        .referral-info { display: flex; align-items: center; gap: 10px; }
+        .referral-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .referral-name { font-weight: 600; }
+        .referral-date { font-size: 0.8rem; }
+        .light-theme .referral-date { color: var(--subtle-text-light); }
+        .dark-theme .referral-date { color: var(--subtle-text-dark); }
+        .referral-bonus { font-weight: 700; }
+        .light-theme .referral-bonus { color: var(--primary-color-light); }
+        .dark-theme .referral-bonus { color: var(--primary-color-dark); }
+        
+        /* TON Conversion Info */
+        .ton-conversion { background-color: rgba(0, 122, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 0.9rem; }
+        .light-theme .ton-conversion { color: var(--primary-color-light); }
+        .dark-theme .ton-conversion { color: var(--primary-color-dark); }
+        .ton-conversion strong { font-weight: 700; }
+    </style>
+</head>
+<body>
 
-// Check daily limit
-function checkDailyLimit($user_id) {
-    $users = loadUsers();
-    $today = date('Y-m-d');
-    
-    if (!isset($users[$user_id]['daily_stats'])) {
-        $users[$user_id]['daily_stats'] = [];
-    }
-    
-    if (!isset($users[$user_id]['daily_stats'][$today])) {
-        $users[$user_id]['daily_stats'][$today] = [
-            'ads_watched' => 0,
-            'earned_today' => 0
-        ];
-    }
-    
-    $daily = $users[$user_id]['daily_stats'][$today];
-    return $daily;
-}
+    <div id="app">
+        <header class="profile-header">
+            <div class="profile-info">
+                <img id="user-photo" src="" alt="User Photo">
+                <div class="user-details">
+                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
+                    <p> Balance: $<span id="user-points">0</span></p>
+                </div>
+            </div>
+        </header>
 
-// Process /start command
-function processStart($chat_id, $first_name, $ref_code = null) {
-    $users = loadUsers();
-    
-    // Create new user if doesn't exist
-    if (!isset($users[$chat_id])) {
-        $users[$chat_id] = [
-            'balance' => 0,
-            'total_earned' => 0,
-            'total_withdrawn' => 0,
-            'watch_count' => 0,
-            'ref_code' => substr(md5($chat_id . time()), 0, 8),
-            'referred_by' => null,
-            'daily_stats' => [],
-            'withdrawals' => [],
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-        logMessage("New user created: $chat_id ($first_name)");
-    }
-    
-    // Referans kontrolü
-    if ($ref_code && !$users[$chat_id]['referred_by']) {
-        foreach ($users as $id => $user) {
-            if (isset($user['ref_code']) && $user['ref_code'] === $ref_code && $id != $chat_id) {
-                $users[$chat_id]['referred_by'] = $id;
-                $users[$id]['balance'] += REFERRAL_BONUS;
+        <main id="main-content">
+            <!-- Home Page -->
+            <div id="home-page" class="page active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Daily Ads Watched</h3>
+                        <p><span id="daily-ads-watched">00</span> /  25</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Referrals</h3>
+                        <p id="referral-count">00</p>
+                    </div>
+                </div>
+                <div class="referral-section">
+                    <h3>Refer & Earn More!</h3>
+                    <p>Share your link to get $0.02 for each referral.</p>
+                    <input type="text" id="referral-link" readonly>
+                    <button id="copy-ref-link-btn">Copy Referral Link</button>
+                </div>
                 
-                // Referans verene bildirim gönder
-                sendMessage($id, 
-                    "🎉 Yeni referansınız var!\n" .
-                    "+" . REFERRAL_BONUS . " TON bonus kazandınız!\n" .
-                    "Yeni bakiyeniz: " . $users[$id]['balance'] . " TON"
-                );
-                break;
-            }
-        }
-    }
-    
-    saveUsers($users);
-    
-    $msg = "🏰 *TorreAds'e Hoş Geldiniz!* 👋\n\n" .
-           "*$first_name*, TON kazanma maceranız başlıyor! 🎉\n\n" .
-           "📱 *Mini App ile reklam izleyin*\n" .
-           "👥 *Arkadaşlarınızı davet edin*\n" .
-           "💎 *Kazançlarınızı TON cinsinden çekin*\n\n" .
-           "Reklam başı: *" . AD_EARNINGS . " TON*\n" .
-           "Referans başı: *" . REFERRAL_BONUS . " TON*\n\n" .
-           "Hemen başlamak için aşağıdaki butonları kullanın! ⬇️";
-    
-    sendMessage($chat_id, $msg, getMainKeyboard());
-    return true;
-}
+                <!-- Referrals List -->
+                <div class="referrals-list" id="referrals-list">
+                    <h3>Your Referrals</h3>
+                    <div id="referrals-container">
+                        <!-- Referrals will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
 
-// Process callback queries
-function processCallback($callback) {
-    $chat_id = $callback['message']['chat']['id'];
-    $message_id = $callback['message']['message_id'];
-    $data = $callback['data'];
-    $callback_id = $callback['id'];
-    
-    $users = loadUsers();
-    
-    if (!isset($users[$chat_id])) {
-        processStart($chat_id, "User");
-        $users = loadUsers();
-    }
-    
-    answerCallback($callback_id);
-    
-    $daily = checkDailyLimit($chat_id);
-    
-    switch ($data) {
-        case 'balance':
-            $msg = "💰 *Bakiye Bilgileri*\n\n" .
-                   "💎 Mevcut Bakiye: *" . number_format($users[$chat_id]['balance'], 6) . " TON*\n" .
-                   "📈 Toplam Kazanç: *" . number_format($users[$chat_id]['total_earned'], 6) . " TON*\n" .
-                   "💸 Toplam Çekim: *" . number_format($users[$chat_id]['total_withdrawn'], 6) . " TON*\n" .
-                   "🎬 İzlenen Reklam: *" . $users[$chat_id]['watch_count'] . "*\n\n" .
-                   "📅 Bugünkü Kazanç: *" . number_format($daily['earned_today'], 6) . " TON*\n" .
-                   "⚡ Günlük Limit: " . $daily['ads_watched'] . "/" . DAILY_LIMIT . " reklam\n\n" .
-                   "💡 Minimum çekim: *" . MIN_WITHDRAWAL . " TON*";
-            break;
+            <!-- Tasks Page -->
+            <div id="tasks-page" class="page">
+                <h2>Complete Tasks</h2>
+                <div class="task-container">
+                    <i class="fas fa-video task-icon"></i>
+                    <h3>Watch a Rewarded Ad</h3>
+                    <p>Earn $0.25 for every ad.</p>
+                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
+                </div>
+                <div class="task-container">
+                    <i class="fab fa-telegram task-icon"></i>
+                    <h3>Join Our Channel</h3>
+                    <p>Get $10 bonus.</p>
+                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+                <div class="task-container">
+                    <i class="fas fa-users task-icon"></i>
+                    <h3>Join Our Group</h3>
+                    <p>Get $2 bonus.</p>
+                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
+                </div>
+            </div>
             
-        case 'referrals':
-            $ref_count = 0;
-            foreach ($users as $user) {
-                if (isset($user['referred_by']) && $user['referred_by'] == $chat_id) {
-                    $ref_count++;
+            <!-- Withdraw Page -->
+            <div id="withdraw-page" class="page">
+                <h2>Withdraw</h2>
+                <p>Minimum $1 required to withdraw.</p>
+                
+                <!-- TON Conversion Info -->
+                <div class="ton-conversion" id="ton-conversion-info">
+                    <p>Current TON Price: $<span id="ton-price">0.00</span></p>
+                    <p>You will receive approximately: <strong><span id="ton-amount">0.000</span> TON</strong></p>
+                </div>
+                
+                <form id="withdraw-form">
+                    <div class="form-group">
+                        <label for="withdraw-method">Method:</label>
+                        <select id="withdraw-method" required>
+                            <option value="TON">TON Coin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ton-address">TON Wallet Address:</label>
+                        <input type="text" id="ton-address" placeholder="e.g., UQABC123..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount to Withdraw ($):</label>
+                        <input type="number" id="amount" placeholder="e.g., 1" min="1" step="0.01" required>
+                    </div>
+                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
+                        <span class="btn-text">Submit Request</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
+        </nav>
+    </div>
+
+    <div id="loading-modal" class="modal">
+        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
+    </div>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tg = window.Telegram.WebApp;
+
+            // --- Configuration ---
+            const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
+            const BOT_USERNAME = "Takamakerbd_bot";
+            const ADMIN_CHAT_ID = "6786186083";
+            const CHANNEL_LINK = "https://t.me/trickmimicrojob";
+            const GROUP_LINK = "https://t.me/+XOFG-KodIfkzMDc1";
+            const PIPEDREAM_WEBHOOK = "https://eo3h4zf914hhqv7.m.pipedream.net";
+            
+            const DAILY_AD_LIMIT = 25;
+            const POINTS_PER_AD = 0.25;
+            const CHANNEL_JOIN_BONUS = 10;
+            const GROUP_JOIN_BONUS = 2;
+            const MIN_WITHDRAW_POINTS = 1;
+            const REFERRAL_BONUS = 0.02; // $0.02 per referral
+            
+            // JSONBin.io Configuration
+            const JSONBIN_BIN_ID = "68dae2c8ae596e708f005011";
+            const JSONBIN_API_KEY = "$2a$10$t0i.TuifzioNY0cd8HzoDOxB94YLcVc.gbHkv.qmFQzFJcbl9uVrK";
+            const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+            
+            // TON Price API
+            const TON_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd";
+            
+            // --- DOM Elements ---
+            const userPhotoElem = document.getElementById('user-photo');
+            const userNameElem = document.getElementById('user-name');
+            const userPointsElem = document.getElementById('user-points');
+            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
+            const referralCountElem = document.getElementById('referral-count');
+            const watchAdBtn = document.getElementById('watch-ad-btn');
+            const joinChannelBtn = document.getElementById('join-channel-btn');
+            const joinGroupBtn = document.getElementById('join-group-btn');
+            const withdrawForm = document.getElementById('withdraw-form');
+            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
+            const referralLinkElem = document.getElementById('referral-link');
+            const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
+            const loadingModal = document.getElementById('loading-modal');
+            const referralsContainer = document.getElementById('referrals-container');
+            const tonConversionInfo = document.getElementById('ton-conversion-info');
+            const tonPriceElem = document.getElementById('ton-price');
+            const tonAmountElem = document.getElementById('ton-amount');
+            const amountInput = document.getElementById('amount');
+            const tonAddressInput = document.getElementById('ton-address');
+
+            // --- State Management ---
+            let userState = {
+                points: 0,
+                dailyAdWatchCount: 0,
+                lastAdWatchDate: null,
+                referrals: [],
+                hasJoinedChannel: false,
+                hasJoinedGroup: false,
+                userId: null,
+                referredBy: null,
+                referralCode: null
+            };
+
+            let tonPrice = 0; // Will be fetched from API
+
+            // JSONBin.io API Functions
+            const saveStateToJSONBin = async () => {
+                if(!userState.userId) return;
+                
+                try {
+                    // First, get the current data
+                    const currentData = await fetch(JSONBIN_API_URL + '/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY
+                        }
+                    }).then(res => res.json());
+                    
+                    // Update only the current user's data
+                    const updatedData = {
+                        ...currentData.record,
+                        [userState.userId]: userState
+                    };
+                    
+                    // Save the updated data
+                    const response = await fetch(JSONBIN_API_URL, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': JSONBIN_API_KEY
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save data to JSONBin');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error saving to JSONBin:', error);
+                    // Fallback to localStorage
+                    localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
                 }
-            }
-            
-            $ref_link = "https://t.me/TorreAds_Bot?start=" . $users[$chat_id]['ref_code'];
-            
-            $msg = "👥 *Referans Sistemimiz*\n\n" .
-                   "🔗 *Referans Linkiniz:*\n" .
-                   "`" . $ref_link . "`\n\n" .
-                   "📊 *Referans İstatistikleri:*\n" .
-                   "• Toplam Referans: *" . $ref_count . " kişi*\n" .
-                   "• Referans Bonusu: *" . REFERRAL_BONUS . " TON*\n\n" .
-                   "🎁 *Referans Kazançları:*\n" .
-                   "• Her referans için: 🎉 " . REFERRAL_BONUS . " TON bonus\n" .
-                   "• Referanslarının kazancından: 💰 %10 komisyon\n" .
-                   "• Limit yok: 🚀 sınırsız referans\n\n" .
-                   "💡 Linkinizi paylaşın, hem bonus hem komisyon kazanın!";
-            break;
-            
-        case 'stats':
-            $total_users = count($users);
-            $total_ads = 0;
-            $total_ton = 0;
-            
-            foreach ($users as $user) {
-                $total_ads += $user['watch_count'] ?? 0;
-                $total_ton += $user['total_earned'] ?? 0;
-            }
-            
-            $msg = "📊 *TorreAds İstatistikleri*\n\n" .
-                   "👥 Toplam Kullanıcı: *$total_users*\n" .
-                   "🎬 Toplam İzlenen Reklam: *$total_ads*\n" .
-                   "💎 Toplam Dağıtılan TON: *" . number_format($total_ton, 6) . " TON*\n\n" .
-                   "👤 *Kişisel İstatistikler:*\n" .
-                   "• Toplam Kazanç: *" . number_format($users[$chat_id]['total_earned'], 6) . " TON*\n" .
-                   "• İzlenen Reklam: *" . $users[$chat_id]['watch_count'] . "*\n" .
-                   "• Bugün: *" . $daily['ads_watched'] . "/" . DAILY_LIMIT . " reklam*\n" .
-                   "• Toplam Çekim: *" . number_format($users[$chat_id]['total_withdrawn'], 6) . " TON*\n\n" .
-                   "🏰 *TorreAds - Güvenilir TON Kazanç Platformu*";
-            break;
-            
-        case 'help':
-            $msg = "ℹ️ *TorreAds Yardım Merkezi*\n\n" .
-                   "📱 *Mini App ile Reklam İzleme*\n" .
-                   "1. 'Reklam İzle' butonuna tıklayın\n" .
-                   "2. Mini App'te reklamı izleyin\n" .
-                   "3. Otomatik olarak *" . AD_EARNINGS . " TON* kazanın\n\n" .
-                   "👥 *Referans Sistemi*\n" .
-                   "• Her referans: *" . REFERRAL_BONUS . " TON* bonus\n" .
-                   "• Referans kazancı: *%10* komisyon\n" .
-                   "• Sınırsız referans hakkı\n\n" .
-                   "💳 *Para Çekme*\n" .
-                   "• Minimum: *" . MIN_WITHDRAWAL . " TON*\n" .
-                   "• TON cüzdan adresi gerekiyor\n" .
-                   "• 24 saat içinde ödeme\n\n" .
-                   "📅 *Limitler*\n" .
-                   "• Günlük: *" . DAILY_LIMIT . "* reklam\n" .
-                   "• Reklam başı: *" . AD_EARNINGS . " TON*\n\n" .
-                   "❓ Sorularınız için: @TorreAdsSupport";
-            break;
-            
-        default:
-            $msg = "🏰 *TorreAds - TON Kazanma Botu* 🏰\n\n" .
-                   "💰 *Bakiye:* " . number_format($users[$chat_id]['balance'], 6) . " TON\n" .
-                   "📊 *Toplam Kazanç:* " . number_format($users[$chat_id]['total_earned'], 6) . " TON\n" .
-                   "🎬 *İzlenen Reklam:* " . $users[$chat_id]['watch_count'] . "\n" .
-                   "📅 *Bugün:* " . $daily['ads_watched'] . "/" . DAILY_LIMIT . " reklam\n\n" .
-                   "💎 *Minimum Çekim:* " . MIN_WITHDRAWAL . " TON\n" .
-                   "⚡ *Günlük Limit:* " . DAILY_LIMIT . " reklam";
-            break;
-    }
-    
-    sendMessage($chat_id, $msg, getMainKeyboard());
-    return true;
-}
+            };
 
-// Webhook processing
-function processWebhook($update) {
-    logMessage("Webhook received: " . json_encode($update));
-    
-    if (isset($update['message'])) {
-        $message = $update['message'];
-        $chat_id = $message['chat']['id'];
-        $text = trim($message['text'] ?? '');
-        $first_name = $message['chat']['first_name'] ?? 'User';
-        
-        if (strpos($text, '/start') === 0) {
-            $parts = explode(' ', $text);
-            $ref_code = $parts[1] ?? null;
-            processStart($chat_id, $first_name, $ref_code);
-        }
-        
-    } elseif (isset($update['callback_query'])) {
-        processCallback($update['callback_query']);
-    }
-    
-    return true;
-}
+            const loadStateFromJSONBin = async (userId) => {
+                try {
+                    const response = await fetch(JSONBIN_API_URL + '/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load data from JSONBin');
+                    }
+                    
+                    const data = await response.json();
+                    const record = data.record[userId];
+                    
+                    if (record) {
+                        userState = record;
+                        // Ensure new state properties exist
+                        if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
+                        if (userState.referredBy === undefined) userState.referredBy = null;
+                        if (userState.referralCode === undefined) userState.referralCode = null;
+                    }
+                } catch (error) {
+                    console.error('Error loading from JSONBin:', error);
+                    // Fallback to localStorage
+                    const savedState = localStorage.getItem(`userState_${userId}`);
+                    if (savedState) {
+                        userState = JSON.parse(savedState);
+                        // Ensure new state properties exist
+                        if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
+                        if (userState.referredBy === undefined) userState.referredBy = null;
+                        if (userState.referralCode === undefined) userState.referralCode = null;
+                    }
+                }
+            };
 
-// Set webhook
-function setWebhook() {
-    $webhook_url = 'https://torreads.onrender.com/webhook';
-    $url = API_URL . 'setWebhook?url=' . urlencode($webhook_url);
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    $response = curl_exec($ch);
-    curl_close($ch);
-    
-    logMessage("Webhook set: $webhook_url");
-    return $response;
-}
+            const getUserFromJSONBin = async (userId) => {
+                try {
+                    const response = await fetch(JSONBIN_API_URL + '/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load data from JSONBin');
+                    }
+                    
+                    const data = await response.json();
+                    return data.record[userId];
+                } catch (error) {
+                    console.error('Error getting user from JSONBin:', error);
+                    return null;
+                }
+            };
 
-// Health check
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['health'])) {
-    echo json_encode([
-        'status' => 'OK',
-        'timestamp' => date('Y-m-d H:i:s'),
-        'service' => 'TorreAds Bot',
-        'webhook' => 'active'
-    ]);
-    exit;
-}
+            const saveState = () => {
+                saveStateToJSONBin();
+            };
 
-// Set webhook endpoint
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['setwebhook'])) {
-    $result = setWebhook();
-    echo "Webhook set: " . $result;
-    exit;
-}
+            const loadState = (userId) => {
+                loadStateFromJSONBin(userId);
+            };
+            
+            // TON Price Functions
+            const fetchTONPrice = async () => {
+                try {
+                    const response = await fetch(TON_PRICE_API);
+                    const data = await response.json();
+                    tonPrice = data['the-open-network'].usd;
+                    tonPriceElem.textContent = tonPrice.toFixed(2);
+                    updateTONConversion();
+                } catch (error) {
+                    console.error('Error fetching TON price:', error);
+                    // Fallback price
+                    tonPrice = 4.50;
+                    tonPriceElem.textContent = tonPrice.toFixed(2);
+                    updateTONConversion();
+                }
+            };
 
-// Webhook endpoint
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['webhook'])) {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    if ($input) {
-        processWebhook($input);
-    }
-    
-    echo 'OK';
-    exit;
-}
+            const updateTONConversion = () => {
+                if (!tonPrice) return;
+                
+                const amount = parseFloat(amountInput.value) || 0;
+                if (amount > 0) {
+                    const tonAmount = amount / tonPrice;
+                    tonAmountElem.textContent = tonAmount.toFixed(6);
+                } else {
+                    tonAmountElem.textContent = "0.000000";
+                }
+            };
+            
+            // --- Core Functions ---
+            const initApp = () => {
+                tg.ready();
+                tg.expand();
+                document.body.className = `${tg.colorScheme}-theme`;
 
-// Manual webhook test
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['test'])) {
-    $test_data = [
-        'update_id' => 100000000,
-        'message' => [
-            'message_id' => 1,
-            'chat' => [
-                'id' => 123456789, // YOUR_CHAT_ID buraya kendi chat ID'nizi yazın
-                'first_name' => 'Test',
-                'type' => 'private'
-            ],
-            'text' => '/start',
-            'date' => time()
-        ]
-    ];
-    
-    processWebhook($test_data);
-    echo "Test message sent!";
-    exit;
-}
+                const user = tg.initDataUnsafe.user;
+                if (!user || !user.id) {
+                    tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
+                    return;
+                }
+                
+                userState.userId = user.id;
+                
+                // Check for referral parameter
+                const startParam = tg.initDataUnsafe.start_param;
+                if (startParam && startParam.startsWith('ref_')) {
+                    const referrerId = startParam.substring(4);
+                    userState.referredBy = referrerId;
+                }
+                
+                // Generate referral code if not exists
+                if (!userState.referralCode) {
+                    userState.referralCode = generateReferralCode();
+                }
+                
+                loadState(user.id);
+                
+                const today = new Date().toISOString().slice(0, 10);
+                if (userState.lastAdWatchDate !== today) {
+                    userState.dailyAdWatchCount = 0;
+                    userState.lastAdWatchDate = today;
+                }
+                
+                // Process referral if this is a new user referred by someone
+                if (userState.referredBy && userState.referrals.length === 0) {
+                    processReferral(userState.referredBy);
+                }
+                
+                // Fetch TON price
+                fetchTONPrice();
+                
+                updateUI();
+                setupNavigation();
+                setupEventListeners();
+                saveState();
+            };
+            
+            const updateUI = () => {
+                const user = tg.initDataUnsafe.user;
+                if (user) {
+                    userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
+                    userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
+                }
+                
+                userPointsElem.textContent = userState.points.toFixed(2);
+                dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
+                referralCountElem.textContent = userState.referrals.length;
 
-// Default response
-echo "🏰 TorreAds Bot is running!\n";
-echo "📅 " . date('Y-m-d H:i:s') . "\n";
-echo "🔗 Webhook: https://torreads.onrender.com/webhook\n";
-echo "❤️ Health: https://torreads.onrender.com/health\n";
-echo "⚙️ Set Webhook: https://torreads.onrender.com/setwebhook\n";
-?>
+                referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+
+                // Update task button states
+                if (userState.hasJoinedChannel) {
+                    joinChannelBtn.textContent = 'Bonus Claimed';
+                    joinChannelBtn.disabled = true;
+                }
+                if (userState.hasJoinedGroup) {
+                    joinGroupBtn.textContent = 'Bonus Claimed';
+                    joinGroupBtn.disabled = true;
+                }
+                
+                // Update referrals list
+                updateReferralsList();
+            };
+            
+            const updateReferralsList = () => {
+                referralsContainer.innerHTML = '';
+                
+                if (userState.referrals.length === 0) {
+                    referralsContainer.innerHTML = '<p>No referrals yet. Share your link to earn $0.02 per referral!</p>';
+                    return;
+                }
+                
+                userState.referrals.forEach(referral => {
+                    const referralItem = document.createElement('div');
+                    referralItem.className = 'referral-item';
+                    
+                    referralItem.innerHTML = `
+                        <div class="referral-info">
+                            <img src="${referral.photo_url || 'https://i.imgur.com/placeholder.png'}" alt="Referral Avatar" class="referral-avatar">
+                            <div>
+                                <div class="referral-name">${referral.first_name || ''} ${referral.last_name || ''}</div>
+                                <div class="referral-date">Joined: ${new Date(referral.joinedAt).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="referral-bonus">+$${REFERRAL_BONUS.toFixed(2)}</div>
+                    `;
+                    
+                    referralsContainer.appendChild(referralItem);
+                });
+            };
+            
+            const setupEventListeners = () => {
+                watchAdBtn.addEventListener('click', handleWatchAd);
+                joinChannelBtn.addEventListener('click', handleJoinChannel);
+                joinGroupBtn.addEventListener('click', handleJoinGroup);
+                withdrawForm.addEventListener('submit', handleWithdraw);
+                copyRefLinkBtn.addEventListener('click', copyReferralLink);
+                amountInput.addEventListener('input', updateTONConversion);
+            };
+
+            const handleWatchAd = () => {
+                if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
+                    tg.showAlert("You have reached your daily ad watch limit."); 
+                    return;
+                }
+                
+                loadingModal.style.display = 'flex';
+                
+                window.showGiga()
+                  .then(() => {
+                    userState.points += POINTS_PER_AD;
+                    userState.dailyAdWatchCount++;
+                    saveState();
+                    updateUI();
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(2)}.`);
+                  })
+                  .catch(e => {
+                    tg.showAlert("Ad could not be loaded. Please try again later.");
+                    console.error("Ad error:", e);
+                  })
+                  .finally(() => {
+                    loadingModal.style.display = 'none';
+                  });
+            };
+            
+            const handleJoinChannel = () => {
+                if(userState.hasJoinedChannel) {
+                    tg.showAlert('You have already claimed this bonus.'); 
+                    return;
+                }
+                tg.openTelegramLink(CHANNEL_LINK);
+                setTimeout(() => {
+                    userState.points += CHANNEL_JOIN_BONUS;
+                    userState.hasJoinedChannel = true;
+                    tg.showAlert(`Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
+                    saveState();
+                    updateUI();
+                }, 3000);
+            };
+
+            const handleJoinGroup = () => {
+                if(userState.hasJoinedGroup) {
+                    tg.showAlert('You have already claimed this bonus.'); 
+                    return;
+                }
+                tg.openTelegramLink(GROUP_LINK);
+                setTimeout(() => {
+                    userState.points += GROUP_JOIN_BONUS;
+                    userState.hasJoinedGroup = true;
+                    tg.showAlert(`Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
+                    saveState();
+                    updateUI();
+                }, 3000);
+            };
+
+            const handleWithdraw = async (e) => {
+                e.preventDefault();
+                const method = document.getElementById('withdraw-method').value;
+                const accountNumber = document.getElementById('ton-address').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+
+                if (isNaN(amount) || amount <= 0) { 
+                    tg.showAlert("Please enter a valid amount."); 
+                    return; 
+                }
+                if (amount < MIN_WITHDRAW_POINTS) { 
+                    tg.showAlert(`Minimum withdrawal is $${MIN_WITHDRAW_POINTS.toFixed(2)}.`); 
+                    return; 
+                }
+                if (amount > userState.points) { 
+                    tg.showAlert("You don't have enough balance."); 
+                    return; 
+                }
+
+                withdrawSubmitBtn.classList.add('loading');
+                withdrawSubmitBtn.disabled = true;
+
+                userState.points -= amount;
+                saveState();
+                updateUI();
+                
+                const user = tg.initDataUnsafe.user;
+                const tonAmount = amount / tonPrice;
+                
+                const withdrawData = {
+                    user_id: user.id,
+                    user_name: `${user.first_name || ''} ${user.last_name || ''}`,
+                    username: user.username || 'N/A',
+                    method: method,
+                    account: accountNumber,
+                    amount_usd: amount,
+                    amount_ton: tonAmount,
+                    ton_price: tonPrice,
+                    date: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })
+                };
+                
+                try {
+                    const response = await fetch(PIPEDREAM_WEBHOOK, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(withdrawData)
+                    });
+                    
+                    if (response.ok) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("Withdrawal request submitted successfully!");
+                        withdrawForm.reset();
+                        updateTONConversion();
+                    } else { 
+                        throw new Error('Failed to submit request'); 
+                    }
+                } catch (error) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("Failed to submit request. Your balance has been returned.");
+                    userState.points += amount;
+                    saveState();
+                    updateUI();
+                } finally {
+                    withdrawSubmitBtn.classList.remove('loading');
+                    withdrawSubmitBtn.disabled = false;
+                }
+            };
+            
+            const copyReferralLink = () => {
+                navigator.clipboard.writeText(referralLinkElem.value).then(() => {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("Referral link copied!");
+                });
+            };
+
+            const setupNavigation = () => {
+                const navButtons = document.querySelectorAll('.nav-btn');
+                const pages = document.querySelectorAll('.page');
+                navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const pageId = button.dataset.page;
+                        pages.forEach(page => page.classList.remove('active'));
+                        document.getElementById(pageId).classList.add('active');
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    });
+                });
+            };
+            
+            // Referral System Functions
+            const generateReferralCode = () => {
+                return Math.random().toString(36).substring(2, 8).toUpperCase();
+            };
+            
+            const processReferral = async (referrerId) => {
+                try {
+                    // Get referrer's data
+                    const referrer = await getUserFromJSONBin(referrerId);
+                    
+                    if (referrer) {
+                        // Add bonus to referrer
+                        referrer.points += REFERRAL_BONUS;
+                        
+                        // Add referral to referrer's list
+                        const user = tg.initDataUnsafe.user;
+                        referrer.referrals.push({
+                            userId: userState.userId,
+                            first_name: user.first_name || '',
+                            last_name: user.last_name || '',
+                            username: user.username || '',
+                            photo_url: user.photo_url || '',
+                            joinedAt: new Date().toISOString()
+                        });
+                        
+                        // Save referrer's updated state
+                        await saveStateToJSONBin();
+                        
+                        // Add bonus to current user for being referred
+                        userState.points += REFERRAL_BONUS;
+                        
+                        tg.showAlert(`You received $${REFERRAL_BONUS.toFixed(2)} bonus for being referred!`);
+                    }
+                } catch (error) {
+                    console.error('Error processing referral:', error);
+                }
+            };
+
+            // Initialize the app
+            initApp();
+        });
+    </script>
+</body>
+</html>
