@@ -1,89 +1,184 @@
-İsteğiniz üzerine, sadece reklam izleme görevi ve yeni reklam kodu ile güncellenmiş kullanıcı uygulaması (earnigcode.txt) ve admin panelinin (earnigadmin.txt) tam kodlarını aşağıda bulabilirsiniz.
-1. Kullanıcı Uygulaması - earnigcode.txt (Güncellenmiş)
-Bu kodda:
- * GigaPub Ad Kodu <head> etiketine eklendi.
- * Alt Menü (Bottom Nav) sadece REKLAM İZLEME linkini içerecek şekilde ayarlandı.
- * Ana Sayfa (Home Page) sadece tek bir Ödüllü Reklam İzle görevi gösterecek şekilde basitleştirildi.
- * Gereksiz cüzdan, referans ve eski görev kodları ile ilgili tüm JavaScript fonksiyonları ve HTML kodları kaldırıldı.
- * claimReward fonksiyonu, yeni window.showGiga() API'si ile çalışacak şekilde güncellendi.
-<!-- end list -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CashReward App</title>
-    
-    <script src="https://ad.gigapub.tech/script?id=986"></script>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #121212; color: #ffffff; }
-        .dark-bg { background-color: #121212; }
-        .card-bg { background-color: #1e1e1e; }
-        .border-accent { border-color: #ff8c00; }
-        .text-accent { color: #ff8c00; }
-        .btn, .btn-accent, .btn-outline-accent { transition: all 0.2s ease-in-out; transform: scale(1); }
-        .btn:active, .btn-accent:active, .btn-outline-accent:active { transform: scale(0.95); }
-        .btn-accent { background-color: #ff8c00; color: #121212; font-weight: bold; }
-        .btn-accent:hover { background-color: #e67e00; }
-        .btn-outline-accent { border: 1px solid #ff8c00; color: #ff8c00; }
-        .btn-outline-accent:hover { background-color: #ff8c00; color: #121212; }
-        .input-field { background-color: #2c2c2c; border: 1px solid #444; }
-        .main-page { display: none; }
-        .main-page.active { display: flex; animation: fadeIn 0.5s ease-in-out; }
-        .sub-page { display: none; }
-        .sub-page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        .bottom-nav a.active { color: #ff8c00; }
-        .notification-dot {
-            position: absolute; top: -2px; right: -2px; width: 10px; height: 10px;
-            background-color: #ef4444; border-radius: 50%; border: 2px solid #121212; display: none;
+import React, { useState, useEffect } from 'react';
+import './App.css';
+
+const TorreAdsMiniApp = () => {
+    const [balance, setBalance] = useState(0);
+    const [ads, setAds] = useState([]);
+    const [isWatching, setIsWatching] = useState(false);
+    const [currentAd, setCurrentAd] = useState(null);
+    const [countdown, setCountdown] = useState(0);
+
+    // Kullanıcı verilerini yükle
+    useEffect(() => {
+        loadUserData();
+        loadAds();
+    }, []);
+
+    const loadUserData = async () => {
+        try {
+            // Telegram Mini App'den kullanıcı ID'sini al
+            const tg = window.Telegram.WebApp;
+            const userId = tg.initDataUnsafe.user?.id;
+            
+            if (userId) {
+                const response = await fetch(`https://api.torreads.com/user/${userId}/balance`);
+                const data = await response.json();
+                setBalance(data.balance);
+            }
+        } catch (error) {
+            console.error('Kullanıcı verisi yüklenemedi:', error);
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
-</head>
-<body class="max-w-md mx-auto">
+    };
 
-    <div id="loader" class="hidden fixed inset-0 dark-bg bg-opacity-75 flex items-center justify-center z-50">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent"></div>
-    </div>
+    const loadAds = async () => {
+        try {
+            const response = await fetch('https://api.torreads.com/ads/available');
+            const data = await response.json();
+            setAds(data);
+        } catch (error) {
+            console.error('Reklamlar yüklenemedi:', error);
+        }
+    };
 
-    <div id="auth-section" class="min-h-screen p-6 flex-col justify-center main-page">
-        <h1 class="text-4xl font-bold text-center mb-2 text-accent">CashReward</h1>
-        <p class="text-center text-gray-400 mb-8">Jaari rakhne ke liye Login ya Signup karein</p>
-     
-        <div id="auth-container">
-            <div id="login-view">
-                <input id="login-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
-                <input id="login-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
-                <button id="login-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Login</button>
-             
-                <p class="text-center text-gray-400">Account nahi hai? <a href="#" id="show-signup" class="font-semibold text-accent">Sign Up</a></p>
-            </div>
-            <div id="signup-view" class="hidden">
-                 <input id="signup-name" type="text" placeholder="Poora Naam" class="w-full p-3 rounded-lg input-field mb-4">
-                <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
-           
-                <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
-                <button id="signup-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Sign Up</button>
-                <p class="text-center text-gray-400">Pehle se account hai? <a href="#" id="show-login" class="font-semibold text-accent">Login</a></p>
-            </div>
-        </div>
-    </div>
+    const watchAd = async (ad) => {
+        setIsWatching(true);
+        setCurrentAd(ad);
+        setCountdown(ad.duration);
 
-    <div id="app-container" class="min-h-screen flex-col main-page">
-        <header class="flex items-center justify-between p-4 sticky top-0 bg-opacity-80 backdrop-blur-md z-10 dark-bg">
-            <h1 class="text-xl font-bold">CashReward</h1>
-            <div class="flex items-center space-x-4">
-         
-                <div id="notification-bell" class="relative cursor-pointer" onclick="navigateTo('notifications-page')">
-                    <i data-lucide="bell" class="w-6 h-6"></i>
-                    <div id="notification-dot" class="notification-dot"></div>
+        // Geri sayım
+        const timer = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    completeAdWatch(ad);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const completeAdWatch = async (ad) => {
+        try {
+            const tg = window.Telegram.WebApp;
+            const userId = tg.initDataUnsafe.user?.id;
+
+            const response = await fetch('https://api.torreads.com/ads/watch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    adId: ad._id,
+                    userId: userId
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Bakiyeyi güncelle
+                setBalance(result.newBalance);
+                // Başarı mesajı
+                tg.showPopup({
+                    title: 'Tebrikler! 🎉',
+                    message: `+${result.reward} TonCoin kazandınız!\nYeni bakiyeniz: ${result.newBalance} TonCoin`,
+                    buttons: [{ type: 'ok' }]
+                });
+            } else {
+                tg.showPopup({
+                    title: 'Hata ❌',
+                    message: result.message,
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        } catch (error) {
+            console.error('Reklam izleme hatası:', error);
+        } finally {
+            setIsWatching(false);
+            setCurrentAd(null);
+        }
+    };
+
+    if (isWatching) {
+        return (
+            <div className="ad-watching-screen">
+                <div className="ad-container">
+                    {currentAd.videoUrl ? (
+                        <video 
+                            src={currentAd.videoUrl} 
+                            autoPlay 
+                            muted 
+                            className="ad-video"
+                            onEnded={() => completeAdWatch(currentAd)}
+                        />
+                    ) : (
+                        <img 
+                            src={currentAd.imageUrl} 
+                            alt={currentAd.title}
+                            className="ad-image"
+                        />
+                    )}
+                    
+                    <div className="countdown-overlay">
+                        <div className="countdown-circle">
+                            <span className="countdown-text">{countdown}</span>
+                        </div>
+                        <p className="ad-instruction">Reklam bitene kadar bekleyin</p>
+                    </div>
                 </div>
-                <button id="logout-btn-header" class="btn btn-outline-accent text-xs px-3 py-1 rounded-lg">Çıkış Yap</button>
             </div>
+        );
+    }
+
+    return (
+        <div className="torreads-mini-app">
+            {/* Header - Bakiye Gösterimi */}
+            <header className="app-header">
+                <div className="balance-display">
+                    <div className="balance-title">Bakiyeniz</div>
+                    <div className="balance-amount">{balance} TonCoin</div>
+                </div>
+            </header>
+
+            {/* Reklam Listesi */}
+            <main className="ads-container">
+                <h2 className="section-title">📺 İzleyebileceğiniz Reklamlar</h2>
+                
+                <div className="ads-list">
+                    {ads.map(ad => (
+                        <div key={ad._id} className="ad-card">
+                            <div className="ad-info">
+                                <h3 className="ad-title">{ad.title}</h3>
+                                <p className="ad-description">{ad.description}</p>
+                                <div className="ad-details">
+                                    <span className="ad-duration">⏱️ {ad.duration}s</span>
+                                    <span className="ad-reward">💰 +{ad.reward} TonCoin</span>
+                                </div>
+                            </div>
+                            <button 
+                                className="watch-button"
+                                onClick={() => watchAd(ad)}
+                            >
+                                🎬 İzle
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {ads.length === 0 && (
+                    <div className="no-ads">
+                        <div className="no-ads-icon">📺</div>
+                        <h3>Şu anda müsait reklam yok</h3>
+                        <p>Daha sonra tekrar kontrol edin</p>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+};
+
+export default TorreAdsMiniApp;            </div>
         </header>
 
         <main class="flex-grow">
@@ -861,4 +956,5 @@ Admin paneli kodunuz, isteğiniz olan Kullanıcılar (Users) ve Talepler (Withdr
     </script>
 </body>
 </html>
+
 
