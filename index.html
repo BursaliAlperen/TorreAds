@@ -343,9 +343,9 @@
             const WITHDRAW_WEBHOOK_URL = 'https://eo3h4zf914hhqv7.m.pipedream.net';
             
             const WITHDRAW_THRESHOLD = 0.50;
-            const AD_REWARD_CENTS = 0.2;
-            const REFERRAL_BONUS_USDT = 0.02;
-            const REFERRER_BONUS_USDT = 0.02;
+            const AD_REWARD_CENTS = 0.2; // 0.002 USDT
+            const REFERRAL_BONUS_USDT = 0.02; // Referans olana 0.02 USDT
+            const REFERRER_BONUS_USDT = 0.02; // Referans verene 0.02 USDT
             const DAILY_AD_LIMIT = 100;
 
             // --- App State ---
@@ -374,6 +374,29 @@
                 change: 0.00,
                 history: []
             };
+
+            // ---- Geliştirilmiş GigaPub Entegrasyonu ----
+            function initializeGigaPub() {
+                return new Promise((resolve, reject) => {
+                    if (typeof window.showGiga === 'function') {
+                        console.log('GigaPub SDK loaded successfully');
+                        resolve();
+                    } else {
+                        // SDK yüklenmemişse, manuel olarak yükle
+                        const script = document.createElement('script');
+                        script.src = 'https://sdk.gigapub.com/sdk.js';
+                        script.onload = () => {
+                            console.log('GigaPub SDK manually loaded');
+                            setTimeout(resolve, 1000);
+                        };
+                        script.onerror = () => {
+                            console.log('GigaPub SDK failed to load, using fallback');
+                            resolve(); // Fallback ile devam et
+                        };
+                        document.head.appendChild(script);
+                    }
+                });
+            }
 
             // ---- Referans Doğrulama Fonksiyonu ----
             function isValidReferralCode(referralCode) {
@@ -411,8 +434,10 @@
                     if (user && user.id) {
                         state.userId = user.id.toString();
                         
+                        // Önce localStorage'dan yükle
                         const savedState = JSON.parse(localStorage.getItem(`torreads_state_${state.userId}`));
                         if (savedState) {
+                            console.log('Loading state from localStorage:', savedState);
                             state = {
                                 balanceInCents: Math.round((savedState.points || savedState.balanceInCents || 0) * 100),
                                 totalAdCount: savedState.totalAdCount || savedState.dailyAdWatchCount || 0,
@@ -432,6 +457,8 @@
                                 hasJoinedGroup: savedState.hasJoinedGroup || false
                             };
                         } else {
+                            // Yeni kullanıcı için state oluştur
+                            console.log('Creating new state for user:', state.userId);
                             state.referralCode = generateReferralCode(state.userId);
                             state.points = 0;
                             state.dailyAdWatchCount = 0;
@@ -439,6 +466,7 @@
                             state.referrals = [];
                             state.hasJoinedChannel = false;
                             state.hasJoinedGroup = false;
+                            saveState(); // Hemen kaydet
                         }
                     }
                 } catch (e) { 
@@ -450,6 +478,7 @@
                 
                 const today = getTodayDateString();
                 if (state.lastAdDate !== today || state.lastAdWatchDate !== today) {
+                    console.log('Resetting daily counters for new day');
                     state.dailyAdCount = 0;
                     state.dailyAdWatchCount = 0;
                     state.lastAdDate = today;
@@ -481,11 +510,14 @@
                         };
                         
                         localStorage.setItem(`torreads_state_${state.userId}`, JSON.stringify(stateToSave));
+                        console.log('State saved successfully:', stateToSave);
                     }
-                } catch (e) { console.error("Could not save state", e); }
+                } catch (e) { 
+                    console.error("Could not save state", e);
+                }
             }
 
-            // ---- GELİŞTİRİLMİŞ Referans Bonus Fonksiyonu ----
+            // ---- Geliştirilmiş Referans Bonus Fonksiyonu ----
             function giveReferralBonusToReferrer(referralCode) {
                 const keys = Object.keys(localStorage);
                 let bonusGiven = false;
@@ -496,12 +528,11 @@
                     if (key.startsWith('torreads_state_')) {
                         try {
                             const userState = JSON.parse(localStorage.getItem(key));
-                            console.log('Checking user:', userState.userId, 'with code:', userState.referralCode);
                             
                             if (userState && userState.referralCode === referralCode) {
                                 console.log('Found referrer! Giving bonus to:', userState.userId);
                                 
-                                // Referans verenin bakiyesini güncelle
+                                // Referans verenin bakiyesini güncelle - 0.02 USDT
                                 const currentBalance = userState.balanceInCents || 0;
                                 userState.balanceInCents = currentBalance + (REFERRER_BONUS_USDT * 100);
                                 
@@ -523,16 +554,17 @@
                                 bonusGiven = true;
                                 
                                 console.log(`Bonus given successfully! New balance: ${userState.balanceInCents/100} USDT, Referral count: ${userState.referralCount}`);
+                                
+                                // UI'ı güncellemek için event tetikle
+                                if (userState.userId === state.userId) {
+                                    updateUI();
+                                }
                             }
                         } catch (e) {
                             console.error('Error processing referral bonus:', e);
                         }
                     }
                 });
-                
-                if (!bonusGiven) {
-                    console.log('No referrer found with code:', referralCode);
-                }
                 
                 return bonusGiven;
             }
@@ -564,6 +596,8 @@
             // ---- UI Updates & View Management ----
             function updateUI() {
                 const balanceInUSDT = (state.balanceInCents / 100).toFixed(3);
+                
+                console.log('Updating UI with balance:', balanceInUSDT, 'referral count:', state.referralCount);
                 
                 balanceDisplay.textContent = `USDT ${balanceInUSDT}`;
                 adCountDisplay.textContent = state.totalAdCount;
@@ -620,7 +654,7 @@
                 statusTimeout = setTimeout(() => { statusMessage.style.display = 'none'; }, duration);
             }
 
-            // ---- Ad Handling with GigaPub ----
+            // ---- Geliştirilmiş Reklam Sistemi ----
             function handleAdSuccess() {
                 state.totalAdCount++;
                 state.dailyAdCount++;
@@ -631,8 +665,10 @@
                 state.dailyAdWatchCount = state.dailyAdCount;
                 state.lastAdWatchDate = state.lastAdDate;
                 
+                console.log('Ad completed successfully. New balance:', state.balanceInCents/100);
+                
                 showStatus(`Success! +${(AD_REWARD_CENTS / 100).toFixed(3)} USDT has been added.`, 'success');
-                saveState();
+                saveState(); // Hemen kaydet
                 updateUI();
                 
                 rewardedBtn.disabled = false;
@@ -651,8 +687,8 @@
                     'Daily Limit Reached' : `Watch Ad (+${(AD_REWARD_CENTS / 100).toFixed(3)} USDT)`;
             }
 
-            // ---- App Logic ----
-            function requestAd() {
+            // ---- Geliştirilmiş Reklam Fonksiyonu ----
+            async function requestAd() {
                 if (state.dailyAdCount >= DAILY_AD_LIMIT) {
                     showStatus("You've reached the daily ad limit.", 'error');
                     return;
@@ -664,22 +700,25 @@
                 
                 showStatus('Loading ad, please wait...', 'info');
                 
-                if (typeof window.showGiga === 'function') {
-                    window.showGiga("main")
-                        .then(() => {
+                try {
+                    // GigaPub'u kullan
+                    if (typeof window.showGiga === 'function') {
+                        console.log('Showing GigaPub ad');
+                        await window.showGiga("main");
+                        handleAdSuccess();
+                    } else {
+                        // Fallback: Simüle edilmiş reklam
+                        console.log('Using simulated ad fallback');
+                        setTimeout(() => {
                             handleAdSuccess();
-                        })
-                        .catch((error) => {
-                            console.error('GigaPub Ad Error:', error);
-                            setTimeout(() => {
-                                handleAdSuccess();
-                            }, 2000);
-                        });
-                } else {
-                    console.log('GigaPub not loaded, showing simulated ad');
+                        }, 3000);
+                    }
+                } catch (error) {
+                    console.error('Ad display error:', error);
+                    // Fallback her zaman çalışsın
                     setTimeout(() => {
                         handleAdSuccess();
-                    }, 2000);
+                    }, 3000);
                 }
             }
 
@@ -832,12 +871,16 @@
             // Initialize
             tg.ready();
             tg.expand();
-            loadState();
-            updateUI();
-            generateReferralLink();
-            fetchUSDTPrice();
             
-            setInterval(fetchUSDTPrice, 30000);
+            // GigaPub'u başlat ve state'i yükle
+            initializeGigaPub().then(() => {
+                loadState();
+                updateUI();
+                generateReferralLink();
+                fetchUSDTPrice();
+                
+                setInterval(fetchUSDTPrice, 30000);
+            });
         });
     </script>
 </body>
