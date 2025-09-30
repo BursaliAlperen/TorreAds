@@ -2,15 +2,30 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const TonWeb = require('tonweb');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 class TorreAdsBackend {
     constructor() {
         this.app = express();
-        this.tonweb = new TonWeb();
+        this.initDatabase();
         this.initMiddleware();
         this.initRoutes();
-        this.initDatabase();
+    }
+
+    initDatabase() {
+        mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/torreads', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        
+        mongoose.connection.on('connected', () => {
+            console.log('✅ MongoDB bağlantısı başarılı');
+        });
+        
+        mongoose.connection.on('error', (err) => {
+            console.error('❌ MongoDB bağlantı hatası:', err);
+        });
     }
 
     initMiddleware() {
@@ -28,17 +43,13 @@ class TorreAdsBackend {
     initRoutes() {
         this.app.use('/api/auth', require('./routes/auth'));
         this.app.use('/api/ads', require('./routes/ads'));
+        this.app.use('/api/user', require('./routes/user'));
         this.app.use('/api/referral', require('./routes/referral'));
         this.app.use('/api/wallet', require('./routes/wallet'));
-        this.app.use('/api/admin', require('./routes/admin'));
-    }
-
-    initDatabase() {
-        // MongoDB bağlantısı
-        const mongoose = require('mongoose');
-        mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+        
+        // Health check
+        this.app.get('/health', (req, res) => {
+            res.json({ status: 'OK', timestamp: new Date() });
         });
     }
 
