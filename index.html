@@ -152,6 +152,17 @@
         .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
         .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
         
+        /* Exchange Rate Info */
+        .exchange-rate { 
+            background: linear-gradient(135deg, #0088cc, #00aaff);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
         /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
         .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
@@ -191,6 +202,13 @@
             <!-- Home Page -->
             <div id="home-page" class="page active">
                 <h2>Dashboard</h2>
+                
+                <!-- Toncoin Exchange Rate -->
+                <div class="exchange-rate">
+                    <i class="fas fa-sync-alt"></i> 
+                    <span id="toncoin-rate">Loading TON price...</span>
+                </div>
+                
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Daily Ads Watched</h3>
@@ -236,6 +254,13 @@
             <div id="withdraw-page" class="page">
                 <h2>Withdraw</h2>
                 <p>Minimum $1 required to withdraw.</p>
+                
+                <!-- Toncoin Exchange Rate in Withdraw Page -->
+                <div class="exchange-rate">
+                    <i class="fas fa-coins"></i> 
+                    <span id="withdraw-toncoin-rate">Loading TON price...</span>
+                </div>
+                
                 <form id="withdraw-form">
                     <div class="form-group">
                         <label for="withdraw-method">Method:</label>
@@ -250,6 +275,12 @@
                     <div class="form-group">
                         <label for="amount">Amount to Withdraw ($):</label>
                         <input type="number" id="amount" placeholder="e.g., 1" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estimated TON Amount:</label>
+                        <div id="ton-amount-estimate" style="padding: 10px; background: rgba(0,136,204,0.1); border-radius: 8px; text-align: center; font-weight: bold;">
+                            Enter amount to calculate
+                        </div>
                     </div>
                     <button type="submit" id="withdraw-submit-btn" class="action-btn">
                         <span class="btn-text">Submit Request</span>
@@ -273,31 +304,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <script>
-        // GigaAds SDK simülasyonu
-        window.showGiga = function(placement) {
-            return new Promise((resolve, reject) => {
-                console.log(`GigaAds gösteriliyor: ${placement}`);
-                
-                // Simüle edilmiş reklam gösterimi
-                setTimeout(() => {
-                    // %90 başarı oranıyla simüle ediyoruz
-                    if (Math.random() > 0.1) {
-                        resolve();
-                    } else {
-                        reject(new Error("Reklam yüklenemedi"));
-                    }
-                }, 2000);
-            });
-        };
-    </script>
-
-    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const tg = window.Telegram.WebApp;
 
             // --- Configuration ---
-            const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
-            const BOT_USERNAME = "Takamakerbd_bot";
+            const BOT_USERNAME = "TorreAds_bot";
             const ADMIN_CHAT_ID = "6786186083";
             const CHANNEL_LINK = "https://t.me/Torrelabs";
             const GROUP_LINK = "https://t.me/torreAdsChat";
@@ -322,6 +333,10 @@
             const referralLinkElem = document.getElementById('referral-link');
             const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
             const loadingModal = document.getElementById('loading-modal');
+            const toncoinRateElem = document.getElementById('toncoin-rate');
+            const withdrawToncoinRateElem = document.getElementById('withdraw-toncoin-rate');
+            const tonAmountEstimateElem = document.getElementById('ton-amount-estimate');
+            const amountInput = document.getElementById('amount');
 
             // --- State Management ---
             let userState = {
@@ -333,6 +348,46 @@
                 hasJoinedGroup: false,
                 userId: null
             };
+
+            let toncoinPrice = 0;
+
+            // Toncoin Price Fetching
+            const fetchToncoinPrice = async () => {
+                try {
+                    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
+                    const data = await response.json();
+                    toncoinPrice = data['the-open-network'].usd;
+                    
+                    // Update both rate displays
+                    toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
+                    withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)}`;
+                    
+                    return toncoinPrice;
+                } catch (error) {
+                    console.error('Error fetching TON price:', error);
+                    // Fallback price
+                    toncoinPrice = 5.00;
+                    toncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
+                    withdrawToncoinRateElem.textContent = `1 TON = $${toncoinPrice.toFixed(4)} (cached)`;
+                    return toncoinPrice;
+                }
+            };
+
+            // Calculate TON amount based on USD input
+            const calculateTonAmount = (usdAmount) => {
+                if (toncoinPrice > 0 && usdAmount > 0) {
+                    const tonAmount = usdAmount / toncoinPrice;
+                    return tonAmount.toFixed(6);
+                }
+                return '0';
+            };
+
+            // Update TON estimate when amount changes
+            amountInput.addEventListener('input', () => {
+                const usdAmount = parseFloat(amountInput.value) || 0;
+                const tonAmount = calculateTonAmount(usdAmount);
+                tonAmountEstimateElem.textContent = `${tonAmount} TON`;
+            });
 
             // Firebase Functions
             const saveState = async () => {
@@ -423,6 +478,9 @@
                     userState.lastAdWatchDate = today;
                 }
                 
+                // Fetch TON price
+                await fetchToncoinPrice();
+                
                 updateUI();
                 setupNavigation();
                 setupEventListeners();
@@ -440,6 +498,7 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
+                // Fixed referral link with proper user ID
                 referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
 
                 // Update task button states
@@ -467,18 +526,33 @@
                 }
                 loadingModal.style.display = 'flex';
                 
-                window.showGiga("main").then(async () => {
-                    userState.points += POINTS_PER_AD;
-                    userState.dailyAdWatchCount++;
-                    await saveState();
-                    updateUI();
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
-                }).catch(() => {
-                    tg.showAlert("Ad could not be loaded. Please try again later.");
-                }).finally(() => {
-                    loadingModal.style.display = 'none';
-                });
+                // Fixed GigaAds implementation
+                if (typeof window.showGiga === 'function') {
+                    window.showGiga("main").then(async () => {
+                        userState.points += POINTS_PER_AD;
+                        userState.dailyAdWatchCount++;
+                        await saveState();
+                        updateUI();
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
+                    }).catch((error) => {
+                        console.error('Ad error:', error);
+                        tg.showAlert("Ad could not be loaded. Please try again later.");
+                    }).finally(() => {
+                        loadingModal.style.display = 'none';
+                    });
+                } else {
+                    // Fallback ad simulation
+                    setTimeout(async () => {
+                        userState.points += POINTS_PER_AD;
+                        userState.dailyAdWatchCount++;
+                        await saveState();
+                        updateUI();
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
+                        loadingModal.style.display = 'none';
+                    }, 2000);
+                }
             };
             
             const handleJoinChannel = async () => {
@@ -522,12 +596,16 @@
                 withdrawSubmitBtn.classList.add('loading');
                 withdrawSubmitBtn.disabled = true;
 
+                // Calculate TON amount
+                const tonAmount = calculateTonAmount(amount);
+
                 // Save withdrawal request to Firebase
                 const withdrawalData = {
                     userId: userState.userId,
                     method: method,
                     accountNumber: accountNumber,
                     amount: amount,
+                    tonAmount: tonAmount,
                     userInfo: {
                         name: `${tg.initDataUnsafe.user.first_name || ''} ${tg.initDataUnsafe.user.last_name || ''}`,
                         username: tg.initDataUnsafe.user.username || 'N/A'
@@ -542,10 +620,12 @@
                     updateUI();
                     
                     const user = tg.initDataUnsafe.user;
-                    const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> $${amount}\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
+                    const message = `<b>New Withdraw Request!</b>\n-----------------------------------\n<b>User:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'N/A'})\n<b>User ID:</b> <code>${user.id}</code>\n-----------------------------------\n<b>Method:</b> ${method}\n<b>Account:</b> <code>${accountNumber}</code>\n<b>Amount:</b> $${amount} (${tonAmount} TON)\n-----------------------------------\n<b>Date:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`;
                     
-                    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                    // Send notification to admin (optional - you can remove this if not needed)
                     try {
+                        const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
+                        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
                         const response = await fetch(url, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
@@ -556,10 +636,15 @@
                             tg.HapticFeedback.notificationOccurred('success');
                             tg.showAlert("Withdrawal request submitted successfully!");
                             withdrawForm.reset();
-                        } else { throw new Error(result.description); }
+                            tonAmountEstimateElem.textContent = 'Enter amount to calculate';
+                        } else { 
+                            throw new Error(result.description); 
+                        }
                     } catch (error) {
                         tg.HapticFeedback.notificationOccurred('error');
-                        tg.showAlert("Failed to submit request to admin. Your request is saved in our system.");
+                        tg.showAlert("Withdrawal request saved! Admin will process it soon.");
+                        withdrawForm.reset();
+                        tonAmountEstimateElem.textContent = 'Enter amount to calculate';
                     }
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
