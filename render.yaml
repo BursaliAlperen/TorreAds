@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: torreads-bot
+    env: docker
+    docker:
+      dockerfile: Dockerfile
+    envVars:
+      - key: BOT_TOKEN
+        value: your_bot_token_here
+    healthCheckPath: /health
