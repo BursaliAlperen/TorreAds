@@ -1,46 +1,67 @@
-const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
 
-const userSchema = new mongoose.Schema({
-    telegramId: { type: String, required: true, unique: true },
-    username: String,
-    firstName: String,
-    lastName: String,
-    balance: { type: Number, default: 0 },
-    totalEarned: { type: Number, default: 0 },
-    totalWithdrawn: { type: Number, default: 0 },
-    level: { type: String, default: 'bronze' },
-    referralCode: { type: String, unique: true },
-    referredBy: { type: String, default: null },
-    referralCount: { type: Number, default: 0 },
-    dailyAdsWatched: { type: Number, default: 0 },
-    lastAdWatch: Date,
-    walletAddress: String,
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    lastSeen: { type: Date, default: Date.now }
-});
+// Bakiye sorgulama
+router.get('/:userId/balance', async (req, res) => {
+    try {
+        const user = await User.findOne({ telegramId: req.params.userId });
+        
+        if (!user) {
+            return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+        }
 
-// Sanal alanlar
-userSchema.virtual('dailyAdLimit').get(function() {
-    const limits = { bronze: 10, silver: 25, gold: 50, platinum: 100 };
-    return limits[this.level] || 10;
-});
-
-userSchema.virtual('earnMultiplier').get(function() {
-    const multipliers = { bronze: 1.0, silver: 1.1, gold: 1.25, platinum: 1.5 };
-    return multipliers[this.level] || 1.0;
-});
-
-// Günlük limit sıfırlama
-userSchema.methods.resetDailyLimit = function() {
-    const now = new Date();
-    const lastReset = new Date(this.lastAdWatch);
-    
-    if (lastReset.getDate() !== now.getDate() || 
-        lastReset.getMonth() !== now.getMonth() || 
-        lastReset.getFullYear() !== now.getFullYear()) {
-        this.dailyAdsWatched = 0;
+        res.json({
+            balance: user.balance,
+            level: user.level,
+            dailyAdsWatched: user.dailyAdsWatched,
+            dailyAdLimit: user.dailyAdLimit
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Sunucu hatası' });
     }
-};
+});
 
-module.exports = mongoose.model('User', userSchema);
+// Kullanıcı istatistikleri
+router.get('/:userId/stats', async (req, res) => {
+    try {
+        const user = await User.findOne({ telegramId: req.params.userId });
+        
+        if (!user) {
+            return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+        }
+
+        res.json({
+            balance: user.balance,
+            totalEarned: user.totalEarned,
+            totalWithdrawn: user.totalWithdrawn,
+            level: user.level,
+            referralCount: user.referralCount,
+            dailyAdsWatched: user.dailyAdsWatched,
+            dailyAdLimit: user.dailyAdLimit
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Sunucu hatası' });
+    }
+});
+
+// Cüzdan adresi güncelleme
+router.post('/:userId/wallet', async (req, res) => {
+    try {
+        const { walletAddress } = req.body;
+        const user = await User.findOne({ telegramId: req.params.userId });
+        
+        if (!user) {
+            return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+        }
+
+        user.walletAddress = walletAddress;
+        await user.save();
+
+        res.json({ success: true, message: 'Cüzdan adresi güncellendi' });
+    } catch (error) {
+        res.status(500).json({ error: 'Sunucu hatası' });
+    }
+});
+
+module.exports = router;
