@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CashReward App</title>
     
-    <!-- Aapka Naya Ad Code -->
-    <script src='//libtl.com/sdk.js' data-zone='9391539' data-sdk='show_9391539'></script>
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,25 +37,26 @@
 </head>
 <body class="max-w-md mx-auto">
 
-    <!-- App Loader -->
     <div id="loader" class="hidden fixed inset-0 dark-bg bg-opacity-75 flex items-center justify-center z-50">
         <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent"></div>
     </div>
 
-    <!-- Authentication Section -->
     <div id="auth-section" class="min-h-screen p-6 flex-col justify-center main-page">
         <h1 class="text-4xl font-bold text-center mb-2 text-accent">CashReward</h1>
         <p class="text-center text-gray-400 mb-8">Jaari rakhne ke liye Login ya Signup karein</p>
+     
         <div id="auth-container">
             <div id="login-view">
                 <input id="login-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
                 <input id="login-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
                 <button id="login-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Login</button>
+             
                 <p class="text-center text-gray-400">Account nahi hai? <a href="#" id="show-signup" class="font-semibold text-accent">Sign Up</a></p>
             </div>
             <div id="signup-view" class="hidden">
                  <input id="signup-name" type="text" placeholder="Poora Naam" class="w-full p-3 rounded-lg input-field mb-4">
                 <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
+           
                 <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
                 <button id="signup-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Sign Up</button>
                 <p class="text-center text-gray-400">Pehle se account hai? <a href="#" id="show-login" class="font-semibold text-accent">Login</a></p>
@@ -64,39 +64,357 @@
         </div>
     </div>
 
-    <!-- Main App Container -->
     <div id="app-container" class="min-h-screen flex-col main-page">
         <header class="flex items-center justify-between p-4 sticky top-0 bg-opacity-80 backdrop-blur-md z-10 dark-bg">
             <h1 class="text-xl font-bold">CashReward</h1>
             <div class="flex items-center space-x-4">
-                <div id="notification-bell" class="relative cursor-pointer">
+         
+                <div id="notification-bell" class="relative cursor-pointer" onclick="navigateTo('notifications-page')">
                     <i data-lucide="bell" class="w-6 h-6"></i>
                     <div id="notification-dot" class="notification-dot"></div>
                 </div>
-                <i data-lucide="user" class="w-6 h-6 cursor-pointer" onclick="navigateTo('profile-page')"></i>
+                <button id="logout-btn-header" class="btn btn-outline-accent text-xs px-3 py-1 rounded-lg">Çıkış Yap</button>
             </div>
         </header>
 
         <main class="flex-grow">
-            <!-- Home Page -->
-            <div id="home-page" class="p-4 space-y-6 sub-page">
+            <div id="home-page" class="p-4 space-y-6 sub-page active">
                 <div class="card-bg p-4 rounded-lg flex items-center justify-between">
                     <div>
+      
                         <p class="text-gray-400 text-sm">Your Balance</p>
                         <p class="text-3xl font-bold"><span id="coin-balance">0</span> Coins</p>
                     </div>
-                    <button id="home-withdraw-btn" class="bg-white text-black font-semibold px-6 py-2 rounded-lg">Withdraw</button>
-                </div>
-                <section>
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-lg font-semibold">Daily Tasks</h2>
-                            <p class="text-sm text-gray-400 mb-4">Complete tasks to get rewards.</p>
-                        </div>
-                        <p class="text-sm text-gray-400">Ads Left: <span id="ads-left-count">...</span></p>
                     </div>
-                    <div class="space-y-3">
-                        <div class="bg-orange-500 p-3 rounded-lg flex items-center justify-between text-black">
+                
+                <section class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">Tek Görev: Reklam İzle</h2>
+                        <p class="text-sm text-gray-400">Kalan Reklam: <span id="ads-left-count">...</span></p>
+                    </div>
+                    <div class="card-bg p-4 rounded-lg flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-4xl">💰</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Ödüllü Reklamı İzle</h3>
+                                <p class="text-sm text-gray-400">Hemen 50 Coin kazan!</p>
+                            </div>
+                        </div>
+                        <button class="btn-accent font-bold px-6 py-3 rounded-lg text-base" onclick="claimReward('gigaPub')">REKLAM İZLE</button>
+                    </div>
+                </section>
+         
+            </div>
+
+            <div id="notifications-page" class="p-4 space-y-4 sub-page">
+                <h2 class="text-xl font-bold text-center">Notifications</h2>
+                <div id="notifications-list" class="space-y-3"></div>
+            </div>
+            
+            </main>
+
+        <nav class="bottom-nav sticky bottom-0 grid grid-cols-1 items-center text-center py-2 card-bg">
+            <a href="#" class="nav-link active" data-page="home-page" style="color: #ff8c00;">
+                <i data-lucide="monitor" class="mx-auto w-6 h-6"></i>
+                <span class="text-base font-bold">REKLAM İZLEME</span>
+            </a>
+        </nav>
+ 
+    </div>
+    
+    <div id="custom-alert" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center">
+            <p id="alert-message" class="mb-4"></p>
+            <button id="alert-ok-btn" class="btn-accent px-6 py-2 rounded-lg">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        const firebaseConfig = {
+     
+            apiKey: "AIzaSyAjdPczpLlBINxzGQ1dvwDRlvZpdUCfKUk",
+            authDomain: "earningapp-c292c.firebaseapp.com",
+            projectId: "earningapp-c292c",
+            storageBucket: "earningapp-c292c.appspot.com",
+            messagingSenderId: "81626520266",
+            appId: "1:81626520266:web:af31f7d303477a3d973233"
+        };
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, serverTimestamp, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userData = null;
+        let appConfig = {};
+
+        const loader = document.getElementById('loader');
+        const coinBalanceEl = document.getElementById('coin-balance');
+        // const walletCoinBalanceEl = document.getElementById('wallet-coin-balance'); // Kaldırıldı
+        // const profileNameEl = document.getElementById('profile-name'); // Kaldırıldı
+        // const profileEmailEl = document.getElementById('profile-email'); // Kaldırıldı
+        const notificationDot = document.getElementById('notification-dot');
+        const adsLeftCountEl = document.getElementById('ads-left-count');
+        
+        window.onload = () => {
+            lucide.createIcons();
+            setupEventListeners();
+            showMainPage('auth-section');
+            loader.style.display = 'none';
+            onAuthStateChanged(auth, handleAuthStateChange);
+        };
+
+        async function handleAuthStateChange(user) {
+            if (user) {
+                loader.style.display = 'flex';
+                currentUser = user;
+                await fetchUserData();
+                if (userData.isBlocked) {
+                    showAlert("Aapka account block kar diya gaya hai.");
+                    await signOut(auth);
+                    loader.style.display = 'none';
+                    return;
+                }
+                await fetchAppConfig();
+                await checkNewNotifications();
+                updateUI();
+                showMainPage('app-container');
+                navigateTo('home-page');
+                loader.style.display = 'none';
+            } else {
+                currentUser = null;
+                userData = null;
+                showMainPage('auth-section');
+            }
+        }
+
+        async function fetchUserData() {
+            if (!currentUser) return;
+            const userRef = doc(db, "users", currentUser.uid);
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    userData = userSnap.data();
+                } else {
+                    const ownReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    const defaultUserData = {
+                        uid: currentUser.uid, name: currentUser.email.split('@')[0], email: currentUser.email,
+                        balance: 50, referralCode: ownReferralCode, referredBy: null,
+                        lastNotificationCheck: new Date(),
+                        createdAt: serverTimestamp(),
+                        dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0], isBlocked: false
+                    };
+                    await setDoc(userRef, defaultUserData);
+                    userData = defaultUserData;
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                showAlert("User data load karne mein error aayi.");
+            }
+        }
+
+        async function fetchAppConfig() {
+            const configRef = doc(db, "config", "main");
+            try {
+                const configSnap = await getDoc(configRef);
+                appConfig = configSnap.exists() ? configSnap.data() : { minWithdrawal: 5000, paymentMethods: ["UPI", "Paytm"], dailyAdLimit: 10, coinValueCoins: 1000, coinValueInr: 10 };
+            } catch (error) {
+                console.error("Error fetching app config:", error);
+            }
+        }
+        
+        function updateUI() {
+            if (!userData) return;
+            const balance = userData.balance || 0;
+            coinBalanceEl.textContent = balance;
+            updateAdsLeftCount();
+        }
+
+        function updateBalance(amount) {
+             if (!userData) return;
+             userData.balance = (userData.balance || 0) + amount;
+             updateUI();
+        }
+
+        function updateAdsLeftCount() {
+            const today = new Date().toISOString().split('T')[0];
+            if (userData.lastAdWatchDate !== today) {
+                userData.dailyAdCount = 0;
+            }
+            const adsLeft = Math.max(0, (appConfig.dailyAdLimit || 10) - userData.dailyAdCount);
+            adsLeftCountEl.textContent = adsLeft;
+        }
+
+        function showMainPage(pageId) {
+            document.querySelectorAll('.main-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+            const pageEl = document.getElementById(pageId);
+            if (pageEl) pageEl.classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active', 'text-accent');
+                // Sadece home-page linki var
+                if (link.dataset.page === 'home-page') link.classList.add('active', 'text-accent');
+            });
+        }
+        window.navigateTo = navigateTo;
+
+        function setupEventListeners() {
+            document.getElementById('show-signup').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('signup-view').classList.remove('hidden');
+            });
+            document.getElementById('show-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('signup-view').classList.add('hidden');
+                document.getElementById('login-view').classList.remove('hidden');
+            });
+            document.getElementById('signup-btn').addEventListener('click', handleSignup);
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            
+            // Yeni çıkış butonu dinleyicisi
+            document.getElementById('logout-btn-header').addEventListener('click', handleLogout); 
+            
+            // Alt menü sadece home-page'e gidiyor
+            document.querySelectorAll('.bottom-nav .nav-link').forEach(link => { 
+                link.addEventListener('click', (e) => { 
+                    e.preventDefault(); 
+                    navigateTo(link.dataset.page); 
+                }); 
+            });
+
+            // Sadece bildirim zili dinleyicisi
+            document.getElementById('notification-bell').addEventListener('click', () => { 
+                navigateTo('notifications-page'); 
+                loadNotifications(); 
+            });
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            if (!name || !email || !password) return showAlert("Kripya sabhi fields bharein.");
+            loader.style.display = 'flex';
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showAlert(error.message);
+                loader.style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) return showAlert("Kripya email aur password daalein.");
+            loader.style.display = 'flex';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showAlert(error.message);
+                loader.style.display = 'none';
+            }
+        }
+
+        async function handleLogout() {
+            await signOut(auth);
+        }
+
+        async function checkNewNotifications() {
+            const lastCheck = userData.lastNotificationCheck;
+            if (!lastCheck || typeof lastCheck.seconds === 'undefined') { 
+                console.log("lastNotificationCheck is not a valid timestamp yet. Skipping check."); 
+                return;
+            }
+            const q = query(collection(db, "notifications"), where("createdAt", ">", lastCheck), limit(1));
+            const querySnapshot = await getDocs(q);
+            notificationDot.style.display = querySnapshot.empty ? 'none' : 'block';
+        }
+
+        async function loadNotifications() {
+            notificationDot.style.display = 'none';
+            if (currentUser) {
+                // Son bildirim kontrol zamanını güncelle
+                await updateDoc(doc(db, "users", currentUser.uid), { lastNotificationCheck: new Date() });
+            }
+
+            const notificationsList = document.getElementById('notifications-list');
+            notificationsList.innerHTML = '';
+            const q = query(collection(db, "notifications"), limit(10));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                notificationsList.innerHTML = '<p class="text-center text-gray-400">Hiç bildirim yok.</p>';
+                return;
+            }
+
+            querySnapshot.forEach(doc => {
+                const notif = doc.data();
+                const date = notif.createdAt ? notif.createdAt.toDate().toLocaleDateString() : 'N/A';
+                const notifHtml = `
+                    <div class="card-bg p-4 rounded-lg">
+                        <h3 class="font-bold text-accent">${notif.title}</h3>
+                        <p class="text-sm text-gray-300 mt-1">${notif.message}</p>
+                        <p class="text-xs text-gray-500 mt-2">${date}</p>
+                    </div>
+                `;
+                notificationsList.innerHTML += notifHtml;
+            });
+        }
+        
+        // YENİ GigaPub Ad Kodunu kullanan claimReward fonksiyonu
+        window.claimReward = async (taskType) => {
+            // Sadece GigaPub reklamını kabul et
+            if (taskType !== 'gigaPub') return;
+
+            const today = new Date().toISOString().split('T')[0];
+            if (userData.lastAdWatchDate !== today) {
+                userData.dailyAdCount = 0;
+            }
+
+            // Limit check
+            const dailyLimit = appConfig.dailyAdLimit || 10;
+            const adsLeft = Math.max(0, dailyLimit - userData.dailyAdCount);
+            if (adsLeft <= 0) {
+                return showAlert("Bugünün reklam izleme limitini doldurdunuz. Yarın tekrar deneyin.");
+            }
+
+            loader.style.display = 'flex';
+            const rewardAmount = 50; 
+            const userRef = doc(db, "users", currentUser.uid);
+
+            // GigaPub Reklam Kodunu Çağır
+            window.showGiga()
+                .then(async () => {
+                    // Sayaç güncelleme
+                    const newCount = (userData.dailyAdCount || 0) + 1;
+                    
+                    // Firestore'u güncelle: hem sayaç hem de bakiye güncellenir
+                    await updateDoc(userRef, { 
+                        balance: (userData.balance || 0) + rewardAmount,
+                        dailyAdCount: newCount,
+                        lastAdWatchDate: today 
+                    });
+                    
+                    // Yerel veriyi güncelle
+                    userData.dailyAdCount = newCount;
+                    userData.lastAdWatchDate = today;
+                    
+                    updateBal lance(rewardAmount); // Bakiye güncelleme
+
+                    showAlert(`Tebrikler! ${rewardAmount} Coin kazandınız.`);
+                    updateAdsLeftCount(); // Sayacı güncellediğimizden emin ol
+                })
+                .catch(e => {
+                    console.                        <div class="bg-orange-500 p-3 rounded-lg flex items-center justify-between text-black">
                             <div class="flex items-center space-x-3"><span class="text-3xl">🤩</span><div><h3 class="font-bold">Watch Short Ad</h3><p class="text-xs font-medium">Rewarded Interstitial</p></div></div>
                             <button class="bg-white text-orange-500 font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('interstitial')">Claim</button>
                         </div>
@@ -627,3 +945,4 @@
     </script>
 </body>
 </html>
+
