@@ -377,21 +377,20 @@
 
             // ---- Referans Doğrulama Fonksiyonu ----
             function isValidReferralCode(referralCode) {
-                // Sistemde kayıtlı referans kodlarını kontrol et
                 const keys = Object.keys(localStorage);
                 for (let key of keys) {
                     if (key.startsWith('torreads_state_')) {
                         try {
                             const userState = JSON.parse(localStorage.getItem(key));
                             if (userState && userState.referralCode === referralCode) {
-                                return true; // Geçerli referans kodu bulundu
+                                return true;
                             }
                         } catch (e) {
                             console.error('Error checking referral code:', e);
                         }
                     }
                 }
-                return false; // Geçerli referans kodu bulunamadı
+                return false;
             }
 
             // ---- State Management ----
@@ -486,33 +485,55 @@
                 } catch (e) { console.error("Could not save state", e); }
             }
 
-            // ---- Referans Bonus Fonksiyonu ----
+            // ---- GELİŞTİRİLMİŞ Referans Bonus Fonksiyonu ----
             function giveReferralBonusToReferrer(referralCode) {
                 const keys = Object.keys(localStorage);
                 let bonusGiven = false;
+                
+                console.log('Searching for referrer with code:', referralCode);
                 
                 keys.forEach(key => {
                     if (key.startsWith('torreads_state_')) {
                         try {
                             const userState = JSON.parse(localStorage.getItem(key));
+                            console.log('Checking user:', userState.userId, 'with code:', userState.referralCode);
+                            
                             if (userState && userState.referralCode === referralCode) {
-                                userState.balanceInCents += REFERRER_BONUS_USDT * 100;
-                                userState.referralCount = (userState.referralCount || 0) + 1;
-                                userState.referredUsers = userState.referredUsers || [];
-                                userState.referredUsers.push(state.userId);
+                                console.log('Found referrer! Giving bonus to:', userState.userId);
                                 
+                                // Referans verenin bakiyesini güncelle
+                                const currentBalance = userState.balanceInCents || 0;
+                                userState.balanceInCents = currentBalance + (REFERRER_BONUS_USDT * 100);
+                                
+                                // Referans sayısını artır
+                                userState.referralCount = (userState.referralCount || 0) + 1;
+                                
+                                // Referans edilen kullanıcıları güncelle
+                                userState.referredUsers = userState.referredUsers || [];
+                                if (!userState.referredUsers.includes(state.userId)) {
+                                    userState.referredUsers.push(state.userId);
+                                }
+                                
+                                // JSONBin uyumluluk alanlarını güncelle
                                 userState.points = userState.balanceInCents / 100;
                                 userState.referrals = userState.referredUsers;
                                 
+                                // State'i kaydet
                                 localStorage.setItem(key, JSON.stringify(userState));
                                 bonusGiven = true;
-                                console.log(`Referral bonus given to user ${userState.userId}`);
+                                
+                                console.log(`Bonus given successfully! New balance: ${userState.balanceInCents/100} USDT, Referral count: ${userState.referralCount}`);
                             }
                         } catch (e) {
                             console.error('Error processing referral bonus:', e);
                         }
                     }
                 });
+                
+                if (!bonusGiven) {
+                    console.log('No referrer found with code:', referralCode);
+                }
+                
                 return bonusGiven;
             }
             
@@ -549,6 +570,7 @@
                 dailyAdCountDisplay.textContent = `${state.dailyAdCount} / ${DAILY_AD_LIMIT}`;
                 withdrawBalanceDisplay.textContent = `USDT ${balanceInUSDT}`;
                 
+                // Referans sayısını ve kazancı güncelle
                 referralCountDisplay.textContent = state.referralCount;
                 const referralBonus = (state.referralCount * REFERRER_BONUS_USDT).toFixed(2);
                 referralBonusDisplay.textContent = `USDT ${referralBonus}`;
@@ -642,7 +664,6 @@
                 
                 showStatus('Loading ad, please wait...', 'info');
                 
-                // GigaPub reklamını göster - DÜZGÜN ENTEGRASYON
                 if (typeof window.showGiga === 'function') {
                     window.showGiga("main")
                         .then(() => {
@@ -650,13 +671,11 @@
                         })
                         .catch((error) => {
                             console.error('GigaPub Ad Error:', error);
-                            // Fallback: Simüle edilmiş reklam
                             setTimeout(() => {
                                 handleAdSuccess();
                             }, 2000);
                         });
                 } else {
-                    // GigaPub yüklenemedi, simüle edilmiş reklam göster
                     console.log('GigaPub not loaded, showing simulated ad');
                     setTimeout(() => {
                         handleAdSuccess();
@@ -732,7 +751,6 @@
             function generateReferralLink() {
                 const user = tg.initDataUnsafe.user;
                 if (user && user.id && state.referralCode) {
-                    // Referans kod kutusu için kopyalama işlevi
                     referralCodeBox.onclick = function() {
                         navigator.clipboard.writeText(state.referralCode).then(() => {
                             showStatus('Referral code copied!', 'success');
@@ -749,7 +767,6 @@
                     return;
                 }
                 
-                // Referans kodunu doğrula
                 if (!isValidReferralCode(referralCode)) {
                     showStatus('Invalid referral code. Please enter a valid code.', 'error');
                     return;
@@ -778,11 +795,11 @@
                 state.balanceInCents += 2; // 0.02 USDT = 2 cents
                 state.points = state.balanceInCents / 100;
                 
-                // REFERANS VERENE DE BONUS VER
+                // REFERANS VERENE DE BONUS VER ve SAYIYI ARTIR
                 const bonusGiven = giveReferralBonusToReferrer(referralCode);
                 
                 if (bonusGiven) {
-                    showStatus(`Referral bonus applied! +0.02 USDT added to your balance. Referrer also received 0.02 USDT.`, 'success');
+                    showStatus(`Referral bonus applied! +0.02 USDT added to your balance. Referrer also received 0.02 USDT and their referral count increased.`, 'success');
                 } else {
                     showStatus(`Referral bonus applied! +0.02 USDT added to your balance.`, 'success');
                 }
