@@ -3,867 +3,967 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TorreAds - Earn & Reward</title>
+    <title>Earning Technology</title>
     
-    <!-- Google Fonts (Nunito) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- Reklam Scripti -->
-    <script src="https://ad.gigapub.tech/script?id=986"></script>
-
-    <!-- Internal CSS -->
     <style>
-        /* Google Font Import */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
-
-        /* CSS Variables for Theming */
         :root {
-            --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #f4f4f9;
-            --secondary-bg-light: #ffffff;
-            --text-color-light: #1c1c1e;
-            --subtle-text-light: #6d6d72;
-            --primary-color-light: #007aff;
-            --border-color-light: #e0e0e0;
-            --bg-color-dark: #121212;
-            --secondary-bg-dark: #1c1c1e;
-            --text-color-dark: #ffffff;
-            --subtle-text-dark: #8e8e93;
-            --primary-color-dark: #0a84ff;
-            --border-color-dark: #38383a;
+            --tg-theme-bg-color: #121212; 
+            --tg-theme-text-color: #e0e0e0; 
+            --tg-theme-button-color: #007bff;
+            --tg-theme-button-text-color: #ffffff; 
+            --tg-theme-hint-color: #8a8a8a; 
+            --success-color: #28a745;
+            --warning-color: #ffc107; 
+            --danger-color: #dc3545; 
+            --secondary-bg-color: #1e1e1e; 
+            --border-color: #333333;
         }
 
-        /* Base Styles */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: var(--font-family);
-            transition: background-color 0.3s, color 0.3s;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0;
+            padding: 20px 15px 90px 15px; 
+            background-color: var(--tg-theme-bg-color); 
+            color: var(--tg-theme-text-color);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            min-height: 100vh; 
+            box-sizing: border-box;
         }
 
-        /* Theme Styles */
-        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
-        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+        }
 
-        /* Profile Header */
-        .profile-header { padding: 20px 15px; display: flex; align-items: center; border-bottom: 1px solid; }
-        .light-theme .profile-header { border-bottom-color: var(--border-color-light); }
-        .dark-theme .profile-header { border-bottom-color: var(--border-color-dark); }
-        .profile-info { display: flex; align-items: center; gap: 15px; }
-        #user-photo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid; }
-        .light-theme #user-photo { border-color: var(--primary-color-light); }
-        .dark-theme #user-photo { border-color: var(--primary-color-dark); }
-        .user-details h1 { font-size: 1.2rem; font-weight: 700; }
-        .verified-icon { font-size: 1rem; margin-left: 5px; }
-        .light-theme .verified-icon { color: var(--primary-color-light); }
-        .dark-theme .verified-icon { color: var(--primary-color-dark); }
-        .user-details p { font-size: 0.9rem; font-weight: 600; }
-        .light-theme .user-details p { color: var(--subtle-text-light); }
-        .dark-theme .user-details p { color: var(--subtle-text-dark); }
+        .view { 
+            display: none; 
+            width: 100%; 
+            animation: fadeIn 0.3s ease-in-out; 
+        }
 
-        /* Main Content & Pages */
-        main { padding: 15px; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { font-size: 1.5rem; margin-bottom: 15px; }
+        #home-view { 
+            display: block; 
+        }
 
-        /* Home Page Stats & Referral */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .stat-card { padding: 20px; border-radius: 12px; text-align: center; }
-        .light-theme .stat-card { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-        .dark-theme .stat-card { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-        .stat-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
-        .light-theme .stat-card h3 { color: var(--subtle-text-light); }
-        .dark-theme .stat-card h3 { color: var(--subtle-text-dark); }
-        .stat-card p { font-size: 1.5rem; font-weight: 700; }
-        .light-theme .stat-card p { color: var(--primary-color-light); }
-        .dark-theme .stat-card p { color: var(--primary-color-dark); }
-        .referral-section { margin-top: 30px; padding: 20px; border-radius: 12px; }
-        .light-theme .referral-section { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-        .dark-theme .referral-section { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-        .referral-section h3 { text-align: center; }
-        #referral-link { width: 100%; padding: 10px; text-align: center; border: 1px dashed; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
-        .light-theme #referral-link { border-color: var(--primary-color-light); background-color: var(--bg-color-light); color: var(--text-color-light); }
-        .dark-theme #referral-link { border-color: var(--primary-color-dark); background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-        #copy-ref-link-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; }
-        .light-theme #copy-ref-link-btn { background-color: var(--primary-color-light); }
-        .dark-theme #copy-ref-link-btn { background-color: var(--primary-color-dark); }
-        
-        /* Task/Bonus Container */
-        .task-container { padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .task-container:last-child { margin-bottom: 0; }
-        .light-theme .task-container { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-        .dark-theme .task-container { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-        .task-icon { font-size: 3rem; margin-bottom: 15px; }
-        .light-theme .task-icon { color: var(--primary-color-light); }
-        .dark-theme .task-icon { color: var(--primary-color-dark); }
-        .task-container h3 { font-size: 1.2rem; margin-bottom: 5px; }
-        .task-container p { font-size: 0.9rem; margin-bottom: 20px; }
-        .light-theme .task-container p { color: var(--subtle-text-light); }
-        .dark-theme .task-container p { color: var(--subtle-text-dark); }
+        @keyframes fadeIn { 
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
 
-        /* Action Button */
-        .action-btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: 700; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; position: relative; display: flex; justify-content: center; align-items: center; }
-        .light-theme .action-btn { background-color: var(--primary-color-light); }
-        .dark-theme .action-btn { background-color: var(--primary-color-dark); }
-        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-loader { width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-        .action-btn.loading .btn-text { visibility: hidden; }
-        .action-btn.loading .btn-loader { display: block; position: absolute; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .header { 
+            margin-bottom: 25px; 
+        }
 
-        /* Form Styles */
-        #withdraw-form .form-group { margin-bottom: 15px; }
-        #withdraw-form label { display: block; margin-bottom: 5px; font-weight: 600; }
-        #withdraw-form input, #withdraw-form select { width: 100%; padding: 12px; border-radius: 8px; font-family: var(--font-family); font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
-        .light-theme #withdraw-form input, .light-theme #withdraw-form select { background-color: var(--bg-color-light); border: 1px solid var(--border-color-light); color: var(--text-color-light); }
-        .dark-theme #withdraw-form input, .dark-theme #withdraw-form select { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); color: var(--text-color-dark); }
-        .light-theme input:focus, .light-theme select:focus { outline: none; border-color: var(--primary-color-light); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
-        .dark-theme input:focus, .dark-theme select:focus { outline: none; border-color: var(--primary-color-dark); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
-        
-        /* Bottom Navigation */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid; z-index: 1000; }
-        .light-theme .bottom-nav { background-color: var(--secondary-bg-light); border-top-color: var(--border-color-light); }
-        .dark-theme .bottom-nav { background-color: var(--secondary-bg-dark); border-top-color: var(--border-color-dark); }
-        .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 5px 10px; font-family: var(--font-family); font-size: 0.7rem; transition: color 0.2s; flex-grow: 1; }
-        .light-theme .nav-btn { color: var(--subtle-text-light); }
-        .dark-theme .nav-btn { color: var(--subtle-text-dark); }
-        .nav-btn i { font-size: 1.4rem; margin-bottom: 3px; }
-        .nav-btn.active { font-weight: 700; }
-        .light-theme .nav-btn.active { color: var(--primary-color-light); }
-        .dark-theme .nav-btn.active { color: var(--primary-color-dark); }
+        .header h1 { 
+            font-size: 32px; 
+            font-weight: 700; 
+            margin-bottom: 5px; 
+            color: #ffffff; 
+        }
 
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
-        .modal-content { padding: 30px; border-radius: 15px; text-align: center; }
-        .light-theme .modal-content { background-color: var(--secondary-bg-light); }
-        .dark-theme .modal-content { background-color: var(--secondary-bg-dark); }
-        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        .light-theme .loader { border-top-color: var(--primary-color-light); }
-        .dark-theme .loader { border-top-color: var(--primary-color-dark); }
+        .header p { 
+            color: var(--tg-theme-hint-color); 
+            font-size: 16px; 
+        }
+
+        .card {
+            background-color: var(--secondary-bg-color); 
+            padding: 25px; 
+            border-radius: 16px; 
+            margin-bottom: 25px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); 
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            margin: 0 0 12px 0; 
+            font-size: 16px; 
+            color: var(--tg-theme-hint-color); 
+            font-weight: 500;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+
+        .balance-amount { 
+            font-size: 42px; 
+            font-weight: 700; 
+            color: #ffffff; 
+            margin-bottom: 10px; 
+        }
+
+        .ad-info-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            text-align: center; 
+        }
+
+        .ad-info-item h3 { 
+            font-size: 20px; 
+            font-weight: 600; 
+            margin: 0 0 5px 0; 
+            color: #ffffff; 
+        }
+
+        .ad-info-item p { 
+            font-size: 14px; 
+            color: var(--tg-theme-hint-color); 
+            margin: 0; 
+        }
+
+        .ad-buttons { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+
+        .btn {
+            width: 100%; 
+            padding: 16px; 
+            font-size: 18px; 
+            font-weight: 600; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            background: linear-gradient(145deg, var(--tg-theme-button-color), #0056b3); 
+            color: var(--tg-theme-button-text-color);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        }
+
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3); 
+        }
+
+        .btn:active { 
+            transform: scale(0.98); 
+        }
+
+        .btn:disabled { 
+            background: #555; 
+            color: #888; 
+            cursor: not-allowed; 
+            box-shadow: none; 
+            transform: none; 
+        }
+
+        #mainWithdrawBtn { 
+            background: linear-gradient(145deg, var(--success-color), #1e7e34); 
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); 
+        }
+
+        #mainWithdrawBtn:disabled { 
+            background: #555; 
+            box-shadow: none; 
+        }
+
+        .status-message {
+            position: fixed; 
+            bottom: 80px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 480px;
+            padding: 12px 15px; 
+            border-radius: 10px; 
+            font-weight: 500; 
+            display: none; 
+            animation: fadeIn 0.3s;
+            z-index: 1000; 
+            box-sizing: border-box;
+        }
+
+        .success { 
+            display: block; 
+            background-color: rgba(40, 167, 69, 0.25); 
+            border-left: 5px solid var(--success-color); 
+            color: var(--success-color); 
+        }
+
+        .error { 
+            display: block; 
+            background-color: rgba(220, 53, 69, 0.25); 
+            border-left: 5px solid var(--danger-color); 
+            color: var(--danger-color); 
+        }
+
+        .info { 
+            display: block; 
+            background-color: rgba(0, 123, 255, 0.25); 
+            border-left: 5px solid var(--tg-theme-button-color); 
+            color: #008cff; 
+        }
+
+        .footer-nav {
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background-color: var(--secondary-bg-color); 
+            display: flex;
+            justify-content: space-around; 
+            padding: 10px 0; 
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+            border-top: 1px solid var(--border-color); 
+            z-index: 999;
+        }
+
+        .nav-btn {
+            background: none; 
+            border: none; 
+            color: var(--tg-theme-hint-color); 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            font-size: 12px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            padding: 5px 15px;
+            border-radius: 12px; 
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .nav-btn.active { 
+            color: var(--tg-theme-button-color); 
+        }
+
+        .nav-btn:hover:not(.active) { 
+            color: #ffffff; 
+        }
+
+        .nav-btn .icon { 
+            width: 28px; 
+            height: 28px; 
+            margin-bottom: 4px; 
+        }
+
+        .input-group { 
+            margin-bottom: 20px; 
+            text-align: left; 
+        }
+
+        .input-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: var(--tg-theme-hint-color); 
+            font-size: 14px; 
+            font-weight: 500; 
+        }
+
+        .input-group input {
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-color);
+            background-color: #333; 
+            color: var(--tg-theme-text-color); 
+            font-size: 16px; 
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus { 
+            outline: none; 
+            border-color: var(--tg-theme-button-color); 
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); 
+        }
+
+        #referralLink {
+            background-color: #111; 
+            padding: 15px; 
+            border-radius: 10px; 
+            word-wrap: break-word;
+            border: 1px dashed var(--tg-theme-hint-color); 
+            margin-top: 15px; 
+            cursor: pointer; 
+            color: #e0e0e0;
+            transition: background-color 0.2s; 
+            text-align: left;
+        }
+
+        #referralLink:hover { 
+            background-color: #2a2a2a; 
+        }
+
+        .admin-panel {
+            display: none; 
+            margin-top: 30px; 
+            padding: 15px; 
+            border: 1px solid var(--warning-color);
+            border-radius: 10px; 
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .admin-panel h3 { 
+            color: var(--warning-color); 
+            margin-top: 0; 
+        }
         
-        /* Referrals List */
-        .referrals-list { margin-top: 20px; }
-        .referral-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; }
-        .light-theme .referral-item { background-color: var(--secondary-bg-light); border: 1px solid var(--border-color-light); }
-        .dark-theme .referral-item { background-color: var(--secondary-bg-dark); border: 1px solid var(--border-color-dark); }
-        .referral-info { display: flex; align-items: center; gap: 10px; }
-        .referral-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        .referral-name { font-weight: 600; }
-        .referral-date { font-size: 0.8rem; }
-        .light-theme .referral-date { color: var(--subtle-text-light); }
-        .dark-theme .referral-date { color: var(--subtle-text-dark); }
-        .referral-bonus { font-weight: 700; }
-        .light-theme .referral-bonus { color: var(--primary-color-light); }
-        .dark-theme .referral-bonus { color: var(--primary-color-dark); }
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--tg-theme-button-color);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
         
-        /* TON Conversion Info */
-        .ton-conversion { background-color: rgba(0, 122, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 0.9rem; }
-        .light-theme .ton-conversion { color: var(--primary-color-light); }
-        .dark-theme .ton-conversion { color: var(--primary-color-dark); }
-        .ton-conversion strong { font-weight: 700; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
-        /* Small Balance Warning */
-        .balance-warning { background-color: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 0.8rem; border: 1px solid rgba(255, 193, 7, 0.3); }
-        .light-theme .balance-warning { color: #856404; }
-        .dark-theme .balance-warning { color: #ffd54f; }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
         
-        /* Referral Code Display */
-        .referral-code-display { background-color: rgba(0, 122, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
-        .referral-code { font-family: monospace; font-size: 1.2rem; font-weight: bold; padding: 5px 10px; background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
-        .light-theme .referral-code { color: var(--primary-color-light); }
-        .dark-theme .referral-code { color: var(--primary-color-dark); }
+        .referral-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .referral-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .referral-item:last-child {
+            border-bottom: none;
+        }
+        
+        .referral-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
-
-    <div id="app">
-        <header class="profile-header">
-            <div class="profile-info">
-                <img id="user-photo" src="" alt="User Photo">
-                <div class="user-details">
-                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
-                    <p> Balance: $<span id="user-points">0</span></p>
+    <div class="container">
+        <!-- Home / Task View -->
+        <div id="home-view" class="view">
+            <div class="header"><h1>Earning Technology</h1><p>Watch Ads and Earn USDT</p></div>
+            <div class="card">
+                <h2>Current Balance</h2>
+                <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
+                    <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 1000</h3><p>Today's Ads</p></div>
                 </div>
             </div>
-        </header>
-
-        <main id="main-content">
-            <!-- Home Page -->
-            <div id="home-page" class="page active">
-                <h2>Dashboard</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  50</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Referrals</h3>
-                        <p id="referral-count">00</p>
-                    </div>
-                </div>
-                
-                <!-- Balance Warning -->
-                <div class="balance-warning">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Low earnings per ad ($0.0005) - Use referrals to earn more!
-                </div>
-                
-                <!-- Referral Code Display -->
-                <div class="referral-code-display">
-                    <p>Your Referral Code:</p>
-                    <div class="referral-code" id="referral-code-display">Loading...</div>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Share this code with friends!</p>
-                </div>
-                
-                <div class="referral-section">
-                    <h3>Refer & Earn More!</h3>
-                    <p>Share your link to get $0.02 for each referral.</p>
-                    <input type="text" id="referral-link" readonly>
-                    <button id="copy-ref-link-btn">Copy Referral Link</button>
-                </div>
-                
-                <!-- Referrals List -->
-                <div class="referrals-list" id="referrals-list">
-                    <h3>Your Referrals</h3>
-                    <div id="referrals-container">
-                        <!-- Referrals will be dynamically added here -->
-                    </div>
-                </div>
+            <div class="ad-buttons">
+                <button class="btn" id="rewardedBtn">
+                    <span class="btn-text">Watch Ad (+0.01 USDT)</span>
+                </button>
             </div>
-
-            <!-- Tasks Page -->
-            <div id="tasks-page" class="page">
-                <h2>Complete Tasks</h2>
-                
-                <!-- Balance Warning -->
-                <div class="balance-warning">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Low earnings per ad - Use referrals to earn more!
-                </div>
-                
-                <div class="task-container">
-                    <i class="fas fa-video task-icon"></i>
-                    <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn $0.0005 for every ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
-                </div>
-                <div class="task-container">
-                    <i class="fab fa-telegram task-icon"></i>
-                    <h3>Join Our Channel</h3>
-                    <p>Get $0.02 bonus.</p>
-                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-                <div class="task-container">
-                    <i class="fas fa-users task-icon"></i>
-                    <h3>Join Our Group</h3>
-                    <p>Get $0.02 bonus.</p>
-                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-            </div>
+            <button class="btn" id="mainWithdrawBtn" disabled>Reach 10.00 USDT to Withdraw</button>
             
-            <!-- Withdraw Page -->
-            <div id="withdraw-page" class="page">
-                <h2>Withdraw</h2>
-                <p>Minimum $1 required to withdraw.</p>
-                
-                <!-- TON Conversion Info -->
-                <div class="ton-conversion" id="ton-conversion-info">
-                    <p>Current TON Price: $<span id="ton-price">0.00</span></p>
-                    <p>You will receive approximately: <strong><span id="ton-amount">0.000</span> TON</strong></p>
-                </div>
-                
-                <form id="withdraw-form">
-                    <div class="form-group">
-                        <label for="withdraw-method">Method:</label>
-                        <select id="withdraw-method" required>
-                            <option value="TON">TON Coin</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="ton-address">TON Wallet Address:</label>
-                        <input type="text" id="ton-address" placeholder="e.g., UQABC123..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="amount">Amount to Withdraw ($):</label>
-                        <input type="number" id="amount" placeholder="e.g., 1" min="1" step="0.01" required>
-                    </div>
-                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
-                        <span class="btn-text">Submit Request</span>
-                        <span class="btn-loader"></span>
-                    </button>
-                </form>
+            <!-- Referral Status -->
+            <div class="card" id="referralStatusCard" style="display: none;">
+                <h2>Referral Status</h2>
+                <p id="referralStatusText">You were referred by a friend!</p>
             </div>
-        </main>
+        </div>
 
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
-            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-        </nav>
+        <!-- Withdraw View -->
+        <div id="withdraw-view" class="view">
+            <div class="header"><h1>Withdraw</h1><p>Request your earnings</p></div>
+            <div class="card">
+                <h2>Your Balance</h2>
+                <div class="balance-amount" id="withdrawBalanceDisplay">USDT 0.00</div>
+                <p style="color: var(--tg-theme-hint-color); margin-top: 15px;">Minimum withdrawal is 10.00 USDT.</p>
+            </div>
+            <div class="card">
+                <h2>Payment Details</h2>
+                <div class="input-group">
+                    <label for="paymentAddress">Your USDT Wallet Address (TRC20)</label>
+                    <input type="text" id="paymentAddress" placeholder="e.g., T... (TRC20 Address)">
+                </div>
+                <button class="btn" id="finalWithdrawBtn" disabled>
+                    <span class="btn-text">Withdraw</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Referral View -->
+        <div id="referral-view" class="view">
+            <div class="header"><h1>Referrals</h1><p>Invite friends and earn more!</p></div>
+            <div class="card">
+                <h2>Your Referral Stats</h2>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item"><h3 id="referralCountDisplay">0</h3><p>Total Referrals</p></div>
+                    <div class="ad-info-item"><h3 id="referralBonusDisplay">USDT 0.00</h3><p>Referral Earnings</p></div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Your Referral Link</h2>
+                <p>Share this link with your friends. You get 0.5 USDT for each verified friend who joins!</p>
+                <p id="referralLink" title="Click to copy"></p>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px;">Note: Referral rewards require backend processing and will be credited to your balance after verification.</p>
+            </div>
+            <div class="card" id="referralListCard" style="display: none;">
+                <h2>Your Referrals</h2>
+                <div class="referral-list" id="referralList"></div>
+            </div>
+        </div>
+
+        <!-- Common Elements -->
+        <div class="status-message" id="statusMessage"></div>
+        <div class="admin-panel" id="adminPanel"><h3>👑 Admin Panel</h3><p id="userInfo"></p></div>
     </div>
 
-    <div id="loading-modal" class="modal">
-        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
-    </div>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+    <!-- Footer Navigation -->
+    <footer class="footer-nav">
+        <button class="nav-btn active" id="navHome"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span><span>Home</span></button>
+        <button class="nav-btn" id="navWithdraw"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.31 8.91a1 1 0 0 0-1.42 0l-4.24 4.24-2.12-2.12a1 1 0 1 0-1.42 1.42l2.83 2.83a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 0-1.42zM20 12a8 8 0 1 1-8-8 8 8 0 0 1 8 8zm-2 0a6 6 0 1 0-6 6 6 6 0 0 0 6-6z"/></svg></span><span>Withdraw</span></button>
+        <button class="nav-btn" id="navRefer"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span><span>Referrals</span></button>
+    </footer>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
 
-            // --- Configuration ---
-            const BOT_USERNAME = "TorreAds_Bot";
-            const PIPEDREAM_WEBHOOK = "https://eo3h4zf914hhqv7.m.pipedream.net";
-            
-            // Updated earning rates
-            const DAILY_AD_LIMIT = 50;
-            const POINTS_PER_AD = 0.0005;
-            const CHANNEL_JOIN_BONUS = 0.02;
-            const GROUP_JOIN_BONUS = 0.02;
-            const MIN_WITHDRAW_POINTS = 1;
-            const REFERRAL_BONUS = 0.02;
-            
-            // Updated links
-            const CHANNEL_LINK = "https://t.me/torreAdsChat";
-            const GROUP_LINK = "https://t.me/Torrelabs";
-            
-            // JSONBin.io Configuration
-            const JSONBIN_BIN_ID = "68dae2c8ae596e708f005011";
-            const JSONBIN_API_KEY = "$2a$10$t0i.TuifzioNY0cd8HzoDOxB94YLcVc.gbHkv.qmFQzFJcbl9uVrK";
-            const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
-            
-            // TON Price API
-            const TON_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd";
+            // --- JSONBin Configuration ---
+            const JSONBIN_API_KEY = '$2a$10$YOUR_API_KEY_HERE'; // Replace with your JSONBin API key
+            const JSONBIN_BIN_ID = 'YOUR_BIN_ID'; // Replace with your JSONBin bin ID
+            const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
             
             // --- DOM Elements ---
-            const userPhotoElem = document.getElementById('user-photo');
-            const userNameElem = document.getElementById('user-name');
-            const userPointsElem = document.getElementById('user-points');
-            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-            const referralCountElem = document.getElementById('referral-count');
-            const watchAdBtn = document.getElementById('watch-ad-btn');
-            const joinChannelBtn = document.getElementById('join-channel-btn');
-            const joinGroupBtn = document.getElementById('join-group-btn');
-            const withdrawForm = document.getElementById('withdraw-form');
-            const withdrawSubmitBtn = document.getElementById('withdraw-submit-btn');
-            const referralLinkElem = document.getElementById('referral-link');
-            const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
-            const loadingModal = document.getElementById('loading-modal');
-            const referralsContainer = document.getElementById('referrals-container');
-            const tonConversionInfo = document.getElementById('ton-conversion-info');
-            const tonPriceElem = document.getElementById('ton-price');
-            const tonAmountElem = document.getElementById('ton-amount');
-            const amountInput = document.getElementById('amount');
-            const tonAddressInput = document.getElementById('ton-address');
-            const referralCodeDisplay = document.getElementById('referral-code-display');
+            const balanceDisplay = document.getElementById('balanceDisplay'), 
+                  adCountDisplay = document.getElementById('adCountDisplay'),
+                  dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay'), 
+                  rewardedBtn = document.getElementById('rewardedBtn'),
+                  mainWithdrawBtn = document.getElementById('mainWithdrawBtn'), 
+                  statusMessage = document.getElementById('statusMessage'),
+                  withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay'), 
+                  paymentAddressInput = document.getElementById('paymentAddress'),
+                  finalWithdrawBtn = document.getElementById('finalWithdrawBtn'), 
+                  referralLinkDisplay = document.getElementById('referralLink'),
+                  referralCountDisplay = document.getElementById('referralCountDisplay'), 
+                  referralBonusDisplay = document.getElementById('referralBonusDisplay'),
+                  adminPanel = document.getElementById('adminPanel'), 
+                  userInfoDisplay = document.getElementById('userInfo'),
+                  referralListCard = document.getElementById('referralListCard'),
+                  referralList = document.getElementById('referralList'),
+                  referralStatusCard = document.getElementById('referralStatusCard'),
+                  referralStatusText = document.getElementById('referralStatusText');
 
-            // --- State Management ---
-            let userState = {
-                points: 0,
-                dailyAdWatchCount: 0,
-                lastAdWatchDate: null,
-                referrals: [],
-                hasJoinedChannel: false,
-                hasJoinedGroup: false,
+            // --- App Constants & Configuration ---
+            const ADMIN_ID = 6357701459; // Replace with your numeric Telegram User ID
+            const BOT_USERNAME = 'YourBotUsername'; // Replace with your bot's username
+            
+            const WITHDRAW_THRESHOLD = 10;      // 10 USDT
+            const AD_REWARD_CENTS = 1;          // 0.01 USDT = 1 cent
+            const REFERRAL_BONUS_USDT = 0.5;    // 0.5 USDT
+            const DAILY_AD_LIMIT = 1000;
+
+            // --- App State ---
+            let state = {
+                balanceInCents: 0,
+                totalAdCount: 0,
+                dailyAdCount: 0,
+                lastAdDate: null,
+                referralCount: 0,
                 userId: null,
                 referredBy: null,
-                referralCode: null
+                referralCode: null,
+                referrals: [],
+                username: null
             };
+            
+            // Global users data
+            let usersData = {};
 
-            let tonPrice = 0;
-
-            // JSONBin.io API Functions
-            const saveStateToJSONBin = async () => {
-                if(!userState.userId) return;
-                
+            // ---- JSONBin Data Management ----
+            async function loadUsersData() {
                 try {
-                    const currentData = await fetch(JSONBIN_API_URL + '/latest', {
+                    const response = await fetch(JSONBIN_URL + '/latest', {
                         method: 'GET',
                         headers: {
-                            'X-Master-Key': JSONBIN_API_KEY
+                            'X-Master-Key': JSONBIN_API_KEY,
+                            'Content-Type': 'application/json'
                         }
-                    }).then(res => res.json());
+                    });
                     
-                    const updatedData = {
-                        ...currentData.record,
-                        [userState.userId]: userState
-                    };
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     
-                    const response = await fetch(JSONBIN_API_URL, {
+                    const data = await response.json();
+                    usersData = data.record || {};
+                    console.log("Users data loaded from JSONBin:", usersData);
+                    return usersData;
+                } catch (error) {
+                    console.error("Could not load data from JSONBin:", error);
+                    // Try to load from localStorage as fallback
+                    const savedData = localStorage.getItem('earningAppUsersData');
+                    if (savedData) {
+                        usersData = JSON.parse(savedData);
+                        console.log("Loaded users data from localStorage:", usersData);
+                    }
+                    return usersData;
+                }
+            }
+            
+            async function saveUsersData() {
+                try {
+                    const response = await fetch(JSONBIN_URL, {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': JSONBIN_API_KEY
+                            'X-Master-Key': JSONBIN_API_KEY,
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(updatedData)
+                        body: JSON.stringify(usersData)
                     });
                     
                     if (!response.ok) {
-                        throw new Error('Failed to save data to JSONBin');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     
-                    return await response.json();
+                    console.log("Users data saved to JSONBin");
+                    
+                    // Also save to localStorage as backup
+                    localStorage.setItem('earningAppUsersData', JSON.stringify(usersData));
                 } catch (error) {
-                    console.error('Error saving to JSONBin:', error);
-                    localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
+                    console.error("Could not save data to JSONBin:", error);
+                    // Fallback to localStorage
+                    localStorage.setItem('earningAppUsersData', JSON.stringify(usersData));
                 }
-            };
-
-            const loadStateFromJSONBin = async (userId) => {
-                try {
-                    const response = await fetch(JSONBIN_API_URL + '/latest', {
-                        method: 'GET',
-                        headers: {
-                            'X-Master-Key': JSONBIN_API_KEY
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load data from JSONBin');
-                    }
-                    
-                    const data = await response.json();
-                    const record = data.record[userId];
-                    
-                    if (record) {
-                        userState = record;
-                        if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
-                        if (userState.referredBy === undefined) userState.referredBy = null;
-                        if (userState.referralCode === undefined) userState.referralCode = null;
-                    }
-                } catch (error) {
-                    console.error('Error loading from JSONBin:', error);
-                    const savedState = localStorage.getItem(`userState_${userId}`);
-                    if (savedState) {
-                        userState = JSON.parse(savedState);
-                        if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
-                        if (userState.referredBy === undefined) userState.referredBy = null;
-                        if (userState.referralCode === undefined) userState.referralCode = null;
-                    }
-                }
-            };
-
-            const getUserFromJSONBin = async (userId) => {
-                try {
-                    const response = await fetch(JSONBIN_API_URL + '/latest', {
-                        method: 'GET',
-                        headers: {
-                            'X-Master-Key': JSONBIN_API_KEY
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load data from JSONBin');
-                    }
-                    
-                    const data = await response.json();
-                    return data.record[userId];
-                } catch (error) {
-                    console.error('Error getting user from JSONBin:', error);
-                    return null;
-                }
-            };
-
-            const getUserByReferralCode = async (referralCode) => {
-                try {
-                    const response = await fetch(JSONBIN_API_URL + '/latest', {
-                        method: 'GET',
-                        headers: {
-                            'X-Master-Key': JSONBIN_API_KEY
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load data from JSONBin');
-                    }
-                    
-                    const data = await response.json();
-                    const allUsers = data.record;
-                    
-                    // Find user with matching referral code
-                    for (const [userId, userData] of Object.entries(allUsers)) {
-                        if (userData.referralCode === referralCode) {
-                            return { userId, userData };
-                        }
-                    }
-                    return null;
-                } catch (error) {
-                    console.error('Error getting user by referral code:', error);
-                    return null;
-                }
-            };
-
-            const saveState = () => {
-                saveStateToJSONBin();
-            };
-
-            const loadState = (userId) => {
-                loadStateFromJSONBin(userId);
-            };
+            }
             
-            // TON Price Functions
-            const fetchTONPrice = async () => {
+            function getTodayDateString() { 
+                return new Date().toISOString().split('T')[0]; 
+            }
+            
+            async function loadState() {
                 try {
-                    const response = await fetch(TON_PRICE_API);
-                    const data = await response.json();
-                    tonPrice = data['the-open-network'].usd;
-                    tonPriceElem.textContent = tonPrice.toFixed(2);
-                    updateTONConversion();
-                } catch (error) {
-                    console.error('Error fetching TON price:', error);
-                    tonPrice = 4.50;
-                    tonPriceElem.textContent = tonPrice.toFixed(2);
-                    updateTONConversion();
+                    if (!state.userId) {
+                        console.error("User ID not set");
+                        return;
+                    }
+                    
+                    // Load the global users data first
+                    await loadUsersData();
+                    
+                    // Check if user exists in the data
+                    if (usersData[state.userId]) {
+                        const savedState = usersData[state.userId];
+                        // Merge with current state, preserving existing referrals
+                        state = { 
+                            ...state, 
+                            ...savedState
+                        };
+                        console.log("State loaded from JSONBin:", state);
+                    } else {
+                        // New user - check if they were referred
+                        await checkReferral();
+                        // Save the new user
+                        usersData[state.userId] = state;
+                        await saveUsersData();
+                    }
+                    
+                    // Reset daily ad count if it's a new day
+                    if (state.lastAdDate !== getTodayDateString()) {
+                        state.dailyAdCount = 0;
+                        state.lastAdDate = getTodayDateString();
+                        await saveState();
+                    }
+                } catch (e) { 
+                    console.error("Could not load state", e);
                 }
-            };
-
-            const updateTONConversion = () => {
-                if (!tonPrice) return;
-                
-                const amount = parseFloat(amountInput.value) || 0;
-                if (amount > 0) {
-                    const tonAmount = amount / tonPrice;
-                    tonAmountElem.textContent = tonAmount.toFixed(6);
+            }
+            
+            async function saveState() {
+                try {
+                    if (!state.userId) {
+                        console.error("User ID not set, cannot save state");
+                        return;
+                    }
+                    
+                    // Update the user in the global data
+                    usersData[state.userId] = state;
+                    await saveUsersData();
+                    console.log("State saved to JSONBin");
+                } catch (e) { 
+                    console.error("Could not save state", e);
+                }
+            }
+            
+            // ---- Fixed Referral System ----
+            async function checkReferral() {
+                try {
+                    // Get the start parameter from Telegram Web App
+                    const initData = tg.initData;
+                    console.log("Telegram initData:", initData);
+                    
+                    if (initData) {
+                        const params = new URLSearchParams(initData);
+                        const startParam = params.get('start');
+                        console.log("Start parameter:", startParam);
+                        
+                        if (startParam && startParam.startsWith('ref_')) {
+                            const referrerId = startParam.substring(4);
+                            console.log("User was referred by:", referrerId);
+                            
+                            // Set referral information in the current user's state
+                            state.referredBy = referrerId;
+                            state.referralCode = generateReferralCode();
+                            
+                            // Add user to referrer's referral list
+                            await addUserToReferrer(referrerId, state.userId);
+                            
+                            console.log("Referral processed successfully");
+                        } else {
+                            // Generate a referral code for this user
+                            state.referralCode = generateReferralCode();
+                            console.log("Generated new referral code:", state.referralCode);
+                        }
+                    } else {
+                        // Generate a referral code for this user
+                        state.referralCode = generateReferralCode();
+                        console.log("No initData, generated new referral code:", state.referralCode);
+                    }
+                } catch (error) {
+                    console.error("Error checking referral:", error);
+                }
+            }
+            
+            function generateReferralCode() {
+                return Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+            
+            async function addUserToReferrer(referrerId, referredUserId) {
+                try {
+                    console.log(`Adding ${referredUserId} to ${referrerId}'s referrals`);
+                    
+                    // Load the latest data to ensure we have the most current state
+                    await loadUsersData();
+                    
+                    if (usersData[referrerId]) {
+                        const referrerData = usersData[referrerId];
+                        const updatedReferrals = referrerData.referrals || [];
+                        
+                        // Add the new referral if not already in the list
+                        if (!updatedReferrals.includes(referredUserId)) {
+                            updatedReferrals.push(referredUserId);
+                            
+                            // Update referrer's data
+                            referrerData.referrals = updatedReferrals;
+                            referrerData.referralCount = updatedReferrals.length;
+                            
+                            // Give referral bonus to referrer
+                            referrerData.balanceInCents += REFERRAL_BONUS_USDT * 100;
+                            
+                            // Update the global data and save
+                            usersData[referrerId] = referrerData;
+                            await saveUsersData();
+                            
+                            console.log(`Added ${referredUserId} to ${referrerId}'s referrals`);
+                            console.log(`Gave ${REFERRAL_BONUS_USDT} USDT bonus to ${referrerId}`);
+                            
+                            // Show notification to current user about being referred
+                            showStatus(`You were referred by a friend! Welcome bonus applied.`, 'success');
+                        } else {
+                            console.log(`User ${referredUserId} already in ${referrerId}'s referrals`);
+                        }
+                    } else {
+                        console.log(`Referrer ${referrerId} not found in users data`);
+                    }
+                } catch (error) {
+                    console.error("Error adding user to referrer:", error);
+                }
+            }
+            
+            async function updateReferralStats() {
+                try {
+                    if (!state.userId) return;
+                    
+                    // Load the latest data
+                    await loadUsersData();
+                    
+                    if (usersData[state.userId]) {
+                        const userData = usersData[state.userId];
+                        state.referrals = userData.referrals || [];
+                        state.referralCount = state.referrals.length;
+                        
+                        // Update referral list display if we're on the referral view
+                        if (document.getElementById('referral-view').style.display === 'block') {
+                            updateReferralList();
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error updating referral stats:", error);
+                }
+            }
+            
+            function updateReferralList() {
+                if (state.referrals && state.referrals.length > 0) {
+                    referralListCard.style.display = 'block';
+                    referralList.innerHTML = '';
+                    
+                    state.referrals.forEach(referralId => {
+                        const referralItem = document.createElement('div');
+                        referralItem.className = 'referral-item';
+                        
+                        // Try to get username from users data
+                        const referralData = usersData[referralId];
+                        const referralName = referralData ? 
+                            (referralData.username || `User ${referralId}`) : 
+                            `User ${referralId}`;
+                            
+                        referralItem.innerHTML = `
+                            <span>${referralName}</span>
+                            <span>+${REFERRAL_BONUS_USDT} USDT</span>
+                        `;
+                        
+                        referralList.appendChild(referralItem);
+                    });
                 } else {
-                    tonAmountElem.textContent = "0.000000";
+                    referralListCard.style.display = 'none';
                 }
-            };
+            }
             
-            // --- Core Functions ---
-            const initApp = () => {
+            function updateReferralStatus() {
+                if (state.referredBy) {
+                    referralStatusCard.style.display = 'block';
+                    const referrerData = usersData[state.referredBy];
+                    const referrerName = referrerData ? 
+                        (referrerData.username || `User ${state.referredBy}`) : 
+                        `User ${state.referredBy}`;
+                    referralStatusText.textContent = `You were referred by ${referrerName}!`;
+                } else {
+                    referralStatusCard.style.display = 'none';
+                }
+            }
+
+            // ---- UI Updates & View Management ----
+            function updateUI() {
+                const balanceInUSDT = (state.balanceInCents / 100).toFixed(2);
+                
+                // Home & Withdraw Views
+                balanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+                adCountDisplay.textContent = state.totalAdCount;
+                dailyAdCountDisplay.textContent = `${state.dailyAdCount} / ${DAILY_AD_LIMIT}`;
+                withdrawBalanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+                
+                // Referral View
+                referralCountDisplay.textContent = state.referralCount;
+                const referralBonus = (state.referralCount * REFERRAL_BONUS_USDT).toFixed(2);
+                referralBonusDisplay.textContent = `USDT ${referralBonus}`;
+
+                // Button States
+                const isWithdrawalPossible = parseFloat(balanceInUSDT) >= WITHDRAW_THRESHOLD;
+                mainWithdrawBtn.disabled = !isWithdrawalPossible;
+                mainWithdrawBtn.textContent = isWithdrawalPossible ? 'Go to Withdraw' : `Reach ${WITHDRAW_THRESHOLD.toFixed(2)} USDT to Withdraw`;
+                
+                finalWithdrawBtn.disabled = !isWithdrawalPossible;
+                finalWithdrawBtn.querySelector('.btn-text').textContent = isWithdrawalPossible ? `Withdraw ${balanceInUSDT} USDT` : `Minimum ${WITHDRAW_THRESHOLD.toFixed(2)} USDT required`;
+                
+                const adLimitReached = state.dailyAdCount >= DAILY_AD_LIMIT;
+                rewardedBtn.disabled = adLimitReached;
+                rewardedBtn.querySelector('.btn-text').textContent = adLimitReached ? 'Daily Limit Reached' : 'Watch Ad (+0.01 USDT)';
+                
+                // Generate referral link
+                if (state.userId && BOT_USERNAME !== 'YourBotUsername') {
+                    referralLinkDisplay.textContent = `https://t.me/${BOT_USERNAME}?start=ref_${state.userId}`;
+                } else {
+                    referralLinkDisplay.textContent = "Referral link will appear here after setup";
+                }
+                
+                // Update referral status
+                updateReferralStatus();
+                
+                // Admin panel
+                if (state.userId && parseInt(state.userId) === ADMIN_ID) {
+                    adminPanel.style.display = 'block';
+                    userInfoDisplay.textContent = `User ID: ${state.userId} | Balance: ${balanceInUSDT} USDT | Total Users: ${Object.keys(usersData).length}`;
+                }
+            }
+            
+            function showView(viewId) {
+                document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                const activeNavId = { 'home-view': 'navHome', 'withdraw-view': 'navWithdraw', 'referral-view': 'navRefer' }[viewId];
+                if(activeNavId) document.getElementById(activeNavId).classList.add('active');
+                
+                // Update referral list when showing referral view
+                if (viewId === 'referral-view') {
+                    updateReferralList();
+                }
+            }
+
+            let statusTimeout;
+            function showStatus(message, type, duration = 4000) {
+                clearTimeout(statusTimeout);
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message ${type}`;
+                statusTimeout = setTimeout(() => { statusMessage.style.display = 'none'; }, duration);
+            }
+
+            // ---- Ad Handling ----
+            async function handleAdSuccess() {
+                state.totalAdCount++;
+                state.dailyAdCount++;
+                state.lastAdDate = getTodayDateString();
+                state.balanceInCents += AD_REWARD_CENTS;
+                
+                showStatus(`Success! +${(AD_REWARD_CENTS / 100).toFixed(2)} USDT has been added.`, 'success');
+                await saveState();
+                updateUI();
+            }
+
+            function handleAdError(error) {
+                console.error('Ad Error:', error);
+                showStatus('Failed to load ad. Please try again.', 'error');
+            }
+
+            // ---- App Logic ----
+            function requestAd() {
+                if (state.dailyAdCount >= DAILY_AD_LIMIT) {
+                    showStatus("You've reached the daily ad limit.", 'error');
+                    return;
+                }
+                
+                showStatus('Loading ad, please wait...', 'info');
+                rewardedBtn.classList.add('loading');
+                rewardedBtn.disabled = true;
+                
+                // Simulate ad loading and completion
+                setTimeout(async () => {
+                    try {
+                        // In a real app, this would be the ad network callback
+                        await handleAdSuccess();
+                    } catch (error) {
+                        handleAdError(error);
+                    } finally {
+                        rewardedBtn.classList.remove('loading');
+                        rewardedBtn.disabled = false;
+                    }
+                }, 2000);
+            }
+
+            async function handleWithdrawal() {
+                const balanceInUSDT = (state.balanceInCents / 100).toFixed(2);
+                const walletAddress = paymentAddressInput.value.trim();
+
+                if (parseFloat(balanceInUSDT) < WITHDRAW_THRESHOLD) {
+                    showStatus(`You need at least ${WITHDRAW_THRESHOLD.toFixed(2)} USDT to withdraw.`, 'error');
+                    return;
+                }
+                
+                // Basic validation for USDT TRC20 address
+                if (!walletAddress.startsWith('T') || walletAddress.length < 34) {
+                    showStatus('Please enter a valid USDT (TRC20) wallet address.', 'error');
+                    return;
+                }
+                
+                finalWithdrawBtn.classList.add('loading');
+                finalWithdrawBtn.disabled = true;
+                
+                try {
+                    const user = tg.initDataUnsafe.user;
+                    const withdrawalData = {
+                        userId: state.userId,
+                        amount: balanceInUSDT,
+                        walletAddress: walletAddress,
+                        userInfo: {
+                            name: `${user.first_name || ''} ${user.last_name || ''}`,
+                            username: user.username || 'N/A'
+                        },
+                        timestamp: new Date().toISOString(),
+                        status: 'pending'
+                    };
+                    
+                    // Save withdrawal request to JSONBin (in a separate bin or as part of users data)
+                    // For now, we'll just send it via Telegram
+                    const message = `--- Withdrawal Request ---\n\nUser ID: ${user.id}\nName: ${user.first_name} ${user.last_name || ''}\nUsername: @${user.username || 'N/A'}\n\nAmount: ${balanceInUSDT} USDT\nWallet Address: ${walletAddress}`;
+                    
+                    tg.sendData(message);
+                    showStatus('Your withdrawal request has been sent for review.', 'success');
+                    
+                    // Reset balance after request
+                    state.balanceInCents = 0;
+                    await saveState();
+                    updateUI();
+                    paymentAddressInput.value = '';
+                    showView('home-view');
+                } catch (error) {
+                    console.error("Withdrawal error:", error);
+                    showStatus('Error processing withdrawal. Please try again.', 'error');
+                } finally {
+                    finalWithdrawBtn.classList.remove('loading');
+                    finalWithdrawBtn.disabled = false;
+                }
+            }
+            
+            // ---- App Initialization ----
+            async function initApp() {
                 tg.ready();
                 tg.expand();
-                document.body.className = `${tg.colorScheme}-theme`;
-
+                
+                // Get user info from Telegram
                 const user = tg.initDataUnsafe.user;
-                if (!user || !user.id) {
-                    tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
-                    return;
-                }
-                
-                userState.userId = user.id;
-                
-                // Önce state'i yükle
-                loadState(user.id);
-                
-                // Check for referral parameter - now using referral code
-                const startParam = tg.initDataUnsafe.start_param;
-                if (startParam && startParam.startsWith('ref_')) {
-                    const referralCode = startParam.substring(4);
-                    userState.referredBy = referralCode;
-                }
-                
-                // Generate referral code if not exists - SADECE İLK DEFA
-                if (!userState.referralCode) {
-                    userState.referralCode = generateStableReferralCode(user.id);
-                    console.log("Yeni referral code oluşturuldu:", userState.referralCode);
+                if (user && user.id) {
+                    state.userId = user.id.toString();
+                    state.username = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                    console.log("User ID:", state.userId);
+                    console.log("Username:", state.username);
+                    
+                    await loadState();
+                    await updateReferralStats();
+                    updateUI();
+                    
+                    // Set up event listeners
+                    setupEventListeners();
                 } else {
-                    console.log("Mevcut referral code kullanılıyor:", userState.referralCode);
+                    showStatus('Could not identify user. Please open in Telegram.', 'error');
                 }
-                
-                const today = new Date().toISOString().slice(0, 10);
-                if (userState.lastAdWatchDate !== today) {
-                    userState.dailyAdWatchCount = 0;
-                    userState.lastAdWatchDate = today;
-                }
-                
-                // Process referral if this is a new user referred by someone
-                if (userState.referredBy && userState.referrals.length === 0) {
-                    processReferralByCode(userState.referredBy);
-                }
-                
-                // Fetch TON price
-                fetchTONPrice();
-                
-                updateUI();
-                setupNavigation();
-                setupEventListeners();
-                saveState();
-            };
+            }
             
-            const updateUI = () => {
-                const user = tg.initDataUnsafe.user;
-                if (user) {
-                    userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
-                    userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
-                }
+            function setupEventListeners() {
+                // Navigation
+                document.getElementById('navHome').addEventListener('click', () => showView('home-view'));
+                document.getElementById('navWithdraw').addEventListener('click', () => showView('withdraw-view'));
+                document.getElementById('navRefer').addEventListener('click', () => showView('referral-view'));
                 
-                userPointsElem.textContent = userState.points.toFixed(4);
-                dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
-                referralCountElem.textContent = userState.referrals.length;
-
-                // Use referralCode for referral link instead of userId
-                if (userState.referralCode) {
-                    referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.referralCode}`;
-                    referralCodeDisplay.textContent = userState.referralCode;
-                } else {
-                    referralLinkElem.value = "Generating...";
-                    referralCodeDisplay.textContent = "Generating...";
-                }
-
-                // Update task button states
-                if (userState.hasJoinedChannel) {
-                    joinChannelBtn.textContent = 'Bonus Claimed';
-                    joinChannelBtn.disabled = true;
-                }
-                if (userState.hasJoinedGroup) {
-                    joinGroupBtn.textContent = 'Bonus Claimed';
-                    joinGroupBtn.disabled = true;
-                }
+                // Buttons
+                rewardedBtn.addEventListener('click', requestAd);
+                mainWithdrawBtn.addEventListener('click', () => showView('withdraw-view'));
+                finalWithdrawBtn.addEventListener('click', handleWithdrawal);
                 
-                // Update referrals list
-                updateReferralsList();
-            };
-            
-            const updateReferralsList = () => {
-                referralsContainer.innerHTML = '';
-                
-                if (userState.referrals.length === 0) {
-                    referralsContainer.innerHTML = '<p>No referrals yet. Share your link to earn $0.02 per referral!</p>';
-                    return;
-                }
-                
-                userState.referrals.forEach(referral => {
-                    const referralItem = document.createElement('div');
-                    referralItem.className = 'referral-item';
-                    
-                    referralItem.innerHTML = `
-                        <div class="referral-info">
-                            <img src="${referral.photo_url || 'https://i.imgur.com/placeholder.png'}" alt="Referral Avatar" class="referral-avatar">
-                            <div>
-                                <div class="referral-name">${referral.first_name || ''} ${referral.last_name || ''}</div>
-                                <div class="referral-date">Joined: ${new Date(referral.joinedAt).toLocaleDateString()}</div>
-                            </div>
-                        </div>
-                        <div class="referral-bonus">+$${REFERRAL_BONUS.toFixed(2)}</div>
-                    `;
-                    
-                    referralsContainer.appendChild(referralItem);
-                });
-            };
-            
-            const setupEventListeners = () => {
-                watchAdBtn.addEventListener('click', handleWatchAd);
-                joinChannelBtn.addEventListener('click', handleJoinChannel);
-                joinGroupBtn.addEventListener('click', handleJoinGroup);
-                withdrawForm.addEventListener('submit', handleWithdraw);
-                copyRefLinkBtn.addEventListener('click', copyReferralLink);
-                amountInput.addEventListener('input', updateTONConversion);
-            };
-
-            const handleWatchAd = () => {
-                if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-                    tg.showAlert("You have reached your daily ad watch limit."); 
-                    return;
-                }
-                
-                loadingModal.style.display = 'flex';
-                
-                window.showGiga()
-                  .then(() => {
-                    userState.points += POINTS_PER_AD;
-                    userState.dailyAdWatchCount++;
-                    saveState();
-                    updateUI();
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert(`Congratulations! You've earned $${POINTS_PER_AD.toFixed(4)}.`);
-                  })
-                  .catch(e => {
-                    tg.showAlert("Ad could not be loaded. Please try again later.");
-                    console.error("Ad error:", e);
-                  })
-                  .finally(() => {
-                    loadingModal.style.display = 'none';
-                  });
-            };
-            
-            const handleJoinChannel = () => {
-                if(userState.hasJoinedChannel) {
-                    tg.showAlert('You have already claimed this bonus.'); 
-                    return;
-                }
-                tg.openTelegramLink(CHANNEL_LINK);
-                setTimeout(() => {
-                    userState.points += CHANNEL_JOIN_BONUS;
-                    userState.hasJoinedChannel = true;
-                    tg.showAlert(`Thank you! You received $${CHANNEL_JOIN_BONUS.toFixed(2)} bonus.`);
-                    saveState();
-                    updateUI();
-                }, 3000);
-            };
-
-            const handleJoinGroup = () => {
-                if(userState.hasJoinedGroup) {
-                    tg.showAlert('You have already claimed this bonus.'); 
-                    return;
-                }
-                tg.openTelegramLink(GROUP_LINK);
-                setTimeout(() => {
-                    userState.points += GROUP_JOIN_BONUS;
-                    userState.hasJoinedGroup = true;
-                    tg.showAlert(`Thank you! You received $${GROUP_JOIN_BONUS.toFixed(2)} bonus.`);
-                    saveState();
-                    updateUI();
-                }, 3000);
-            };
-
-            const handleWithdraw = async (e) => {
-                e.preventDefault();
-                const method = document.getElementById('withdraw-method').value;
-                const accountNumber = document.getElementById('ton-address').value;
-                const amount = parseFloat(document.getElementById('amount').value);
-
-                if (isNaN(amount) || amount <= 0) { 
-                    tg.showAlert("Please enter a valid amount."); 
-                    return; 
-                }
-                if (amount < MIN_WITHDRAW_POINTS) { 
-                    tg.showAlert(`Minimum withdrawal is $${MIN_WITHDRAW_POINTS.toFixed(2)}.`); 
-                    return; 
-                }
-                if (amount > userState.points) { 
-                    tg.showAlert("You don't have enough balance."); 
-                    return; 
-                }
-
-                withdrawSubmitBtn.classList.add('loading');
-                withdrawSubmitBtn.disabled = true;
-
-                userState.points -= amount;
-                saveState();
-                updateUI();
-                
-                const user = tg.initDataUnsafe.user;
-                const tonAmount = amount / tonPrice;
-                
-                const withdrawData = {
-                    user_id: user.id,
-                    user_name: `${user.first_name || ''} ${user.last_name || ''}`,
-                    username: user.username || 'N/A',
-                    method: method,
-                    account: accountNumber,
-                    amount_usd: amount,
-                    amount_ton: tonAmount,
-                    ton_price: tonPrice,
-                    date: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })
-                };
-                
-                try {
-                    const response = await fetch(PIPEDREAM_WEBHOOK, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(withdrawData)
-                    });
-                    
-                    if (response.ok) {
-                        tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert("Withdrawal request submitted successfully!");
-                        withdrawForm.reset();
-                        updateTONConversion();
-                    } else { 
-                        throw new Error('Failed to submit request'); 
-                    }
-                } catch (error) {
-                    tg.HapticFeedback.notificationOccurred('error');
-                    tg.showAlert("Failed to submit request. Your balance has been returned.");
-                    userState.points += amount;
-                    saveState();
-                    updateUI();
-                } finally {
-                    withdrawSubmitBtn.classList.remove('loading');
-                    withdrawSubmitBtn.disabled = false;
-                }
-            };
-            
-            const copyReferralLink = () => {
-                navigator.clipboard.writeText(referralLinkElem.value).then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("Referral link copied!");
-                });
-            };
-
-            const setupNavigation = () => {
-                const navButtons = document.querySelectorAll('.nav-btn');
-                const pages = document.querySelectorAll('.page');
-                navButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const pageId = button.dataset.page;
-                        pages.forEach(page => page.classList.remove('active'));
-                        document.getElementById(pageId).classList.add('active');
-                        navButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                    });
-                });
-            };
-            
-            // Referral System Functions - STABLE VERSION
-            const generateStableReferralCode = (userId) => {
-                // userId'yi kullanarak sabit bir referral code oluştur
-                let hash = 0;
-                for (let i = 0; i < userId.toString().length; i++) {
-                    const char = userId.toString().charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32bit integer
-                }
-                
-                // Hash'i 6 karakterlik bir string'e dönüştür
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let result = '';
-                let tempHash = Math.abs(hash);
-                
-                for (let i = 0; i < 6; i++) {
-                    result += chars[tempHash % chars.length];
-                    tempHash = Math.floor(tempHash / chars.length);
-                }
-                
-                return result;
-            };
-            
-            const processReferralByCode = async (referralCode) => {
-                try {
-                    // Find user by referral code
-                    const referrerData = await getUserByReferralCode(referralCode);
-                    
-                    if (referrerData) {
-                        const { userId: referrerId, userData: referrer } = referrerData;
-                        
-                        // Add bonus to referrer
-                        referrer.points += REFERRAL_BONUS;
-                        
-                        // Add referral to referrer's list
-                        const user = tg.initDataUnsafe.user;
-                        referrer.referrals.push({
-                            userId: userState.userId,
-                            first_name: user.first_name || '',
-                            last_name: user.last_name || '',
-                            username: user.username || '',
-                            photo_url: user.photo_url || '',
-                            joinedAt: new Date().toISOString()
+                // Copy referral link
+                referralLinkDisplay.addEventListener('click', () => {
+                    if (referralLinkDisplay.textContent && !referralLinkDisplay.textContent.includes('setup')) {
+                        navigator.clipboard.writeText(referralLinkDisplay.textContent).then(() => {
+                            showStatus('Referral link copied to clipboard!', 'success');
                         });
-                        
-                        // Save referrer's updated state
-                        await saveStateToJSONBin();
-                        
-                        // Add bonus to current user for being referred
-                        userState.points += REFERRAL_BONUS;
-                        
-                        tg.showAlert(`You received $${REFERRAL_BONUS.toFixed(2)} bonus for being referred!`);
                     }
-                } catch (error) {
-                    console.error('Error processing referral by code:', error);
-                }
-            };
-
+                });
+            }
+            
             // Initialize the app
             initApp();
         });
