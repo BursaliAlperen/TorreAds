@@ -175,6 +175,12 @@
         .balance-warning { background-color: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 0.8rem; border: 1px solid rgba(255, 193, 7, 0.3); }
         .light-theme .balance-warning { color: #856404; }
         .dark-theme .balance-warning { color: #ffd54f; }
+        
+        /* Referral Code Display */
+        .referral-code-display { background-color: rgba(0, 122, 255, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
+        .referral-code { font-family: monospace; font-size: 1.2rem; font-weight: bold; padding: 5px 10px; background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
+        .light-theme .referral-code { color: var(--primary-color-light); }
+        .dark-theme .referral-code { color: var(--primary-color-dark); }
     </style>
 </head>
 <body>
@@ -209,6 +215,13 @@
                 <div class="balance-warning">
                     <i class="fas fa-exclamation-triangle"></i> 
                     Low earnings per ad ($0.0005) - Use referrals to earn more!
+                </div>
+                
+                <!-- Referral Code Display -->
+                <div class="referral-code-display">
+                    <p>Your Referral Code:</p>
+                    <div class="referral-code" id="referral-code-display">Loading...</div>
+                    <p style="font-size: 0.8rem; margin-top: 5px;">Share this code with friends!</p>
                 </div>
                 
                 <div class="referral-section">
@@ -313,12 +326,12 @@
             const PIPEDREAM_WEBHOOK = "https://eo3h4zf914hhqv7.m.pipedream.net";
             
             // Updated earning rates
-            const DAILY_AD_LIMIT = 50; // Increased limit for low earnings
-            const POINTS_PER_AD = 0.0005; // Very low ad earnings
+            const DAILY_AD_LIMIT = 50;
+            const POINTS_PER_AD = 0.0005;
             const CHANNEL_JOIN_BONUS = 0.02;
             const GROUP_JOIN_BONUS = 0.02;
             const MIN_WITHDRAW_POINTS = 1;
-            const REFERRAL_BONUS = 0.02; // $0.02 per referral
+            const REFERRAL_BONUS = 0.02;
             
             // Updated links
             const CHANNEL_LINK = "https://t.me/torreAdsChat";
@@ -352,6 +365,7 @@
             const tonAmountElem = document.getElementById('ton-amount');
             const amountInput = document.getElementById('amount');
             const tonAddressInput = document.getElementById('ton-address');
+            const referralCodeDisplay = document.getElementById('referral-code-display');
 
             // --- State Management ---
             let userState = {
@@ -366,14 +380,13 @@
                 referralCode: null
             };
 
-            let tonPrice = 0; // Will be fetched from API
+            let tonPrice = 0;
 
             // JSONBin.io API Functions
             const saveStateToJSONBin = async () => {
                 if(!userState.userId) return;
                 
                 try {
-                    // First, get the current data
                     const currentData = await fetch(JSONBIN_API_URL + '/latest', {
                         method: 'GET',
                         headers: {
@@ -381,13 +394,11 @@
                         }
                     }).then(res => res.json());
                     
-                    // Update only the current user's data
                     const updatedData = {
                         ...currentData.record,
                         [userState.userId]: userState
                     };
                     
-                    // Save the updated data
                     const response = await fetch(JSONBIN_API_URL, {
                         method: 'PUT',
                         headers: {
@@ -404,7 +415,6 @@
                     return await response.json();
                 } catch (error) {
                     console.error('Error saving to JSONBin:', error);
-                    // Fallback to localStorage
                     localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
                 }
             };
@@ -427,18 +437,15 @@
                     
                     if (record) {
                         userState = record;
-                        // Ensure new state properties exist
                         if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
                         if (userState.referredBy === undefined) userState.referredBy = null;
                         if (userState.referralCode === undefined) userState.referralCode = null;
                     }
                 } catch (error) {
                     console.error('Error loading from JSONBin:', error);
-                    // Fallback to localStorage
                     const savedState = localStorage.getItem(`userState_${userId}`);
                     if (savedState) {
                         userState = JSON.parse(savedState);
-                        // Ensure new state properties exist
                         if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
                         if (userState.referredBy === undefined) userState.referredBy = null;
                         if (userState.referralCode === undefined) userState.referralCode = null;
@@ -485,7 +492,6 @@
                     updateTONConversion();
                 } catch (error) {
                     console.error('Error fetching TON price:', error);
-                    // Fallback price
                     tonPrice = 4.50;
                     tonPriceElem.textContent = tonPrice.toFixed(2);
                     updateTONConversion();
@@ -520,9 +526,15 @@
                 
                 // Check for referral parameter
                 const startParam = tg.initDataUnsafe.start_param;
-                if (startParam && startParam.startsWith('ref_')) {
-                    const referrerId = startParam.substring(4);
-                    userState.referredBy = referrerId;
+                if (startParam) {
+                    if (startParam.startsWith('ref_')) {
+                        const referrerId = startParam.substring(4);
+                        userState.referredBy = referrerId;
+                    } else if (startParam.startsWith('code_')) {
+                        const referralCode = startParam.substring(5);
+                        // Handle referral code logic here
+                        processReferralByCode(referralCode);
+                    }
                 }
                 
                 // Generate referral code if not exists
@@ -563,7 +575,11 @@
                 dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
                 referralCountElem.textContent = userState.referrals.length;
 
+                // Use userId for referral link (as shown in your screenshot)
                 referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
+                
+                // Display referral code separately
+                referralCodeDisplay.textContent = userState.referralCode || 'Generating...';
 
                 // Update task button states
                 if (userState.hasJoinedChannel) {
@@ -795,6 +811,42 @@
                     }
                 } catch (error) {
                     console.error('Error processing referral:', error);
+                }
+            };
+
+            // New function to handle referral by code
+            const processReferralByCode = async (referralCode) => {
+                try {
+                    // Get all users to find who has this referral code
+                    const response = await fetch(JSONBIN_API_URL + '/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load data from JSONBin');
+                    }
+                    
+                    const data = await response.json();
+                    const allUsers = data.record;
+                    
+                    // Find user with matching referral code
+                    let referrerId = null;
+                    for (const [userId, userData] of Object.entries(allUsers)) {
+                        if (userData.referralCode === referralCode) {
+                            referrerId = userId;
+                            break;
+                        }
+                    }
+                    
+                    if (referrerId) {
+                        userState.referredBy = referrerId;
+                        processReferral(referrerId);
+                    }
+                } catch (error) {
+                    console.error('Error processing referral by code:', error);
                 }
             };
 
