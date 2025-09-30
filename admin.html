@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin Panel - Shohoj World</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<header class="bg-gradient-to-r from-purple-700 to-pink-500 text-white p-4 flex justify-between items-center shadow-lg">
+  <h1 class="text-xl font-bold">⚙️ Admin Panel</h1>
+  <p id="currentZone">Zone ID: ...</p>
+</header>
+
+<main class="p-6 flex-grow max-w-5xl mx-auto w-full space-y-6">
+  <section class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-purple-700 mb-4">Zone Settings</h2>
+    <div class="flex items-center space-x-3">
+      <input id="zoneIdInput" type="text" class="border rounded-lg p-2 w-40" placeholder="Enter Zone ID"/>
+      <button onclick="updateZoneId()" class="bg-purple-700 text-white px-4 py-2 rounded-lg">Update Zone</button>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-purple-700 mb-4">Users Data</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200">
+        <thead class="bg-purple-700 text-white">
+          <tr>
+            <th class="px-4 py-2">Photo</th>
+            <th class="px-4 py-2">Name</th>
+            <th class="px-4 py-2">Username</th>
+            <th class="px-4 py-2">Balance</th>
+            <th class="px-4 py-2">Total Ads</th>
+            <th class="px-4 py-2">Tasks</th>
+            <th class="px-4 py-2">Ads Watched</th>
+          </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+fetch("zone.json").then(r=>r.json()).then(data=>{
+  document.getElementById("currentZone").innerText = "Zone ID: " + data.zoneId;
+  document.getElementById("zoneIdInput").value = data.zoneId;
+});
+
+function updateZoneId(){
+  let newId = document.getElementById("zoneIdInput").value;
+  fetch("save_zone.php",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({zoneId:newId})
+  }).then(()=>alert("✅ Zone Updated!"));
+}
+
+fetch("users.json").then(r=>r.json()).then(users=>{
+  let table = document.getElementById("userTable");
+  for(let id in users){
+    let u = users[id];
+    table.innerHTML += `
+      <tr class="text-center border-t">
+        <td><img src="${u.photo}" class="w-10 h-10 rounded-full mx-auto"/></td>
+        <td>${u.name}</td>
+        <td>@${u.username}</td>
+        <td class="text-purple-700 font-bold">${u.balance.toFixed(2)} ৳</td>
+        <td>${u.totalAds}</td>
+        <td>${u.tasks}</td>
+        <td>${u.adsWatched}</td>
+      </tr>`;
+  }
+});
+</script>
+</body>
+</html>
