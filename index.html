@@ -51,6 +51,19 @@
             padding: 20px 16px 80px 16px;
         }
         
+        /* Maintenance Banner */
+        .maintenance-banner {
+            background: linear-gradient(135deg, var(--warning), #ff6f00);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+        
         /* Loading Screen */
         .loading-screen {
             display: flex;
@@ -509,6 +522,39 @@
             color: var(--white);
         }
 
+        /* Bot Status Controls */
+        .status-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        
+        .status-btn {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-btn.active {
+            background: var(--success);
+            color: white;
+        }
+        
+        .status-btn.maintenance {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .status-btn.paused {
+            background: var(--error);
+            color: white;
+        }
+
         /* Withdrawal History */
         .withdrawal-history {
             margin-top: 20px;
@@ -724,10 +770,20 @@
                 font-size: 10px;
                 min-width: 60px;
             }
+            
+            .status-controls {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Maintenance Banner -->
+    <div class="maintenance-banner" id="maintenanceBanner">
+        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">engineering</span>
+        <span id="maintenanceMessage">Bot is under maintenance</span>
+    </div>
+
     <div class="container">
         <!-- Loading Screen -->
         <div id="loading-screen" class="loading-screen">
@@ -821,6 +877,17 @@
                     <span class="material-icons">admin_panel_settings</span>
                     Admin Control Panel
                 </h3>
+                
+                <!-- Bot Status Controls -->
+                <div class="input-group">
+                    <label class="input-label">Bot Status Control</label>
+                    <div class="status-controls">
+                        <button class="status-btn active" id="statusActiveBtn">Active</button>
+                        <button class="status-btn maintenance" id="statusMaintenanceBtn">Maintenance</button>
+                        <button class="status-btn paused" id="statusPausedBtn">Paused</button>
+                    </div>
+                    <input type="text" class="input-field" id="statusMessageInput" placeholder="Custom status message...">
+                </div>
                 
                 <!-- Admin Tabs -->
                 <div class="admin-tabs">
@@ -1061,6 +1128,8 @@
             // DOM Elements
             const elements = {
                 loadingScreen: document.getElementById('loading-screen'),
+                maintenanceBanner: document.getElementById('maintenanceBanner'),
+                maintenanceMessage: document.getElementById('maintenanceMessage'),
                 balanceDisplay: document.getElementById('balanceDisplay'),
                 adCountDisplay: document.getElementById('adCountDisplay'),
                 dailyAdCountDisplay: document.getElementById('dailyAdCountDisplay'),
@@ -1087,6 +1156,11 @@
                 emptyWithdrawalHistory: document.getElementById('emptyWithdrawalHistory'),
                 userList: document.getElementById('userList'),
                 adminWithdrawalList: document.getElementById('adminWithdrawalList'),
+                // Bot status elements
+                statusActiveBtn: document.getElementById('statusActiveBtn'),
+                statusMaintenanceBtn: document.getElementById('statusMaintenanceBtn'),
+                statusPausedBtn: document.getElementById('statusPausedBtn'),
+                statusMessageInput: document.getElementById('statusMessageInput'),
                 // Admin buttons
                 adminAddBalanceBtn: document.getElementById('adminAddBalanceBtn'),
                 adminResetStatsBtn: document.getElementById('adminResetStatsBtn'),
@@ -1124,6 +1198,12 @@
                 withdrawalHistory: []
             };
 
+            // Bot Status
+            let botStatus = {
+                status: 'active', // active, maintenance, paused
+                message: 'Bot is under maintenance'
+            };
+
             // Initialize App
             async function initializeApp() {
                 try {
@@ -1144,6 +1224,7 @@
                     
                     // Load state from localStorage
                     loadState();
+                    loadBotStatus();
                     
                     // Check if user is admin
                     if (CONFIG.ADMIN_IDS.includes(parseInt(state.userId))) {
@@ -1220,6 +1301,27 @@
                 }
             }
 
+            function loadBotStatus() {
+                try {
+                    const saved = localStorage.getItem('torreads_bot_status');
+                    if (saved) {
+                        botStatus = JSON.parse(saved);
+                        console.log('✅ Bot status loaded:', botStatus);
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading bot status:', error);
+                }
+            }
+
+            function saveBotStatus() {
+                try {
+                    localStorage.setItem('torreads_bot_status', JSON.stringify(botStatus));
+                    console.log('💾 Bot status saved');
+                } catch (error) {
+                    console.error('❌ Error saving bot status:', error);
+                }
+            }
+
             function generateReferralCode() {
                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                 let code = '';
@@ -1252,6 +1354,9 @@
             // UI Management
             function updateUI() {
                 if (!state.userId) return;
+
+                // Update maintenance banner
+                updateMaintenanceBanner();
 
                 // Update balance and stats
                 elements.balanceDisplay.textContent = `USDT ${state.balance.toFixed(3)}`;
@@ -1294,12 +1399,19 @@
                     `Withdraw ${state.balance.toFixed(3)} USDT` : 
                     `Minimum ${CONFIG.WITHDRAW_THRESHOLD} USDT required`;
 
-                // Update ad button
+                // Update ad button based on bot status
                 const adLimitReached = state.dailyAds >= CONFIG.DAILY_AD_LIMIT;
-                elements.rewardedBtn.disabled = adLimitReached;
-                elements.rewardedBtn.textContent = adLimitReached ? 
-                    'Daily Limit Reached' : 
-                    `Watch Ad & Earn +${CONFIG.AD_REWARD} USDT`;
+                const isBotActive = botStatus.status === 'active';
+                
+                elements.rewardedBtn.disabled = adLimitReached || !isBotActive;
+                
+                if (!isBotActive) {
+                    elements.rewardedBtn.textContent = 'Temporarily Unavailable';
+                } else {
+                    elements.rewardedBtn.textContent = adLimitReached ? 
+                        'Daily Limit Reached' : 
+                        `Watch Ad & Earn +${CONFIG.AD_REWARD} USDT`;
+                }
 
                 // Update withdrawal history
                 updateWithdrawalHistory();
@@ -1309,7 +1421,36 @@
                     updateAdminStats();
                     updateUserList();
                     updateAdminWithdrawalList();
+                    updateBotStatusUI();
                 }
+            }
+
+            function updateMaintenanceBanner() {
+                if (botStatus.status !== 'active') {
+                    elements.maintenanceBanner.style.display = 'block';
+                    elements.maintenanceMessage.textContent = botStatus.message;
+                } else {
+                    elements.maintenanceBanner.style.display = 'none';
+                }
+            }
+
+            function updateBotStatusUI() {
+                // Reset all buttons
+                elements.statusActiveBtn.classList.remove('active');
+                elements.statusMaintenanceBtn.classList.remove('active');
+                elements.statusPausedBtn.classList.remove('active');
+                
+                // Set active button
+                if (botStatus.status === 'active') {
+                    elements.statusActiveBtn.classList.add('active');
+                } else if (botStatus.status === 'maintenance') {
+                    elements.statusMaintenanceBtn.classList.add('active');
+                } else if (botStatus.status === 'paused') {
+                    elements.statusPausedBtn.classList.add('active');
+                }
+                
+                // Set message input
+                elements.statusMessageInput.value = botStatus.message;
             }
 
             function updateWithdrawalHistory() {
@@ -1371,10 +1512,40 @@
                 }, duration);
             }
 
+            // Bot Status Functions
+            function setBotStatus(status, message = '') {
+                botStatus.status = status;
+                if (message) {
+                    botStatus.message = message;
+                } else {
+                    // Default messages
+                    switch(status) {
+                        case 'active':
+                            botStatus.message = 'Bot is running normally';
+                            break;
+                        case 'maintenance':
+                            botStatus.message = 'Bot is under maintenance';
+                            break;
+                        case 'paused':
+                            botStatus.message = 'Bot is temporarily paused';
+                            break;
+                    }
+                }
+                
+                saveBotStatus();
+                updateUI();
+                showStatus(`Bot status set to: ${status}`, 'status-success');
+            }
+
             // Ad System
             async function requestAd() {
                 if (!appInitialized) {
                     showStatus('App is initializing...', 'status-error');
+                    return;
+                }
+
+                if (botStatus.status !== 'active') {
+                    showStatus(botStatus.message, 'status-error');
                     return;
                 }
 
@@ -1493,7 +1664,7 @@
                 }
             }
 
-            // Referral System - FIXED
+            // Referral System - COMPLETELY REWRITTEN
             function setupReferralCopy() {
                 elements.referralCodeBox.onclick = () => {
                     navigator.clipboard.writeText(state.referralCode).then(() => {
@@ -1535,27 +1706,26 @@
                     return;
                 }
 
-                // Give bonus to current user
-                state.referredBy = code;
-                state.hasClaimedReferral = true;
-                state.balance += CONFIG.REFERRAL_BONUS;
+                // NEW REFERRAL SYSTEM - Search for referrer
+                const referrerFound = findAndRewardReferrer(code);
                 
-                // Find referrer and give them bonus + increase referral count
-                const bonusGiven = giveReferralBonusToReferrer(code);
-                
-                saveState();
-                updateUI();
-                
-                if (bonusGiven) {
+                if (referrerFound) {
+                    // Give bonus to current user
+                    state.referredBy = code;
+                    state.hasClaimedReferral = true;
+                    state.balance += CONFIG.REFERRAL_BONUS;
+                    
+                    saveState();
+                    updateUI();
+                    
                     showStatus(`+${CONFIG.REFERRAL_BONUS} USDT bonus! Referrer also received ${CONFIG.REFERRAL_BONUS} USDT 🎁`, 'status-success');
                 } else {
-                    showStatus(`+${CONFIG.REFERRAL_BONUS} USDT bonus! 🎁`, 'status-success');
+                    showStatus('Referral code not found', 'status-error');
                 }
             }
 
-            // FIXED: Referrer bonus function
-            function giveReferralBonusToReferrer(referralCode) {
-                let bonusGiven = false;
+            // NEW: Improved referral system
+            function findAndRewardReferrer(referralCode) {
                 console.log('🔍 Searching for referrer with code:', referralCode);
                 
                 // Search all users in localStorage
@@ -1564,10 +1734,9 @@
                     if (key.startsWith('torreads_') && key !== `torreads_${state.userId}`) {
                         try {
                             const userData = JSON.parse(localStorage.getItem(key));
-                            console.log('📁 Checking user:', userData.userId, 'Code:', userData.referralCode);
                             
                             if (userData && userData.referralCode === referralCode) {
-                                console.log('🎯 Found referrer! Giving bonus to:', userData.userId);
+                                console.log('🎯 Found referrer! User ID:', userData.userId);
                                 
                                 // Give bonus to referrer
                                 userData.balance = (userData.balance || 0) + CONFIG.REFERRAL_BONUS;
@@ -1580,22 +1749,18 @@
                                 
                                 // Save referrer's updated state
                                 localStorage.setItem(key, JSON.stringify(userData));
-                                bonusGiven = true;
-                                
                                 console.log(`💰 Bonus given! Referrer new balance: ${userData.balance} USDT, Referral count: ${userData.referralCount}`);
-                                break;
+                                
+                                return true;
                             }
                         } catch (e) {
-                            console.error('Error processing referral bonus:', e);
+                            console.error('Error processing referral:', e);
                         }
                     }
                 }
                 
-                if (!bonusGiven) {
-                    console.log('⚠️ Referrer not found for code:', referralCode);
-                }
-                
-                return bonusGiven;
+                console.log('❌ Referrer not found for code:', referralCode);
+                return false;
             }
 
             // Admin Functions
@@ -1674,7 +1839,8 @@
                         </div>
                     </div>
                     <div style="margin-top: 12px; font-size: 12px; color: var(--dark-gray);">
-                        Pending Withdrawals: <strong>${pendingWithdrawals}</strong>
+                        <div>Pending Withdrawals: <strong>${pendingWithdrawals}</strong></div>
+                        <div>Bot Status: <strong>${botStatus.status}</strong></div>
                     </div>
                 `;
             }
@@ -1761,7 +1927,7 @@
                 }
             }
 
-            // Admin button functions - FIXED
+            // Admin button functions
             function adminAddBalance() {
                 const amount = parseFloat(elements.adminBalanceInput.value);
                 if (amount && amount > 0) {
@@ -1912,7 +2078,7 @@
 
             window.showAdminTab = showAdminTab;
 
-            // Event Listeners - FIXED
+            // Event Listeners
             function setupEventListeners() {
                 console.log('🔧 Setting up event listeners...');
                 
@@ -1931,7 +2097,12 @@
                 elements.finalWithdrawBtn.addEventListener('click', handleWithdrawal);
                 elements.submitReferralBtn.addEventListener('click', handleReferralSubmission);
                 
-                // Admin buttons - FIXED: Direct event listeners
+                // Bot status controls
+                elements.statusActiveBtn.addEventListener('click', () => setBotStatus('active', elements.statusMessageInput.value));
+                elements.statusMaintenanceBtn.addEventListener('click', () => setBotStatus('maintenance', elements.statusMessageInput.value));
+                elements.statusPausedBtn.addEventListener('click', () => setBotStatus('paused', elements.statusMessageInput.value));
+                
+                // Admin buttons
                 elements.adminAddBalanceBtn.addEventListener('click', adminAddBalance);
                 elements.adminResetStatsBtn.addEventListener('click', adminResetStats);
                 elements.adminExportAllDataBtn.addEventListener('click', adminExportAllData);
