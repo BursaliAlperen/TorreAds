@@ -148,7 +148,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* USDT Price Chart Styles */
+        /* TON Price Chart Styles */
         .price-chart {
             background-color: var(--secondary-bg-color);
             padding: 15px;
@@ -274,7 +274,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -293,13 +293,14 @@
         .language-modal h2 {
             margin-top: 0;
             color: #ffffff;
+            margin-bottom: 20px;
         }
         
         .language-options {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
         
         .language-option {
@@ -314,6 +315,46 @@
         
         .language-option:hover {
             background-color: #444;
+        }
+        
+        .language-option.selected {
+            background-color: var(--tg-theme-button-color);
+            color: white;
+        }
+        
+        .language-confirm-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .language-confirm-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .language-confirm-checkbox input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .language-confirm-btn {
+            padding: 12px 24px;
+            background: linear-gradient(145deg, var(--tg-theme-button-color), #0056b3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+        
+        .language-confirm-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
         }
         
         /* Görevler pazarı */
@@ -474,6 +515,13 @@
                 <button class="language-option" data-lang="az">Azərbaycanca</button>
                 <button class="language-option" data-lang="hi">हिन्दी</button>
                 <button class="language-option" data-lang="es">Español</button>
+            </div>
+            <div class="language-confirm-section">
+                <div class="language-confirm-checkbox">
+                    <input type="checkbox" id="languageConfirm">
+                    <label for="languageConfirm">I confirm my language selection / Dil seçimimi onaylıyorum</label>
+                </div>
+                <button class="language-confirm-btn" id="languageConfirmBtn" disabled>Confirm / Onayla</button>
             </div>
         </div>
     </div>
@@ -701,6 +749,8 @@
                   cancelTaskBtn = document.getElementById('cancelTaskBtn'),
                   tasksContainer = document.getElementById('tasksContainer'),
                   languageModal = document.getElementById('languageModal'),
+                  languageConfirm = document.getElementById('languageConfirm'),
+                  languageConfirmBtn = document.getElementById('languageConfirmBtn'),
                   maintenanceMode = document.getElementById('maintenanceMode'),
                   maintenanceMessage = document.getElementById('maintenanceMessage');
 
@@ -787,7 +837,9 @@
                     createTaskButton: "Create Task",
                     cancel: "Cancel",
                     maintenanceTitle: "🛠️ Maintenance Mode",
-                    maintenanceMessage: "The app is currently under maintenance. Please try again later."
+                    maintenanceMessage: "The app is currently under maintenance. Please try again later.",
+                    languageConfirm: "I confirm my language selection",
+                    confirm: "Confirm"
                 },
                 tr: {
                     appTitle: "TorreAds",
@@ -853,7 +905,9 @@
                     createTaskButton: "Görev Oluştur",
                     cancel: "İptal",
                     maintenanceTitle: "🛠️ Bakım Modu",
-                    maintenanceMessage: "Uygulama şu anda bakımda. Lütfen daha sonra tekrar deneyin."
+                    maintenanceMessage: "Uygulama şu anda bakımda. Lütfen daha sonra tekrar deneyin.",
+                    languageConfirm: "Dil seçimimi onaylıyorum",
+                    confirm: "Onayla"
                 },
                 ru: {
                     appTitle: "TorreAds",
@@ -919,7 +973,9 @@
                     createTaskButton: "Создать задание",
                     cancel: "Отмена",
                     maintenanceTitle: "🛠️ Режим обслуживания",
-                    maintenanceMessage: "Приложение в настоящее время находится на обслуживании. Пожалуйста, попробуйте позже."
+                    maintenanceMessage: "Приложение в настоящее время находится на обслуживании. Пожалуйста, попробуйте позже.",
+                    languageConfirm: "Я подтверждаю выбор языка",
+                    confirm: "Подтвердить"
                 },
                 az: {
                     appTitle: "TorreAds",
@@ -985,7 +1041,9 @@
                     createTaskButton: "Tapşırıq Yaradın",
                     cancel: "Ləğv et",
                     maintenanceTitle: "🛠️ Baxım Rejimi",
-                    maintenanceMessage: "Tətbiq hazırda baxım rejimindədir. Zəhmət olmasa sonra yenidən cəhd edin."
+                    maintenanceMessage: "Tətbiq hazırda baxım rejimindədir. Zəhmət olmasa sonra yenidən cəhd edin.",
+                    languageConfirm: "Dil seçimimi təsdiqləyirəm",
+                    confirm: "Təsdiqlə"
                 },
                 hi: {
                     appTitle: "TorreAds",
@@ -1051,7 +1109,9 @@
                     createTaskButton: "कार्य बनाएं",
                     cancel: "रद्द करें",
                     maintenanceTitle: "🛠️ रखरखाव मोड",
-                    maintenanceMessage: "ऐप वर्तमान में रखरखाव में है। कृपया बाद में पुनः प्रयास करें।"
+                    maintenanceMessage: "ऐप वर्तमान में रखरखाव में है। कृपया बाद में पुनः प्रयास करें।",
+                    languageConfirm: "मैं अपनी भाषा चयन की पुष्टि करता हूं",
+                    confirm: "पुष्टि करें"
                 },
                 es: {
                     appTitle: "TorreAds",
@@ -1117,7 +1177,9 @@
                     createTaskButton: "Crear Tarea",
                     cancel: "Cancelar",
                     maintenanceTitle: "🛠️ Modo de Mantenimiento",
-                    maintenanceMessage: "La aplicación está actualmente en mantenimiento. Por favor, inténtalo de nuevo más tarde."
+                    maintenanceMessage: "La aplicación está actualmente en mantenimiento. Por favor, inténtalo de nuevo más tarde.",
+                    languageConfirm: "Confirmo mi selección de idioma",
+                    confirm: "Confirmar"
                 }
             };
 
@@ -1127,6 +1189,7 @@
             let currentLanguage = 'en';
             let isAdmin = false;
             let maintenanceModeEnabled = false;
+            let selectedLanguage = null;
 
             // --- Language Functions ---
             function setLanguage(lang) {
@@ -1210,6 +1273,10 @@
                 // Bakım modu
                 document.querySelector('.maintenance-content h2').textContent = t.maintenanceTitle;
                 document.querySelector('.maintenance-content p:first-child').textContent = t.maintenanceMessage;
+                
+                // Dil onaylama
+                document.querySelector('.language-confirm-checkbox label').textContent = t.languageConfirm;
+                document.getElementById('languageConfirmBtn').textContent = t.confirm;
             }
 
             // --- Data Management Functions ---
@@ -1407,6 +1474,34 @@
             document.getElementById('navWithdraw').addEventListener('click', () => showView('withdraw-view'));
             document.getElementById('navRefer').addEventListener('click', () => showView('referral-view'));
 
+            // Dil seçimi event listener'ları
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Tüm seçeneklerden seçili sınıfını kaldır
+                    document.querySelectorAll('.language-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Bu seçeneği seçili yap
+                    this.classList.add('selected');
+                    selectedLanguage = this.getAttribute('data-lang');
+                });
+            });
+
+            // Dil onaylama checkbox'ı
+            languageConfirm.addEventListener('change', function() {
+                languageConfirmBtn.disabled = !this.checked;
+            });
+
+            // Dil onaylama butonu
+            languageConfirmBtn.addEventListener('click', function() {
+                if (selectedLanguage) {
+                    setLanguage(selectedLanguage);
+                    languageModal.style.display = 'none';
+                    showStatus('Language changed successfully!', 'success');
+                }
+            });
+
             // Reklam izleme butonu
             rewardedBtn.addEventListener('click', async () => {
                 if (!userData) return;
@@ -1420,7 +1515,19 @@
                 
                 try {
                     // Gigapub reklam gösterimi
-                    await gigapub.showRewardedAd();
+                    if (typeof window.showGiga === 'function') {
+                        await new Promise((resolve, reject) => {
+                            window.showGiga({
+                                placementId: '986',
+                                onReward: resolve,
+                                onClose: resolve,
+                                onError: reject
+                            });
+                        });
+                    } else {
+                        // Fallback: Manuel ödül
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                     
                     // Başarılı reklam izleme
                     userData.balance += AD_REWARD_CENTS;
@@ -1969,15 +2076,6 @@
                 document.querySelector('.container').style.display = 'block';
                 document.querySelector('.footer-nav').style.display = 'flex';
             }
-
-            // Dil seçimi
-            document.querySelectorAll('.language-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const lang = this.getAttribute('data-lang');
-                    setLanguage(lang);
-                    languageModal.style.display = 'none';
-                });
-            });
 
             // --- App Initialization ---
             async function initApp() {
