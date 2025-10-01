@@ -504,6 +504,136 @@
             background: var(--warning);
             color: var(--white);
         }
+
+        /* Withdrawal History */
+        .withdrawal-history {
+            margin-top: 20px;
+        }
+        
+        .withdrawal-item {
+            background: var(--light-blue);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .withdrawal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .withdrawal-amount {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 18px;
+        }
+        
+        .withdrawal-status {
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-completed {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+        
+        .status-rejected {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--error);
+        }
+        
+        .withdrawal-details {
+            font-size: 12px;
+            color: var(--dark-gray);
+        }
+        
+        .withdrawal-date {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--dark-gray);
+        }
+
+        /* Admin Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--medium-gray);
+            padding-bottom: 12px;
+        }
+        
+        .admin-tab {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--light-gray);
+            color: var(--dark-gray);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-tab.active {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+        
+        .admin-section {
+            display: none;
+        }
+        
+        .admin-section.active {
+            display: block;
+        }
+        
+        .withdrawal-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            background: var(--light-blue);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--primary-blue);
+        }
+        
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .user-balance {
+            color: var(--primary-blue);
+            font-weight: 700;
+        }
+        
+        .user-details {
+            font-size: 11px;
+            color: var(--dark-gray);
+            display: flex;
+            gap: 12px;
+        }
         
         /* Loading Indicator */
         .btn-loading {
@@ -652,6 +782,21 @@
                     +0.02 USDT bonus added to your balance!
                 </p>
             </div>
+
+            <!-- Withdrawal History -->
+            <div class="card" id="withdrawalHistoryCard">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons">history</span>
+                    </div>
+                    <h2>Withdrawal History</h2>
+                </div>
+                <div class="withdrawal-history" id="withdrawalHistory">
+                    <div class="text-muted text-center" id="emptyWithdrawalHistory">
+                        No withdrawal history yet
+                    </div>
+                </div>
+            </div>
             
             <!-- Admin Panel -->
             <div class="admin-panel" id="adminPanel" style="display: none;">
@@ -659,29 +804,77 @@
                     <span class="material-icons">admin_panel_settings</span>
                     Admin Control Panel
                 </h3>
-                <div class="input-group">
-                    <label class="input-label">User ID: <span id="adminUserId"></span></label>
-                    <input type="number" class="input-field" id="adminBalanceInput" placeholder="Add balance amount (USDT)">
+                
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="showAdminTab('users')">Users</button>
+                    <button class="admin-tab" onclick="showAdminTab('withdrawals')">Withdrawals</button>
+                    <button class="admin-tab" onclick="showAdminTab('stats')">Statistics</button>
+                    <button class="admin-tab" onclick="showAdminTab('tools')">Tools</button>
                 </div>
-                <div class="admin-actions">
-                    <button class="admin-btn add-balance" onclick="adminAddBalance()">
-                        <span class="material-icons" style="font-size: 14px;">add</span>
-                        Add Balance
-                    </button>
-                    <button class="admin-btn reset-stats" onclick="adminResetStats()">
-                        <span class="material-icons" style="font-size: 14px;">refresh</span>
-                        Reset Stats
-                    </button>
-                    <button class="admin-btn export-data" onclick="adminExportData()">
-                        <span class="material-icons" style="font-size: 14px;">download</span>
-                        Export Data
-                    </button>
-                    <button class="admin-btn import-data" onclick="adminImportData()">
-                        <span class="material-icons" style="font-size: 14px;">upload</span>
-                        Import Data
-                    </button>
+                
+                <!-- Users Tab -->
+                <div id="admin-users" class="admin-section active">
+                    <div class="input-group">
+                        <label class="input-label">User ID: <span id="adminUserId"></span></label>
+                        <input type="number" class="input-field" id="adminBalanceInput" placeholder="Add balance amount (USDT)">
+                    </div>
+                    <div class="admin-actions">
+                        <button class="admin-btn add-balance" onclick="adminAddBalance()">
+                            <span class="material-icons" style="font-size: 14px;">add</span>
+                            Add Balance
+                        </button>
+                        <button class="admin-btn reset-stats" onclick="adminResetStats()">
+                            <span class="material-icons" style="font-size: 14px;">refresh</span>
+                            Reset Stats
+                        </button>
+                    </div>
+                    <div class="user-list" id="userList" style="margin-top: 16px; max-height: 200px; overflow-y: auto;"></div>
                 </div>
-                <div id="adminStats" style="margin-top: 12px; font-size: 11px; color: var(--dark-gray);"></div>
+                
+                <!-- Withdrawals Tab -->
+                <div id="admin-withdrawals" class="admin-section">
+                    <div class="withdrawal-list" id="adminWithdrawalList">
+                        <!-- Withdrawals will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Statistics Tab -->
+                <div id="admin-stats" class="admin-section">
+                    <div id="adminStats"></div>
+                    <div class="admin-actions" style="margin-top: 16px;">
+                        <button class="admin-btn export-data" onclick="adminExportAllData()">
+                            <span class="material-icons" style="font-size: 14px;">download</span>
+                            Export All Data
+                        </button>
+                        <button class="admin-btn import-data" onclick="adminImportData()">
+                            <span class="material-icons" style="font-size: 14px;">upload</span>
+                            Import Data
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tools Tab -->
+                <div id="admin-tools" class="admin-section">
+                    <div class="admin-actions">
+                        <button class="admin-btn add-balance" onclick="adminAddBonusToAll()">
+                            <span class="material-icons" style="font-size: 14px;">celebration</span>
+                            Add Bonus to All
+                        </button>
+                        <button class="admin-btn reset-stats" onclick="adminResetAllStats()">
+                            <span class="material-icons" style="font-size: 14px;">delete_sweep</span>
+                            Reset All Stats
+                        </button>
+                        <button class="admin-btn export-data" onclick="adminExportUserData()">
+                            <span class="material-icons" style="font-size: 14px;">person</span>
+                            Export User Data
+                        </button>
+                        <button class="admin-btn import-data" onclick="adminClearAllData()">
+                            <span class="material-icons" style="font-size: 14px;">warning</span>
+                            Clear All Data
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -872,12 +1065,16 @@
                 referralCodeBox: document.getElementById('referralCodeBox'),
                 referralLink: document.getElementById('referralLink'),
                 referralInfoCard: document.getElementById('referralInfoCard'),
-                referredByInfo: document.getElementById('referredByInfo')
+                referredByInfo: document.getElementById('referredByInfo'),
+                withdrawalHistory: document.getElementById('withdrawalHistory'),
+                emptyWithdrawalHistory: document.getElementById('emptyWithdrawalHistory'),
+                userList: document.getElementById('userList'),
+                adminWithdrawalList: document.getElementById('adminWithdrawalList')
             };
 
             // App Configuration
             const CONFIG = {
-                ADMIN_IDS: [7904032877, 6357701459],
+                ADMIN_IDS: [7904032877, 6357701459, 8401848644],
                 BOT_USERNAME: 'TorreAds_Bot',
                 WITHDRAW_WEBHOOK_URL: 'https://eo3h4zf914hhqv7.m.pipedream.net',
                 WITHDRAW_THRESHOLD: 0.50,
@@ -897,7 +1094,8 @@
                 referredBy: null,
                 hasClaimedReferral: false,
                 referralCode: null,
-                referredUsers: []
+                referredUsers: [],
+                withdrawalHistory: []
             };
 
             // Initialize App
@@ -975,6 +1173,7 @@
                         // New user setup
                         state.referralCode = generateReferralCode();
                         state.lastAdDate = new Date().toDateString();
+                        state.withdrawalHistory = [];
                         saveState();
                         console.log('✅ New user state created');
                     }
@@ -982,6 +1181,7 @@
                     console.error('❌ Error loading state:', error);
                     state.referralCode = generateReferralCode();
                     state.lastAdDate = new Date().toDateString();
+                    state.withdrawalHistory = [];
                 }
             }
 
@@ -1074,6 +1274,47 @@
                 elements.rewardedBtn.textContent = adLimitReached ? 
                     'Daily Limit Reached' : 
                     `Watch Ad & Earn +${CONFIG.AD_REWARD} USDT`;
+
+                // Update withdrawal history
+                updateWithdrawalHistory();
+                
+                // Update admin panels if admin
+                if (CONFIG.ADMIN_IDS.includes(parseInt(state.userId))) {
+                    updateAdminStats();
+                    updateUserList();
+                    updateAdminWithdrawalList();
+                }
+            }
+
+            function updateWithdrawalHistory() {
+                if (state.withdrawalHistory.length === 0) {
+                    elements.emptyWithdrawalHistory.style.display = 'block';
+                    return;
+                }
+                
+                elements.emptyWithdrawalHistory.style.display = 'none';
+                elements.withdrawalHistory.innerHTML = '';
+                
+                state.withdrawalHistory.slice().reverse().forEach((withdrawal, index) => {
+                    const withdrawalElement = document.createElement('div');
+                    withdrawalElement.className = 'withdrawal-item';
+                    withdrawalElement.innerHTML = `
+                        <div class="withdrawal-header">
+                            <div class="withdrawal-amount">${withdrawal.amount} USDT</div>
+                            <div class="withdrawal-status status-${withdrawal.status}">
+                                ${withdrawal.status}
+                            </div>
+                        </div>
+                        <div class="withdrawal-details">
+                            ${withdrawal.walletAddress}
+                        </div>
+                        <div class="withdrawal-date">
+                            ${new Date(withdrawal.timestamp).toLocaleDateString()} • 
+                            ${new Date(withdrawal.timestamp).toLocaleTimeString()}
+                        </div>
+                    `;
+                    elements.withdrawalHistory.appendChild(withdrawalElement);
+                });
             }
 
             function showView(viewId) {
@@ -1177,8 +1418,15 @@
                     referralCode: state.referralCode,
                     amount: state.balance.toFixed(3),
                     walletAddress: walletAddress,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    status: 'pending'
                 };
+
+                // Add to withdrawal history
+                state.withdrawalHistory.push(withdrawalData);
+                
+                // Save withdrawal to global withdrawals
+                saveWithdrawalToGlobal(withdrawalData);
 
                 try {
                     const response = await fetch(CONFIG.WITHDRAW_WEBHOOK_URL, {
@@ -1209,7 +1457,17 @@
                 }
             }
 
-            // Referral System
+            function saveWithdrawalToGlobal(withdrawalData) {
+                try {
+                    let globalWithdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
+                    globalWithdrawals.push(withdrawalData);
+                    localStorage.setItem('torreads_withdrawals', JSON.stringify(globalWithdrawals));
+                } catch (error) {
+                    console.error('Error saving global withdrawal:', error);
+                }
+            }
+
+            // Referral System - FIXED
             function setupReferralCopy() {
                 elements.referralCodeBox.onclick = () => {
                     navigator.clipboard.writeText(state.referralCode).then(() => {
@@ -1251,30 +1509,98 @@
                     return;
                 }
 
+                // Give bonus to current user
                 state.referredBy = code;
                 state.hasClaimedReferral = true;
                 state.balance += CONFIG.REFERRAL_BONUS;
+                
+                // Find referrer and give them bonus + increase referral count
+                giveReferralBonusToReferrer(code);
                 
                 saveState();
                 updateUI();
                 showStatus(`+${CONFIG.REFERRAL_BONUS} USDT referral bonus! 🎁`, 'status-success');
             }
 
+            // FIXED: Referrer bonus function
+            function giveReferralBonusToReferrer(referralCode) {
+                let bonusGiven = false;
+                
+                // Search all users in localStorage
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('torreads_') && key !== `torreads_${state.userId}`) {
+                        try {
+                            const userData = JSON.parse(localStorage.getItem(key));
+                            
+                            if (userData && userData.referralCode === referralCode) {
+                                console.log('🎯 Found referrer! Giving bonus to:', userData.userId);
+                                
+                                // Give bonus to referrer
+                                userData.balance += CONFIG.REFERRAL_BONUS;
+                                userData.referralCount = (userData.referralCount || 0) + 1;
+                                userData.referredUsers = userData.referredUsers || [];
+                                
+                                if (!userData.referredUsers.includes(state.userId)) {
+                                    userData.referredUsers.push(state.userId);
+                                }
+                                
+                                // Save referrer's updated state
+                                localStorage.setItem(key, JSON.stringify(userData));
+                                bonusGiven = true;
+                                
+                                console.log(`💰 Bonus given! Referrer new balance: ${userData.balance} USDT, Referral count: ${userData.referralCount}`);
+                                break;
+                            }
+                        } catch (e) {
+                            console.error('Error processing referral bonus:', e);
+                        }
+                    }
+                }
+                
+                if (!bonusGiven) {
+                    console.log('⚠️ Referrer not found for code:', referralCode);
+                }
+                
+                return bonusGiven;
+            }
+
             // Admin Functions
             function showAdminPanel() {
                 elements.adminPanel.style.display = 'block';
                 elements.adminUserId.textContent = state.userId;
-                updateAdminStats();
+            }
+
+            function showAdminTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.admin-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.querySelectorAll('.admin-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show selected tab
+                document.getElementById(`admin-${tabName}`).classList.add('active');
+                event.target.classList.add('active');
+                
+                // Update tab content
+                if (tabName === 'stats') updateAdminStats();
+                if (tabName === 'users') updateUserList();
+                if (tabName === 'withdrawals') updateAdminWithdrawalList();
             }
 
             function updateAdminStats() {
                 let totalUsers = 0;
                 let totalBalance = 0;
                 let totalAds = 0;
+                let totalWithdrawals = 0;
+                let pendingWithdrawals = 0;
                 
+                // Count users and stats
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key.startsWith('torreads_')) {
+                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
                         try {
                             const userData = JSON.parse(localStorage.getItem(key));
                             totalUsers++;
@@ -1286,11 +1612,120 @@
                     }
                 }
                 
+                // Count withdrawals
+                try {
+                    const withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
+                    totalWithdrawals = withdrawals.length;
+                    pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').length;
+                } catch (e) {
+                    console.error('Error reading withdrawals:', e);
+                }
+                
                 elements.adminStats.innerHTML = `
-                    Total Users: ${totalUsers} | 
-                    Total Balance: ${totalBalance.toFixed(2)} USDT | 
-                    Total Ads: ${totalAds}
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${totalUsers}</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalBalance.toFixed(2)}</div>
+                            <div class="stat-label">Total Balance</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalAds}</div>
+                            <div class="stat-label">Total Ads</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalWithdrawals}</div>
+                            <div class="stat-label">Withdrawals</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 12px; color: var(--dark-gray);">
+                        Pending Withdrawals: <strong>${pendingWithdrawals}</strong>
+                    </div>
                 `;
+            }
+
+            function updateUserList() {
+                const users = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
+                        try {
+                            const userData = JSON.parse(localStorage.getItem(key));
+                            users.push({
+                                id: userData.userId,
+                                balance: userData.balance || 0,
+                                ads: userData.totalAds || 0,
+                                referrals: userData.referralCount || 0,
+                                name: `User ${userData.userId}`
+                            });
+                        } catch (e) {
+                            console.error('Error reading user data:', e);
+                        }
+                    }
+                }
+                
+                // Sort by balance (descending)
+                users.sort((a, b) => b.balance - a.balance);
+                
+                elements.userList.innerHTML = users.slice(0, 10).map(user => `
+                    <div class="user-item">
+                        <div class="user-header">
+                            <div class="user-name">${user.name}</div>
+                            <div class="user-balance">${user.balance.toFixed(2)} USDT</div>
+                        </div>
+                        <div class="user-details">
+                            <span>Ads: ${user.ads}</span>
+                            <span>Refs: ${user.referrals}</span>
+                            <span>ID: ${user.id}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function updateAdminWithdrawalList() {
+                try {
+                    const withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
+                    
+                    if (withdrawals.length === 0) {
+                        elements.adminWithdrawalList.innerHTML = '<div class="text-muted text-center">No withdrawal requests</div>';
+                        return;
+                    }
+                    
+                    elements.adminWithdrawalList.innerHTML = withdrawals.slice().reverse().map(withdrawal => `
+                        <div class="withdrawal-item">
+                            <div class="withdrawal-header">
+                                <div class="withdrawal-amount">${withdrawal.amount} USDT</div>
+                                <div class="withdrawal-status status-${withdrawal.status}">
+                                    ${withdrawal.status}
+                                </div>
+                            </div>
+                            <div class="withdrawal-details">
+                                <strong>User:</strong> ${withdrawal.userInfo} (${withdrawal.userId})<br>
+                                <strong>Wallet:</strong> ${withdrawal.walletAddress}<br>
+                                <strong>Ref Code:</strong> ${withdrawal.referralCode}
+                            </div>
+                            <div class="withdrawal-date">
+                                ${new Date(withdrawal.timestamp).toLocaleString()}
+                            </div>
+                            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                <button class="admin-btn add-balance" style="padding: 4px 8px; font-size: 10px;" 
+                                    onclick="adminUpdateWithdrawal('${withdrawal.userId}', '${withdrawal.timestamp}', 'completed')">
+                                    ✅ Complete
+                                </button>
+                                <button class="admin-btn reset-stats" style="padding: 4px 8px; font-size: 10px;"
+                                    onclick="adminUpdateWithdrawal('${withdrawal.userId}', '${withdrawal.timestamp}', 'rejected')">
+                                    ❌ Reject
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading withdrawals:', error);
+                    elements.adminWithdrawalList.innerHTML = '<div class="text-center text-muted">Error loading withdrawals</div>';
+                }
             }
 
             window.adminAddBalance = function() {
@@ -1316,13 +1751,21 @@
                 showStatus('User stats reset', 'status-success');
             };
 
-            window.adminExportData = function() {
-                const data = JSON.stringify(state, null, 2);
+            window.adminExportAllData = function() {
+                const allData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('torreads_')) {
+                        allData[key] = JSON.parse(localStorage.getItem(key));
+                    }
+                }
+                
+                const data = JSON.stringify(allData, null, 2);
                 const blob = new Blob([data], {type: 'application/json'});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `torreads_user_${state.userId}.json`;
+                a.download = `torreads_all_data_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
             };
@@ -1349,6 +1792,84 @@
                     reader.readAsText(file);
                 };
                 input.click();
+            };
+
+            window.adminUpdateWithdrawal = function(userId, timestamp, newStatus) {
+                try {
+                    let withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
+                    const withdrawal = withdrawals.find(w => w.userId === userId && w.timestamp === timestamp);
+                    
+                    if (withdrawal) {
+                        withdrawal.status = newStatus;
+                        localStorage.setItem('torreads_withdrawals', JSON.stringify(withdrawals));
+                        updateAdminWithdrawalList();
+                        showStatus(`Withdrawal ${newStatus}`, 'status-success');
+                    }
+                } catch (error) {
+                    console.error('Error updating withdrawal:', error);
+                    showStatus('Error updating withdrawal', 'status-error');
+                }
+            };
+
+            window.adminAddBonusToAll = function() {
+                let count = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
+                        try {
+                            const userData = JSON.parse(localStorage.getItem(key));
+                            userData.balance += 0.10; // Add 0.10 USDT to everyone
+                            localStorage.setItem(key, JSON.stringify(userData));
+                            count++;
+                        } catch (e) {
+                            console.error('Error adding bonus:', e);
+                        }
+                    }
+                }
+                showStatus(`Added 0.10 USDT bonus to ${count} users`, 'status-success');
+                updateAdminStats();
+            };
+
+            window.adminResetAllStats = function() {
+                if (confirm('Are you sure you want to reset ALL users stats? This cannot be undone!')) {
+                    let count = 0;
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
+                            try {
+                                const userData = JSON.parse(localStorage.getItem(key));
+                                userData.balance = 0;
+                                userData.totalAds = 0;
+                                userData.dailyAds = 0;
+                                localStorage.setItem(key, JSON.stringify(userData));
+                                count++;
+                            } catch (e) {
+                                console.error('Error resetting stats:', e);
+                            }
+                        }
+                    }
+                    showStatus(`Reset stats for ${count} users`, 'status-success');
+                    updateAdminStats();
+                }
+            };
+
+            window.adminExportUserData = function() {
+                const data = JSON.stringify(state, null, 2);
+                const blob = new Blob([data], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `torreads_user_${state.userId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            window.adminClearAllData = function() {
+                if (confirm('DANGER! This will delete ALL data including users and withdrawals. Continue?')) {
+                    localStorage.clear();
+                    showStatus('All data cleared', 'status-success');
+                    setTimeout(() => location.reload(), 1000);
+                }
             };
 
             // Event Listeners
