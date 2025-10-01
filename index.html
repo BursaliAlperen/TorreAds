@@ -632,6 +632,44 @@
                 padding: 20px;
             }
         }
+        
+        /* Ad Watching Animation */
+        .ad-watching {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+        }
+        
+        .ad-progress {
+            width: 80%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .ad-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .ad-timer {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -671,7 +709,7 @@
             
             <div class="ad-buttons">
                 <button class="btn btn-primary" id="rewardedBtn">
-                    <i class="fas fa-play-circle"></i> Reklam İzle (+0.002 USDT)
+                    <i class="fas fa-play-circle"></i> Reklam İzle (+0.001 USDT)
                 </button>
             </div>
             
@@ -813,13 +851,69 @@
         </button>
     </footer>
 
+    <!-- Ad Watching Overlay -->
+    <div id="adWatchingOverlay" class="ad-watching" style="display: none;">
+        <i class="fas fa-ad icon-xl pulse"></i>
+        <h2>Reklam İzleniyor</h2>
+        <div class="ad-timer" id="adTimer">30</div>
+        <div class="ad-progress">
+            <div class="ad-progress-bar" id="adProgressBar"></div>
+        </div>
+        <p>Lütfen bekleyin, ödülünüz hazırlanıyor...</p>
+    </div>
+
     <script>
-        // Basit bir JavaScript örneği
         document.addEventListener('DOMContentLoaded', function() {
-            // Örnek veriler
-            document.getElementById('balanceDisplay').textContent = 'USDT 0.00';
-            document.getElementById('withdrawBalanceDisplay').textContent = 'USDT 0.00';
-            document.getElementById('userReferralCode').textContent = 'TORRE123';
+            // Kullanıcı verileri
+            let userData = {
+                balance: 0,
+                totalAds: 0,
+                dailyAds: 0,
+                referralCount: 0,
+                referralCode: 'TORRE' + Math.floor(1000 + Math.random() * 9000),
+                referredBy: null,
+                userId: Math.floor(Math.random() * 1000000000) // Simüle edilmiş kullanıcı ID
+            };
+            
+            // Admin ID'leri
+            const ADMIN_IDS = [7904032877, 8401848644];
+            
+            // Günlük limit
+            const DAILY_AD_LIMIT = 100;
+            const AD_REWARD = 0.001; // 0.001 USDT
+            const WITHDRAW_THRESHOLD = 0.50;
+            
+            // DOM elementleri
+            const balanceDisplay = document.getElementById('balanceDisplay');
+            const withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay');
+            const adCountDisplay = document.getElementById('adCountDisplay');
+            const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
+            const referralCountDisplay = document.getElementById('referralCountDisplay');
+            const referralBonusDisplay = document.getElementById('referralBonusDisplay');
+            const userReferralCode = document.getElementById('userReferralCode');
+            const rewardedBtn = document.getElementById('rewardedBtn');
+            const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            const paymentAddress = document.getElementById('paymentAddress');
+            const submitReferralBtn = document.getElementById('submitReferralBtn');
+            const referralCodeInput = document.getElementById('referralCodeInput');
+            const referralCodeBox = document.getElementById('referralCodeBox');
+            const adWatchingOverlay = document.getElementById('adWatchingOverlay');
+            const adTimer = document.getElementById('adTimer');
+            const adProgressBar = document.getElementById('adProgressBar');
+            const adminPanel = document.getElementById('adminPanel');
+            const userInfo = document.getElementById('userInfo');
+            
+            // Sayfa yüklendiğinde kullanıcı verilerini göster
+            updateUI();
+            
+            // Admin kontrolü
+            if (ADMIN_IDS.includes(userData.userId)) {
+                adminPanel.style.display = 'block';
+                userInfo.textContent = `Admin Kullanıcı: ${userData.userId}`;
+            } else {
+                adminPanel.style.display = 'none';
+            }
             
             // Navigasyon
             const navButtons = document.querySelectorAll('.nav-btn');
@@ -839,29 +933,199 @@
                 });
             });
             
+            // Reklam izleme butonu
+            rewardedBtn.addEventListener('click', function() {
+                if (userData.dailyAds >= DAILY_AD_LIMIT) {
+                    showStatus('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin!', 'error');
+                    return;
+                }
+                
+                startAdWatch();
+            });
+            
+            // Reklam izleme fonksiyonu
+            function startAdWatch() {
+                // Butonu devre dışı bırak
+                rewardedBtn.disabled = true;
+                rewardedBtn.classList.add('btn-loading');
+                
+                // Reklam izleme ekranını göster
+                adWatchingOverlay.style.display = 'flex';
+                
+                let timeLeft = 30; // 30 saniye
+                adTimer.textContent = timeLeft;
+                
+                const timerInterval = setInterval(() => {
+                    timeLeft--;
+                    adTimer.textContent = timeLeft;
+                    
+                    // İlerleme çubuğunu güncelle
+                    const progress = ((30 - timeLeft) / 30) * 100;
+                    adProgressBar.style.width = progress + '%';
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        finishAdWatch();
+                    }
+                }, 1000);
+            }
+            
+            // Reklam izleme tamamlandığında
+            function finishAdWatch() {
+                // Ödülü ver
+                userData.balance += AD_REWARD;
+                userData.totalAds++;
+                userData.dailyAds++;
+                
+                // UI'ı güncelle
+                updateUI();
+                
+                // Reklam ekranını gizle
+                adWatchingOverlay.style.display = 'none';
+                
+                // Butonu tekrar etkinleştir
+                rewardedBtn.disabled = false;
+                rewardedBtn.classList.remove('btn-loading');
+                
+                // Başarı mesajı göster
+                showStatus(`Tebrikler! ${AD_REWARD} USDT kazandınız!`, 'success');
+                
+                // Günlük limit kontrolü
+                if (userData.dailyAds >= DAILY_AD_LIMIT) {
+                    showStatus('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin!', 'info');
+                }
+            }
+            
+            // Çekim butonu durumu
+            paymentAddress.addEventListener('input', function() {
+                updateWithdrawButton();
+            });
+            
+            function updateWithdrawButton() {
+                const canWithdraw = userData.balance >= WITHDRAW_THRESHOLD && paymentAddress.value.trim().length > 0;
+                finalWithdrawBtn.disabled = !canWithdraw;
+            }
+            
+            // Çekim butonu
+            finalWithdrawBtn.addEventListener('click', function() {
+                if (userData.balance < WITHDRAW_THRESHOLD) {
+                    showStatus(`Minimum çekim miktarı ${WITHDRAW_THRESHOLD} USDT'dir`, 'error');
+                    return;
+                }
+                
+                if (!paymentAddress.value.trim()) {
+                    showStatus('Lütfen USDT cüzdan adresinizi girin', 'error');
+                    return;
+                }
+                
+                // Çekim işlemi
+                showStatus(`Çekim talebiniz alındı: ${userData.balance.toFixed(3)} USDT. Onaylandıktan sonra ödemeniz yapılacak.`, 'success');
+                
+                // Bakiyeyi sıfırla
+                userData.balance = 0;
+                
+                // UI'ı güncelle
+                updateUI();
+                
+                // Adres alanını temizle
+                paymentAddress.value = '';
+                
+                // Ana sayfaya dön
+                setTimeout(() => {
+                    showView('home-view');
+                }, 2000);
+            });
+            
+            // Referans kodu gönderme
+            submitReferralBtn.addEventListener('click', function() {
+                const referralCode = referralCodeInput.value.trim();
+                
+                if (!referralCode) {
+                    showStatus('Lütfen bir referans kodu girin', 'error');
+                    return;
+                }
+                
+                if (userData.referredBy) {
+                    showStatus('Zaten bir referans kodu kullandınız', 'error');
+                    return;
+                }
+                
+                // Referans bonusu ver
+                userData.balance += 0.02;
+                userData.referredBy = referralCode;
+                
+                // UI'ı güncelle
+                updateUI();
+                
+                showStatus('Referans kodunuz başarıyla kaydedildi! 0.02 USDT bonusunuz hesabınıza eklendi.', 'success');
+                
+                // Giriş kutusunu temizle
+                referralCodeInput.value = '';
+            });
+            
             // Referans kodu kopyalama
-            document.getElementById('referralCodeBox').addEventListener('click', function() {
-                const code = document.getElementById('userReferralCode').textContent;
-                navigator.clipboard.writeText(code).then(() => {
+            referralCodeBox.addEventListener('click', function() {
+                navigator.clipboard.writeText(userData.referralCode).then(() => {
                     showStatus('Referans kodu panoya kopyalandı!', 'success');
+                }).catch(err => {
+                    showStatus('Kopyalama başarısız', 'error');
                 });
             });
             
-            // Çekim butonu durumu
-            const paymentAddress = document.getElementById('paymentAddress');
-            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
-            
-            paymentAddress.addEventListener('input', function() {
-                finalWithdrawBtn.disabled = this.value.length < 10;
+            // Ana çekim butonu
+            mainWithdrawBtn.addEventListener('click', function() {
+                if (userData.balance >= WITHDRAW_THRESHOLD) {
+                    showView('withdraw-view');
+                } else {
+                    showStatus(`Minimum çekim miktarı ${WITHDRAW_THRESHOLD} USDT'dir`, 'error');
+                }
             });
             
-            // Admin paneli kontrolü (örnek)
-            const adminIds = [6357701459, 8401848644, 7904032877];
-            const currentUserId = 6357701459; // Örnek kullanıcı ID
+            // UI güncelleme fonksiyonu
+            function updateUI() {
+                balanceDisplay.textContent = `USDT ${userData.balance.toFixed(3)}`;
+                withdrawBalanceDisplay.textContent = `USDT ${userData.balance.toFixed(3)}`;
+                adCountDisplay.textContent = userData.totalAds;
+                dailyAdCountDisplay.textContent = `${userData.dailyAds} / ${DAILY_AD_LIMIT}`;
+                referralCountDisplay.textContent = userData.referralCount;
+                referralBonusDisplay.textContent = `USDT ${(userData.referralCount * 0.02).toFixed(2)}`;
+                userReferralCode.textContent = userData.referralCode;
+                
+                // Günlük limit kontrolü
+                rewardedBtn.disabled = userData.dailyAds >= DAILY_AD_LIMIT;
+                
+                // Çekim butonu durumu
+                mainWithdrawBtn.disabled = userData.balance < WITHDRAW_THRESHOLD;
+                mainWithdrawBtn.textContent = userData.balance >= WITHDRAW_THRESHOLD ? 
+                    `${userData.balance.toFixed(3)} USDT Çek` : 
+                    `Çekim Yapmak İçin ${WITHDRAW_THRESHOLD} USDT'ye Ulaş`;
+                
+                updateWithdrawButton();
+            }
             
-            if (adminIds.includes(currentUserId)) {
-                document.getElementById('adminPanel').style.display = 'block';
-                document.getElementById('userInfo').textContent = `Admin: Kullanıcı (ID: ${currentUserId})`;
+            // Görünüm değiştirme fonksiyonu
+            function showView(viewId) {
+                views.forEach(view => view.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+                
+                // Navigasyon butonlarını güncelle
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                
+                if (viewId === 'home-view') document.getElementById('navHome').classList.add('active');
+                if (viewId === 'withdraw-view') document.getElementById('navWithdraw').classList.add('active');
+                if (viewId === 'referral-view') document.getElementById('navRefer').classList.add('active');
+            }
+            
+            // Durum mesajı gösterimi
+            function showStatus(message, type) {
+                const statusElement = document.getElementById('statusMessage');
+                statusElement.textContent = message;
+                statusElement.className = `status-message ${type}`;
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 4000);
             }
             
             // USDT fiyat simülasyonu
@@ -879,22 +1143,46 @@
             setInterval(updateUSDTPrice, 10000);
             updateUSDTPrice(); // İlk güncelleme
             
-            // Durum mesajı gösterimi
-            function showStatus(message, type) {
-                const statusElement = document.getElementById('statusMessage');
-                statusElement.textContent = message;
-                statusElement.className = `status-message ${type}`;
-                statusElement.style.display = 'block';
-                
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 4000);
-            }
+            // Admin butonları
+            document.getElementById('resetAllBtn').addEventListener('click', function() {
+                if (confirm('Tüm kullanıcı istatistiklerini sıfırlamak istediğinizden emin misiniz?')) {
+                    userData.balance = 0;
+                    userData.totalAds = 0;
+                    userData.dailyAds = 0;
+                    userData.referralCount = 0;
+                    updateUI();
+                    showStatus('Tüm istatistikler sıfırlandı!', 'success');
+                }
+            });
             
-            // Örnek durum mesajı
-            setTimeout(() => {
-                showStatus('TorreAds\'e hoş geldiniz!', 'info');
-            }, 1000);
+            document.getElementById('resetReferralsBtn').addEventListener('click', function() {
+                if (confirm('Tüm referansları sıfırlamak istediğinizden emin misiniz?')) {
+                    userData.referralCount = 0;
+                    userData.referredBy = null;
+                    updateUI();
+                    showStatus('Tüm referanslar sıfırlandı!', 'success');
+                }
+            });
+            
+            document.getElementById('deleteAllBtn').addEventListener('click', function() {
+                if (confirm('Tüm kullanıcı verilerini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                    userData = {
+                        balance: 0,
+                        totalAds: 0,
+                        dailyAds: 0,
+                        referralCount: 0,
+                        referralCode: 'TORRE' + Math.floor(1000 + Math.random() * 9000),
+                        referredBy: null,
+                        userId: userData.userId
+                    };
+                    updateUI();
+                    showStatus('Tüm kullanıcı verileri silindi!', 'success');
+                }
+            });
+            
+            document.getElementById('refreshStatsBtn').addEventListener('click', function() {
+                showStatus('İstatistikler yenilendi!', 'success');
+            });
         });
     </script>
 </body>
