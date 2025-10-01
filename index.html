@@ -1048,13 +1048,27 @@
     </div>
 
     <script>
-        // JSONBin.io Configuration
+        // JSONBin.io Configuration - DÜZGÜN ÇALIŞAN API KEY
         const JSONBIN_BIN_ID = '68dd124bae596e708f0254ac';
         const JSONBIN_API_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY.';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
+        // Admin IDs
+        const ADMIN_IDS = ['8401848644', '7904032877'];
+
         // Telegram WebApp
-        const tg = window.Telegram.WebApp;
+        let tg;
+        try {
+            tg = window.Telegram.WebApp;
+        } catch (error) {
+            console.log('Telegram WebApp not available, using fallback');
+            tg = {
+                initDataUnsafe: { user: { id: 'test_user_' + Date.now() } },
+                ready: () => console.log('Telegram ready'),
+                expand: () => console.log('Telegram expand'),
+                enableClosingConfirmation: () => console.log('Closing confirmation enabled')
+            };
+        }
 
         // Global State
         let appData = {
@@ -1070,7 +1084,8 @@
                 totalWithdrawals: 0,
                 totalReferrals: 0,
                 lastReset: new Date().toDateString()
-            }
+            },
+            lastUpdated: new Date().toISOString()
         };
 
         let currentUser = {
@@ -1086,7 +1101,8 @@
             completedTasks: [],
             taskEarnings: 0,
             paymentAddress: '',
-            isAdmin: false
+            isAdmin: false,
+            lastLogin: new Date().toISOString()
         };
 
         // Initialize App
@@ -1094,8 +1110,17 @@
             try {
                 showStatus('Uygulama başlatılıyor...', 'info');
                 
+                // Initialize Telegram
+                tg.ready();
+                tg.expand();
+                tg.enableClosingConfirmation();
+                
                 // Load data from JSONBin
-                await loadAppData();
+                const loaded = await loadAppData();
+                if (!loaded) {
+                    // If loading fails, create default data structure
+                    await initializeDefaultData();
+                }
                 
                 // Initialize current user
                 await initCurrentUser();
@@ -1110,34 +1135,89 @@
                 
             } catch (error) {
                 console.error('App initialization error:', error);
-                showStatus('Uygulama başlatılırken hata oluştu', 'error');
+                // Fallback: Initialize with default data
+                await initializeDefaultData();
+                await initCurrentUser();
+                updateUI();
+                showStatus('Uygulama hazır! (Yerel mod)', 'success', 2000);
             }
+        }
+
+        // Initialize default data structure
+        async function initializeDefaultData() {
+            appData = {
+                users: {},
+                tasks: {
+                    manual: [
+                        {
+                            id: 'manual_1',
+                            title: 'Telegram Kanalımıza Katılın',
+                            description: 'Resmi Telegram kanalımıza katılarak 0.005 USDT kazanın',
+                            link: 'https://t.me/torreadschannel',
+                            reward: 0.005,
+                            type: 'manual'
+                        },
+                        {
+                            id: 'manual_2',
+                            title: 'Telegram Grubumuza Katılın',
+                            description: 'Topluluk grubumuza katılarak 0.003 USDT kazanın',
+                            link: 'https://t.me/torreadsgroup',
+                            reward: 0.003,
+                            type: 'manual'
+                        }
+                    ],
+                    marketplace: []
+                },
+                withdrawRequests: [],
+                systemStats: {
+                    totalUsers: 0,
+                    totalAds: 0,
+                    totalWithdrawals: 0,
+                    totalReferrals: 0,
+                    lastReset: new Date().toDateString()
+                },
+                lastUpdated: new Date().toISOString()
+            };
+            
+            await saveAppData();
         }
 
         // Load app data from JSONBin
         async function loadAppData() {
             try {
+                console.log('Loading data from JSONBin...');
                 const response = await fetch(JSONBIN_URL + '/latest', {
+                    method: 'GET',
                     headers: {
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Meta': 'false'
                     }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.record) {
-                        appData = data.record;
-                        console.log('App data loaded successfully');
+                    console.log('Data loaded successfully:', data);
+                    
+                    if (data && typeof data === 'object') {
+                        appData = data;
+                        return true;
                     }
+                } else {
+                    console.log('JSONBin response not OK:', response.status);
                 }
             } catch (error) {
-                console.error('Error loading app data:', error);
+                console.error('Error loading from JSONBin:', error);
             }
+            
+            return false;
         }
 
         // Save app data to JSONBin
         async function saveAppData() {
             try {
+                console.log('Saving data to JSONBin...');
+                appData.lastUpdated = new Date().toISOString();
+                
                 const response = await fetch(JSONBIN_URL, {
                     method: 'PUT',
                     headers: {
@@ -1148,32 +1228,46 @@
                 });
                 
                 if (response.ok) {
-                    console.log('App data saved successfully');
+                    console.log('Data saved successfully to JSONBin');
                     return true;
+                } else {
+                    console.log('JSONBin save response not OK:', response.status);
                 }
             } catch (error) {
-                console.error('Error saving app data:', error);
+                console.error('Error saving to JSONBin:', error);
             }
+            
             return false;
         }
 
         // Initialize current user
         async function initCurrentUser() {
-            const user = tg.initDataUnsafe.user;
-            if (!user || !user.id) {
-                showStatus('Kullanıcı bilgileri alınamadı', 'error');
-                return;
+            let userId;
+            
+            try {
+                const user = tg.initDataUnsafe.user;
+                userId = user?.id?.toString();
+            } catch (error) {
+                console.log('Error getting Telegram user, using test user');
+                userId = 'test_user_' + Date.now();
             }
             
-            currentUser.id = user.id.toString();
+            if (!userId) {
+                userId = 'unknown_user_' + Date.now();
+            }
+            
+            currentUser.id = userId;
             
             // Check if user exists
             if (appData.users[currentUser.id]) {
+                console.log('Loading existing user:', currentUser.id);
                 currentUser = { ...currentUser, ...appData.users[currentUser.id] };
             } else {
+                console.log('Creating new user:', currentUser.id);
                 // Create new user
                 currentUser.referralCode = generateReferralCode();
-                currentUser.isAdmin = [7904032877, 8401848644, 6357701459].includes(parseInt(currentUser.id));
+                currentUser.isAdmin = ADMIN_IDS.includes(currentUser.id);
+                currentUser.lastLogin = new Date().toISOString();
                 
                 // Check for referral code in URL
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1190,6 +1284,10 @@
             
             // Check daily reset
             checkDailyReset();
+            
+            // Update last login
+            currentUser.lastLogin = new Date().toISOString();
+            appData.users[currentUser.id] = { ...currentUser };
         }
 
         // Generate referral code
@@ -1206,6 +1304,11 @@
         async function applyReferral(referralCode) {
             if (currentUser.referredBy) {
                 showStatus('Zaten bir referans kodu kullandınız', 'error');
+                return;
+            }
+            
+            if (referralCode === currentUser.referralCode) {
+                showStatus('Kendi referans kodunuzu kullanamazsınız', 'error');
                 return;
             }
             
@@ -1247,7 +1350,10 @@
         // Save current user data
         async function saveUserData() {
             appData.users[currentUser.id] = { ...currentUser };
-            await saveAppData();
+            const saved = await saveAppData();
+            if (!saved) {
+                console.warn('Failed to save user data to JSONBin');
+            }
         }
 
         // Update UI
@@ -1296,6 +1402,9 @@
             // Show/hide admin nav
             document.getElementById('navAdmin').style.display = currentUser.isAdmin ? 'flex' : 'none';
             document.getElementById('adminPanel').style.display = currentUser.isAdmin ? 'block' : 'none';
+            
+            // Update admin user info
+            document.getElementById('userInfo').textContent = `Kullanıcı ID: ${currentUser.id} ${currentUser.isAdmin ? '(Admin)' : ''}`;
         }
 
         // Update withdraw buttons
@@ -1349,7 +1458,9 @@
             });
             
             // Set default to 25%
-            percentageBtns[0].click();
+            if (percentageBtns.length > 0) {
+                percentageBtns[0].click();
+            }
         }
 
         // Calculate task cost based on percentage
@@ -1381,6 +1492,8 @@
         // Load manual tasks
         function loadManualTasks() {
             const tasksList = document.getElementById('manualTasksList');
+            if (!tasksList) return;
+            
             tasksList.innerHTML = '';
             
             if (appData.tasks.manual.length === 0) {
@@ -1388,7 +1501,7 @@
                 return;
             }
             
-            appData.tasks.manual.forEach((task, index) => {
+            appData.tasks.manual.forEach((task) => {
                 const isCompleted = currentUser.completedTasks.includes(task.id);
                 
                 const taskElement = document.createElement('div');
@@ -1411,6 +1524,8 @@
         // Load marketplace tasks
         function loadMarketplaceTasks() {
             const tasksList = document.getElementById('marketplaceTasksList');
+            if (!tasksList) return;
+            
             tasksList.innerHTML = '';
             
             // Filter out expired tasks
@@ -1424,7 +1539,7 @@
                 return;
             }
             
-            appData.tasks.marketplace.forEach((task, index) => {
+            appData.tasks.marketplace.forEach((task) => {
                 const isCompleted = currentUser.completedTasks.includes(task.id);
                 const timeLeft = task.createdAt + (48 * 60 * 60 * 1000) - now;
                 const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
@@ -1519,11 +1634,11 @@
 
         // Create marketplace task
         async function createMarketplaceTask() {
-            const title = document.getElementById('taskTitle').value.trim();
-            const description = document.getElementById('taskDescription').value.trim();
-            const link = document.getElementById('taskLink').value.trim();
-            const reward = parseFloat(document.getElementById('taskReward').value);
-            const members = parseInt(document.getElementById('taskMembers').value);
+            const title = document.getElementById('taskTitle')?.value.trim();
+            const description = document.getElementById('taskDescription')?.value.trim();
+            const link = document.getElementById('taskLink')?.value.trim();
+            const reward = parseFloat(document.getElementById('taskReward')?.value || '0.002');
+            const members = parseInt(document.getElementById('taskMembers')?.value || '10');
             const cost = reward * members;
             
             if (!title || !description || !link) {
@@ -1556,9 +1671,9 @@
             appData.tasks.marketplace.push(task);
             
             // Clear form
-            document.getElementById('taskTitle').value = '';
-            document.getElementById('taskDescription').value = '';
-            document.getElementById('taskLink').value = '';
+            if (document.getElementById('taskTitle')) document.getElementById('taskTitle').value = '';
+            if (document.getElementById('taskDescription')) document.getElementById('taskDescription').value = '';
+            if (document.getElementById('taskLink')) document.getElementById('taskLink').value = '';
             
             showStatus('Görev oluşturuldu!', 'success');
             await saveAppData();
@@ -1573,15 +1688,24 @@
             const price = 1.00 + (Math.random() - 0.5) * 0.01;
             const change = (price - 1.00) / 1.00 * 100;
             
-            document.getElementById('usdtPrice').textContent = price.toFixed(4);
-            const changeElement = document.getElementById('priceChange');
-            changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
-            changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+            const usdtPriceElement = document.getElementById('usdtPrice');
+            const priceChangeElement = document.getElementById('priceChange');
+            
+            if (usdtPriceElement) {
+                usdtPriceElement.textContent = price.toFixed(4);
+            }
+            
+            if (priceChangeElement) {
+                priceChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                priceChangeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+            }
         }
 
         // Show status message
         function showStatus(message, type, duration = 3000) {
             const statusElement = document.getElementById('statusMessage');
+            if (!statusElement) return;
+            
             statusElement.textContent = message;
             statusElement.className = `status-message ${type}`;
             
@@ -1598,13 +1722,19 @@
             });
             
             // Show target view
-            document.getElementById(viewId).style.display = 'block';
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.style.display = 'block';
+            }
             
             // Update active nav button
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.querySelector(`[data-view="${viewId}"]`).classList.add('active');
+            const activeNav = document.querySelector(`[data-view="${viewId}"]`);
+            if (activeNav) {
+                activeNav.classList.add('active');
+            }
             
             // Special handling for admin view
             if (viewId === 'admin-view' && currentUser.isAdmin) {
@@ -1617,10 +1747,15 @@
             if (!currentUser.isAdmin) return;
             
             // Update stats
-            document.getElementById('totalUsers').textContent = Object.keys(appData.users).length;
-            document.getElementById('totalAds').textContent = appData.systemStats.totalAds;
-            document.getElementById('totalWithdrawals').textContent = appData.systemStats.totalWithdrawals;
-            document.getElementById('totalReferrals').textContent = appData.systemStats.totalReferrals;
+            const totalUsersElement = document.getElementById('totalUsers');
+            const totalAdsElement = document.getElementById('totalAds');
+            const totalWithdrawalsElement = document.getElementById('totalWithdrawals');
+            const totalReferralsElement = document.getElementById('totalReferrals');
+            
+            if (totalUsersElement) totalUsersElement.textContent = Object.keys(appData.users).length;
+            if (totalAdsElement) totalAdsElement.textContent = appData.systemStats.totalAds;
+            if (totalWithdrawalsElement) totalWithdrawalsElement.textContent = appData.systemStats.totalWithdrawals;
+            if (totalReferralsElement) totalReferralsElement.textContent = appData.systemStats.totalReferrals;
             
             // Update user list
             updateAdminUserList();
@@ -1635,6 +1770,8 @@
         // Update admin user list
         function updateAdminUserList() {
             const userList = document.getElementById('adminUserList');
+            if (!userList) return;
+            
             userList.innerHTML = '';
             
             const users = Object.entries(appData.users).slice(0, 10); // Show first 10 users
@@ -1659,6 +1796,8 @@
         // Update admin tasks list
         function updateAdminTasksList() {
             const tasksList = document.getElementById('adminTasksList');
+            if (!tasksList) return;
+            
             tasksList.innerHTML = '';
             
             appData.tasks.manual.forEach((task, index) => {
@@ -1679,6 +1818,8 @@
         // Update withdraw requests list
         function updateWithdrawRequestsList() {
             const requestsList = document.getElementById('withdrawRequestsList');
+            if (!requestsList) return;
+            
             requestsList.innerHTML = '';
             
             if (appData.withdrawRequests.length === 0) {
@@ -1709,10 +1850,10 @@
 
         // Admin: Add manual task
         async function addManualTask() {
-            const title = document.getElementById('adminTaskTitle').value.trim();
-            const description = document.getElementById('adminTaskDescription').value.trim();
-            const link = document.getElementById('adminTaskLink').value.trim();
-            const reward = parseFloat(document.getElementById('adminTaskReward').value);
+            const title = document.getElementById('adminTaskTitle')?.value.trim();
+            const description = document.getElementById('adminTaskDescription')?.value.trim();
+            const link = document.getElementById('adminTaskLink')?.value.trim();
+            const reward = parseFloat(document.getElementById('adminTaskReward')?.value || '0.002');
             
             if (!title || !description) {
                 showStatus('Lütfen görev başlığı ve açıklaması girin', 'error');
@@ -1731,10 +1872,10 @@
             appData.tasks.manual.push(task);
             
             // Clear form
-            document.getElementById('adminTaskTitle').value = '';
-            document.getElementById('adminTaskDescription').value = '';
-            document.getElementById('adminTaskLink').value = '';
-            document.getElementById('adminTaskReward').value = '0.002';
+            if (document.getElementById('adminTaskTitle')) document.getElementById('adminTaskTitle').value = '';
+            if (document.getElementById('adminTaskDescription')) document.getElementById('adminTaskDescription').value = '';
+            if (document.getElementById('adminTaskLink')) document.getElementById('adminTaskLink').value = '';
+            if (document.getElementById('adminTaskReward')) document.getElementById('adminTaskReward').value = '0.002';
             
             showStatus('Görev eklendi!', 'success');
             await saveAppData();
@@ -1784,6 +1925,8 @@
             }
             
             const btn = document.getElementById('rewardedBtn');
+            if (!btn) return;
+            
             btn.disabled = true;
             btn.classList.add('btn-loading');
             
@@ -1849,27 +1992,45 @@
             });
             
             // Rewarded ad
-            document.getElementById('rewardedBtn').addEventListener('click', handleRewardedAd);
+            const rewardedBtn = document.getElementById('rewardedBtn');
+            if (rewardedBtn) {
+                rewardedBtn.addEventListener('click', handleRewardedAd);
+            }
             
             // Withdraw
-            document.getElementById('finalWithdrawBtn').addEventListener('click', handleWithdraw);
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            if (finalWithdrawBtn) {
+                finalWithdrawBtn.addEventListener('click', handleWithdraw);
+            }
             
             // Referral submission
-            document.getElementById('submitReferralBtn').addEventListener('click', async function() {
-                const code = document.getElementById('referralCodeInput').value.trim().toUpperCase();
-                if (!code) {
-                    showStatus('Lütfen bir referans kodu girin', 'error');
-                    return;
-                }
-                await applyReferral(code);
-                updateUI();
-            });
+            const submitReferralBtn = document.getElementById('submitReferralBtn');
+            if (submitReferralBtn) {
+                submitReferralBtn.addEventListener('click', async function() {
+                    const codeInput = document.getElementById('referralCodeInput');
+                    if (!codeInput) return;
+                    
+                    const code = codeInput.value.trim().toUpperCase();
+                    if (!code) {
+                        showStatus('Lütfen bir referans kodu girin', 'error');
+                        return;
+                    }
+                    await applyReferral(code);
+                    updateUI();
+                });
+            }
             
             // Task creation
-            document.getElementById('createTaskBtn').addEventListener('click', createMarketplaceTask);
+            const createTaskBtn = document.getElementById('createTaskBtn');
+            if (createTaskBtn) {
+                createTaskBtn.addEventListener('click', createMarketplaceTask);
+            }
             
             // Admin task addition
-            document.getElementById('adminAddTaskBtn').addEventListener('click', addManualTask);
+            const adminAddTaskBtn = document.getElementById('adminAddTaskBtn');
+            if (adminAddTaskBtn) {
+                adminAddTaskBtn.addEventListener('click', addManualTask);
+            }
             
             // Admin tabs
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -1878,13 +2039,14 @@
                     document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
                     
                     this.classList.add('active');
-                    document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+                    const tabContent = document.getElementById(this.dataset.tab + '-tab');
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                    }
                 });
             });
             
             // Initialize app
-            tg.ready();
-            tg.expand();
             initApp();
         });
 
