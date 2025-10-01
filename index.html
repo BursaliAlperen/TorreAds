@@ -7,692 +7,125 @@
     
     <!-- GigaPub SDK -->
     <script src="https://ad.gigapub.tech/script?id=986"></script>
+
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
         :root {
-            --primary-blue: #1976D2;
-            --light-blue: #E3F2FD;
-            --dark-blue: #0D47A1;
-            --accent-blue: #2196F3;
-            --white: #FFFFFF;
-            --light-gray: #F5F5F5;
-            --medium-gray: #E0E0E0;
-            --dark-gray: #757575;
-            --text-dark: #212121;
-            --text-light: #FFFFFF;
-            --success: #4CAF50;
-            --warning: #FF9800;
-            --error: #F44336;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
+            --tg-theme-bg-color: #121212; --tg-theme-text-color: #e0e0e0; --tg-theme-button-color: #007bff;
+            --tg-theme-button-text-color: #ffffff; --tg-theme-hint-color: #8a8a8a; --success-color: #28a745;
+            --warning-color: #ffc107; --danger-color: #dc3545; --secondary-bg-color: #1e1e1e; --border-color: #333333;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
-            color: var(--text-dark);
-            min-height: 100vh;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0;
+            padding: 20px 15px 90px 15px; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color);
+            display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 100vh; box-sizing: border-box;
         }
-        
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 20px 16px 80px 16px;
-        }
-        
-        /* Maintenance Banner */
-        .maintenance-banner {
-            background: linear-gradient(135deg, var(--warning), #ff6f00);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            box-shadow: var(--shadow);
-            display: none;
-        }
-        
-        /* Loading Screen */
-        .loading-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 70vh;
-            text-align: center;
-        }
-        
-        .loader {
-            width: 48px;
-            height: 48px;
-            border: 4px solid var(--medium-gray);
-            border-top: 4px solid var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 24px;
-        }
-        
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
-            padding: 20px 0;
-        }
-        
-        .app-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-        
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 24px;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            margin-bottom: 4px;
-        }
-        
-        .header p {
-            color: var(--dark-gray);
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        /* Views */
-        .view {
-            display: none;
-            animation: fadeIn 0.4s ease-out;
-        }
-        
-        #home-view {
-            display: block;
-        }
-        
-        /* Cards */
+        .container { width: 100%; max-width: 500px; }
+        .view { display: none; width: 100%; animation: fadeIn 0.3s ease-in-out; }
+        #home-view { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .header { margin-bottom: 25px; }
+        .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; color: #ffffff; }
+        .header p { color: var(--tg-theme-hint-color); font-size: 16px; }
         .card {
-            background: var(--white);
-            padding: 24px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--medium-gray);
-            transition: all 0.3s ease;
+            background-color: var(--secondary-bg-color); padding: 25px; border-radius: 16px; margin-bottom: 25px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color);
         }
-        
-        .card:hover {
-            box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
-        }
-        
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--light-blue);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary-blue);
-        }
-        
         .card h2 {
-            font-size: 16px;
-            color: var(--dark-gray);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin: 0 0 12px 0; font-size: 16px; color: var(--tg-theme-hint-color); font-weight: 500;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
-        
-        /* Balance */
-        .balance-section {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .balance-label {
-            font-size: 14px;
-            color: var(--dark-gray);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .balance-amount {
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--primary-blue);
-            margin-bottom: 4px;
-            line-height: 1.1;
-        }
-        
-        .balance-subtitle {
-            font-size: 14px;
-            color: var(--dark-gray);
-        }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 20px;
-        }
-        
-        .stat-item {
-            background: var(--light-blue);
-            padding: 20px 16px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid var(--medium-gray);
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            margin-bottom: 4px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--dark-gray);
-            font-weight: 500;
-        }
-        
-        /* Buttons */
+        .balance-amount { font-size: 42px; font-weight: 700; color: #ffffff; margin-bottom: 10px; }
+        .ad-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center; }
+        .ad-info-item h3 { font-size: 20px; font-weight: 600; margin: 0 0 5px 0; color: #ffffff; }
+        .ad-info-item p { font-size: 14px; color: var(--tg-theme-hint-color); margin: 0; }
+        .ad-buttons { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .btn {
-            width: 100%;
-            padding: 18px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            width: 100%; padding: 16px; font-size: 18px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            background: linear-gradient(145deg, var(--tg-theme-button-color), #0056b3); color: var(--tg-theme-button-text-color);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-            color: var(--white);
-            box-shadow: var(--shadow);
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+        #mainWithdrawBtn { background: linear-gradient(145deg, var(--success-color), #1e7e34); box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); }
+        #mainWithdrawBtn:disabled { background: #555; box-shadow: none; }
+        .status-message {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 480px;
+            padding: 12px 15px; border-radius: 10px; font-weight: 500; display: none; animation: fadeIn 0.3s;
+            z-index: 1000; box-sizing: border-box;
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
+        .success { display: block; background-color: rgba(40, 167, 69, 0.25); border-left: 5px solid var(--success-color); color: var(--success-color); }
+        .error { display: block; background-color: rgba(220, 53, 69, 0.25); border-left: 5px solid var(--danger-color); color: var(--danger-color); }
+        .info { display: block; background-color: rgba(0, 123, 255, 0.25); border-left: 5px solid var(--tg-theme-button-color); color: #008cff; }
+        .footer-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--secondary-bg-color); display: flex;
+            justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+            border-top: 1px solid var(--border-color); z-index: 999;
         }
-        
-        .btn-primary:active {
-            transform: translateY(0);
+        .nav-btn {
+            background: none; border: none; color: var(--tg-theme-hint-color); display: flex; flex-direction: column;
+            align-items: center; font-size: 12px; font-weight: 500; cursor: pointer; padding: 5px 15px;
+            border-radius: 12px; transition: color 0.2s, background-color 0.2s;
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--success), #45a049);
-            color: var(--white);
-            box-shadow: var(--shadow);
+        .nav-btn.active { color: var(--tg-theme-button-color); }
+        .nav-btn:hover:not(.active) { color: #ffffff; }
+        .nav-btn .icon { width: 28px; height: 28px; margin-bottom: 4px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--tg-theme-hint-color); font-size: 14px; font-weight: 500; }
+        .input-group input {
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);
+            background-color: #333; color: var(--tg-theme-text-color); font-size: 16px; box-sizing: border-box;
         }
-        
-        .btn-secondary {
-            background: var(--white);
-            color: var(--primary-blue);
-            border: 2px solid var(--primary-blue);
-            box-shadow: var(--shadow);
+        .input-group input:focus { outline: none; border-color: var(--tg-theme-button-color); box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); }
+        #referralLink {
+            background-color: #111; padding: 15px; border-radius: 10px; word-wrap: break-word;
+            border: 1px dashed var(--tg-theme-hint-color); margin-top: 15px; cursor: pointer; color: #e0e0e0;
+            transition: background-color 0.2s; text-align: left;
         }
+        #referralLink:hover { background-color: #2a2a2a; }
         
-        .btn:disabled {
-            background: var(--medium-gray);
-            color: var(--dark-gray);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn:disabled:hover {
-            transform: none;
-            box-shadow: none;
-        }
-        
-        /* Action Buttons Container */
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        
-        /* Input Groups */
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .input-label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark-gray);
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            border: 2px solid var(--medium-gray);
-            background: var(--white);
-            color: var(--text-dark);
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
-        }
-        
-        /* Referral Styles */
-        .referral-code-box {
-            background: linear-gradient(135deg, var(--light-blue), var(--white));
-            padding: 20px;
-            border-radius: 16px;
-            border: 2px dashed var(--primary-blue);
-            margin: 20px 0;
-            cursor: pointer;
-            color: var(--primary-blue);
-            transition: all 0.3s ease;
-            text-align: center;
-            font-weight: 700;
-            font-size: 20px;
-            letter-spacing: 2px;
-        }
-        
-        .referral-code-box:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-        
+        /* Yeni referans giriş kutusu stilleri */
         .referral-input-container {
             margin-top: 20px;
-            padding: 20px;
-            background: var(--light-blue);
-            border-radius: 16px;
-            border: 1px solid var(--medium-gray);
+            padding: 15px;
+            background-color: var(--secondary-bg-color);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
         }
         
         .referral-input-group {
             display: flex;
-            gap: 12px;
-            margin-top: 16px;
+            gap: 10px;
+            margin-top: 10px;
         }
         
-        .referral-input-group .input-field {
+        .referral-input-group input {
             flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .referral-input-group .btn {
-            margin-bottom: 0;
-            padding: 16px 20px;
-            min-width: 100px;
-        }
-        
-        /* Status Messages */
-        .status-message {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: none;
-            animation: slideUp 0.3s ease;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            border-left: 4px solid;
-        }
-        
-        .status-success {
-            display: block;
-            background: rgba(76, 175, 80, 0.1);
-            border-left-color: var(--success);
-            color: var(--success);
-        }
-        
-        .status-error {
-            display: block;
-            background: rgba(244, 67, 54, 0.1);
-            border-left-color: var(--error);
-            color: var(--error);
-        }
-        
-        .status-info {
-            display: block;
-            background: rgba(33, 150, 243, 0.1);
-            border-left-color: var(--accent-blue);
-            color: var(--accent-blue);
-        }
-        
-        /* Footer Navigation */
-        .footer-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--white);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
-            border-top: 1px solid var(--medium-gray);
-            z-index: 1000;
-        }
-        
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--dark-gray);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            min-width: 60px;
-        }
-        
-        .nav-btn.active {
-            color: var(--primary-blue);
-            background: var(--light-blue);
-        }
-        
-        .nav-btn:hover:not(.active) {
-            color: var(--primary-blue);
-            transform: translateY(-2px);
-        }
-        
-        .nav-icon {
-            font-size: 20px;
-            margin-bottom: 4px;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-btn.active .nav-icon {
-            transform: scale(1.1);
-        }
-        
-        /* Admin Panel */
-        .admin-panel {
-            margin-top: 24px;
-            padding: 20px;
-            border: 2px solid var(--warning);
-            border-radius: 16px;
-            background: rgba(255, 152, 0, 0.05);
-        }
-        
-        .admin-panel h3 {
-            color: var(--warning);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-        }
-        
-        .admin-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 16px;
-        }
-        
-        .admin-btn {
-            padding: 12px 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        
-        .admin-btn.add-balance {
-            background: var(--success);
-            color: var(--white);
-        }
-        
-        .admin-btn.reset-stats {
-            background: var(--error);
-            color: var(--white);
-        }
-        
-        .admin-btn.export-data {
-            background: var(--primary-blue);
-            color: var(--white);
-        }
-        
-        .admin-btn.import-data {
-            background: var(--warning);
-            color: var(--white);
-        }
-
-        /* Bot Status Controls */
-        .status-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin: 16px 0;
-        }
-        
-        .status-btn {
-            padding: 10px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 11px;
-            transition: all 0.3s ease;
-        }
-        
-        .status-btn.active {
-            background: var(--success);
-            color: white;
-        }
-        
-        .status-btn.maintenance {
-            background: var(--warning);
-            color: white;
-        }
-        
-        .status-btn.paused {
-            background: var(--error);
-            color: white;
-        }
-
-        /* Withdrawal History */
-        .withdrawal-history {
-            margin-top: 20px;
-        }
-        
-        .withdrawal-item {
-            background: var(--light-blue);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border-left: 4px solid var(--primary-blue);
-        }
-        
-        .withdrawal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .withdrawal-amount {
-            font-weight: 700;
-            color: var(--primary-blue);
-            font-size: 18px;
-        }
-        
-        .withdrawal-status {
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .status-pending {
-            background: rgba(255, 152, 0, 0.1);
-            color: var(--warning);
-        }
-        
-        .status-completed {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .status-rejected {
-            background: rgba(244, 67, 54, 0.1);
-            color: var(--error);
-        }
-        
-        .withdrawal-details {
-            font-size: 12px;
-            color: var(--dark-gray);
-        }
-        
-        .withdrawal-date {
-            margin-top: 4px;
-            font-size: 11px;
-            color: var(--dark-gray);
-        }
-
-        /* Admin Tabs */
-        .admin-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 2px solid var(--medium-gray);
-            padding-bottom: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .admin-tab {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            background: var(--light-gray);
-            color: var(--dark-gray);
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 70px;
-        }
-        
-        .admin-tab.active {
-            background: var(--primary-blue);
-            color: var(--white);
-        }
-        
-        .admin-section {
-            display: none;
-        }
-        
-        .admin-section.active {
-            display: block;
-        }
-        
-        .withdrawal-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .user-item {
-            background: var(--light-blue);
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--primary-blue);
+            border: 1px solid var(--border-color);
+            background-color: #333;
+            color: var(--tg-theme-text-color);
         }
         
-        .user-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        
-        .user-name {
+        .referral-input-group button {
+            padding: 12px 20px;
+            background: linear-gradient(145deg, var(--tg-theme-button-color), #0056b3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
-            color: var(--text-dark);
         }
         
-        .user-balance {
-            color: var(--primary-blue);
-            font-weight: 700;
-        }
-        
-        .user-details {
-            font-size: 11px;
-            color: var(--dark-gray);
-            display: flex;
-            gap: 12px;
-        }
-        
-        /* Loading Indicator */
+        /* Loading indicator */
         .btn-loading {
             position: relative;
             pointer-events: none;
-            color: transparent;
         }
         
         .btn-loading::after {
@@ -705,624 +138,535 @@
             margin-left: -10px;
             margin-top: -10px;
             border: 2px solid transparent;
-            border-top: 2px solid currentColor;
+            border-top: 2px solid #ffffff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         
-        /* Animations */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* USDT Price Chart Styles */
+        .price-chart {
+            background-color: var(--secondary-bg-color);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid var(--border-color);
         }
         
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translate(-50%, 20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
         
-        /* Utility Classes */
-        .text-center { text-align: center; }
-        .text-success { color: var(--success); }
-        .text-muted { color: var(--dark-gray); }
-        .mb-16 { margin-bottom: 16px; }
-        .mb-8 { margin-bottom: 8px; }
+        .current-price {
+            font-size: 18px;
+            font-weight: bold;
+        }
         
-        /* Responsive */
-        @media (max-width: 480px) {
-            .container {
-                padding: 16px 12px 80px 12px;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-            
-            .balance-amount {
-                font-size: 40px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .stats-grid {
-                gap: 12px;
-            }
-            
-            .admin-tabs {
-                gap: 4px;
-            }
-            
-            .admin-tab {
-                padding: 6px 8px;
-                font-size: 10px;
-                min-width: 60px;
-            }
-            
-            .status-controls {
-                grid-template-columns: 1fr;
-            }
+        .price-change {
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        
+        .price-change.positive {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success-color);
+        }
+        
+        .price-change.negative {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .chart-placeholder {
+            height: 60px;
+            background: linear-gradient(90deg, #333 0%, #444 50%, #333 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+        }
+
+        /* Referans kod kutusu */
+        .referral-code-box {
+            background-color: #111;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed var(--tg-theme-hint-color);
+            margin-top: 15px;
+            cursor: pointer;
+            color: #e0e0e0;
+            transition: background-color 0.2s;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        
+        .referral-code-box:hover {
+            background-color: #2a2a2a;
+        }
+
+        /* Admin Panel Stilleri */
+        .admin-panel {
+            display: none;
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid var(--warning-color);
+            border-radius: 10px;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .admin-panel h3 {
+            color: var(--warning-color);
+            margin-top: 0;
+        }
+        
+        .admin-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .admin-btn {
+            padding: 10px 15px;
+            background: linear-gradient(145deg, var(--warning-color), #e0a800);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        
+        .admin-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .admin-btn.danger {
+            background: linear-gradient(145deg, var(--danger-color), #c82333);
+            color: white;
+        }
+        
+        .admin-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-    <!-- Maintenance Banner -->
-    <div class="maintenance-banner" id="maintenanceBanner">
-        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">engineering</span>
-        <span id="maintenanceMessage">Bot is under maintenance</span>
-    </div>
-
     <div class="container">
-        <!-- Loading Screen -->
-        <div id="loading-screen" class="loading-screen">
-            <div class="loader"></div>
-            <h2 style="margin-bottom: 8px; color: var(--primary-blue);">TorreAds</h2>
-            <p class="text-muted">Loading your earnings...</p>
-        </div>
-
-        <!-- Home View -->
+        <!-- Home / Task View -->
         <div id="home-view" class="view">
-            <div class="header">
-                <div class="app-logo">
-                    <div class="logo-icon">
-                        <span class="material-icons">attach_money</span>
-                    </div>
-                    <h1>TorreAds</h1>
+            <div class="header"><h1>TorreAds</h1><p>Watch Ads and Earn USDT</p></div>
+            
+            <!-- USDT Price Chart -->
+            <div class="price-chart">
+                <div class="price-info">
+                    <div class="current-price">USDT: $<span id="usdtPrice">1.00</span></div>
+                    <div class="price-change" id="priceChange">0.00%</div>
                 </div>
-                <p>Watch Ads • Earn USDT • Simple & Secure</p>
+                <div class="chart-placeholder" id="chartPlaceholder">
+                    Live USDT Price Chart
+                </div>
             </div>
             
-            <!-- Balance Card -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">account_balance_wallet</span>
-                    </div>
-                    <h2>Current Balance</h2>
-                </div>
-                <div class="balance-section">
-                    <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
-                    <div class="balance-subtitle">Available for withdrawal</div>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="adCountDisplay">0</div>
-                        <div class="stat-label">Total Ads</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="dailyAdCountDisplay">0/100</div>
-                        <div class="stat-label">Today's Limit</div>
-                    </div>
+                <h2>Current Balance</h2>
+                <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
+                    <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 100</h3><p>Today's Ads</p></div>
                 </div>
             </div>
+            <div class="ad-buttons"><button class="btn" id="rewardedBtn">Watch Ad (+0.002 USDT)</button></div>
+            <button class="btn" id="mainWithdrawBtn" disabled>Reach 0.50 USDT to Withdraw</button>
             
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="btn btn-primary" id="rewardedBtn">
-                    <span class="material-icons">play_circle</span>
-                    Watch Ad & Earn +0.002 USDT
-                </button>
+            <!-- Genişletilmiş Admin Panel -->
+            <div class="admin-panel" id="adminPanel">
+                <h3>👑 Admin Panel</h3>
+                <p id="userInfo"></p>
                 
-                <button class="btn btn-success" id="mainWithdrawBtn" disabled>
-                    <span class="material-icons">payments</span>
-                    Reach 0.50 USDT to Withdraw
-                </button>
-            </div>
-            
-            <!-- Referral Info -->
-            <div class="card" id="referralInfoCard" style="display: none;">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">card_giftcard</span>
-                    </div>
-                    <h2>Referral Bonus</h2>
-                </div>
-                <p class="mb-8">You were referred by: <strong id="referredByInfo"></strong></p>
-                <p class="text-success" style="font-weight: 600;">
-                    <span class="material-icons" style="font-size: 16px; vertical-align: middle;">check_circle</span>
-                    +0.02 USDT bonus added to your balance!
-                </p>
-            </div>
-
-            <!-- Withdrawal History -->
-            <div class="card" id="withdrawalHistoryCard">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">history</span>
-                    </div>
-                    <h2>Withdrawal History</h2>
-                </div>
-                <div class="withdrawal-history" id="withdrawalHistory">
-                    <div class="text-muted text-center" id="emptyWithdrawalHistory">
-                        No withdrawal history yet
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Admin Panel -->
-            <div class="admin-panel" id="adminPanel" style="display: none;">
-                <h3>
-                    <span class="material-icons">admin_panel_settings</span>
-                    Admin Control Panel
-                </h3>
-                
-                <!-- Bot Status Controls -->
-                <div class="input-group">
-                    <label class="input-label">Bot Status Control</label>
-                    <div class="status-controls">
-                        <button class="status-btn active" id="statusActiveBtn">Active</button>
-                        <button class="status-btn maintenance" id="statusMaintenanceBtn">Maintenance</button>
-                        <button class="status-btn paused" id="statusPausedBtn">Paused</button>
-                    </div>
-                    <input type="text" class="input-field" id="statusMessageInput" placeholder="Custom status message...">
+                <div class="admin-stats" id="adminStats">
+                    <p><strong>Global Stats:</strong></p>
+                    <p>Total Users: <span id="totalUsers">0</span></p>
+                    <p>Total Ads Watched: <span id="totalAds">0</span></p>
+                    <p>Total USDT Distributed: <span id="totalUSDT">0.00</span></p>
+                    <p>Total Referrals: <span id="totalReferrals">0</span></p>
                 </div>
                 
-                <!-- Admin Tabs -->
-                <div class="admin-tabs">
-                    <button class="admin-tab active" onclick="showAdminTab('users')">Users</button>
-                    <button class="admin-tab" onclick="showAdminTab('withdrawals')">Withdrawals</button>
-                    <button class="admin-tab" onclick="showAdminTab('stats')">Statistics</button>
-                    <button class="admin-tab" onclick="showAdminTab('tools')">Tools</button>
-                </div>
-                
-                <!-- Users Tab -->
-                <div id="admin-users" class="admin-section active">
-                    <div class="input-group">
-                        <label class="input-label">User ID: <span id="adminUserId"></span></label>
-                        <input type="number" class="input-field" id="adminBalanceInput" placeholder="Add balance amount (USDT)">
-                    </div>
-                    <div class="admin-actions">
-                        <button class="admin-btn add-balance" id="adminAddBalanceBtn">
-                            <span class="material-icons" style="font-size: 14px;">add</span>
-                            Add Balance
-                        </button>
-                        <button class="admin-btn reset-stats" id="adminResetStatsBtn">
-                            <span class="material-icons" style="font-size: 14px;">refresh</span>
-                            Reset Stats
-                        </button>
-                    </div>
-                    <div class="user-list" id="userList" style="margin-top: 16px; max-height: 200px; overflow-y: auto;"></div>
-                </div>
-                
-                <!-- Withdrawals Tab -->
-                <div id="admin-withdrawals" class="admin-section">
-                    <div class="withdrawal-list" id="adminWithdrawalList">
-                        <!-- Withdrawals will be populated here -->
-                    </div>
-                </div>
-                
-                <!-- Statistics Tab -->
-                <div id="admin-stats" class="admin-section">
-                    <div id="adminStats"></div>
-                    <div class="admin-actions" style="margin-top: 16px;">
-                        <button class="admin-btn export-data" id="adminExportAllDataBtn">
-                            <span class="material-icons" style="font-size: 14px;">download</span>
-                            Export All Data
-                        </button>
-                        <button class="admin-btn import-data" id="adminImportDataBtn">
-                            <span class="material-icons" style="font-size: 14px;">upload</span>
-                            Import Data
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Tools Tab -->
-                <div id="admin-tools" class="admin-section">
-                    <div class="admin-actions">
-                        <button class="admin-btn add-balance" id="adminAddBonusToAllBtn">
-                            <span class="material-icons" style="font-size: 14px;">celebration</span>
-                            Add Bonus to All
-                        </button>
-                        <button class="admin-btn reset-stats" id="adminResetAllStatsBtn">
-                            <span class="material-icons" style="font-size: 14px;">delete_sweep</span>
-                            Reset All Stats
-                        </button>
-                        <button class="admin-btn export-data" id="adminExportUserDataBtn">
-                            <span class="material-icons" style="font-size: 14px;">person</span>
-                            Export User Data
-                        </button>
-                        <button class="admin-btn import-data" id="adminClearAllDataBtn">
-                            <span class="material-icons" style="font-size: 14px;">warning</span>
-                            Clear All Data
-                        </button>
-                    </div>
+                <div class="admin-controls">
+                    <button class="admin-btn" id="resetAllBtn">Reset All User Stats</button>
+                    <button class="admin-btn" id="resetReferralsBtn">Reset All Referrals</button>
+                    <button class="admin-btn danger" id="deleteAllBtn">Delete All User Data</button>
+                    <button class="admin-btn" id="refreshStatsBtn">Refresh Stats</button>
                 </div>
             </div>
         </div>
 
         <!-- Withdraw View -->
         <div id="withdraw-view" class="view">
-            <div class="header">
-                <div class="app-logo">
-                    <div class="logo-icon">
-                        <span class="material-icons">payments</span>
-                    </div>
-                    <h1>Withdraw</h1>
-                </div>
-                <p>Cash out your earnings securely</p>
-            </div>
-            
+            <div class="header"><h1>Withdraw</h1><p>Request your earnings</p></div>
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">account_balance_wallet</span>
-                    </div>
-                    <h2>Your Balance</h2>
-                </div>
-                <div class="balance-section">
-                    <div class="balance-amount" id="withdrawBalanceDisplay">USDT 0.00</div>
-                    <div class="balance-subtitle">Available for withdrawal</div>
-                </div>
-                <p class="text-center text-muted mb-16">
-                    Minimum withdrawal: <strong>0.50 USDT</strong>
-                </p>
+                <h2>Your Balance</h2>
+                <div class="balance-amount" id="withdrawBalanceDisplay">USDT 0.00</div>
+                <p style="color: var(--tg-theme-hint-color); margin-top: 15px;">Minimum withdrawal is 0.50 USDT.</p>
             </div>
-            
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">credit_card</span>
-                    </div>
-                    <h2>Payment Details</h2>
-                </div>
+                <h2>Payment Details</h2>
                 <div class="input-group">
-                    <label class="input-label" for="paymentAddress">Your USDT Wallet Address (TRC20)</label>
-                    <input type="text" class="input-field" id="paymentAddress" placeholder="Enter your TRC20 wallet address">
+                    <label for="paymentAddress">Your USDT Wallet Address (TRC20)</label>
+                    <input type="text" id="paymentAddress" placeholder="e.g., T... (TRC20 Address)">
                 </div>
-                <button class="btn btn-success" id="finalWithdrawBtn" disabled>
-                    <span class="material-icons">rocket_launch</span>
-                    Withdraw USDT
-                </button>
+                <button class="btn" id="finalWithdrawBtn" disabled>Withdraw</button>
             </div>
         </div>
         
         <!-- Referral View -->
         <div id="referral-view" class="view">
-            <div class="header">
-                <div class="app-logo">
-                    <div class="logo-icon">
-                        <span class="material-icons">group</span>
-                    </div>
-                    <h1>Referrals</h1>
-                </div>
-                <p>Invite friends & earn together</p>
-            </div>
-            
+            <div class="header"><h1>Referrals</h1><p>Invite friends and earn more!</p></div>
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">bar_chart</span>
-                    </div>
-                    <h2>Your Referral Stats</h2>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="referralCountDisplay">0</div>
-                        <div class="stat-label">Total Referrals</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="referralBonusDisplay">0.00</div>
-                        <div class="stat-label">USDT Earned</div>
-                    </div>
+                <h2>Your Referral Stats</h2>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item"><h3 id="referralCountDisplay">0</h3><p>Total Referrals</p></div>
+                    <div class="ad-info-item"><h3 id="referralBonusDisplay">USDT 0.00</h3><p>Referral Earnings</p></div>
                 </div>
             </div>
             
+            <!-- Manuel Referans Giriş Kutusu -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">local_offer</span>
-                    </div>
-                    <h2>Enter Referral Code</h2>
-                </div>
-                <p class="text-muted mb-16">
-                    Got a code from a friend? Enter it below to get bonus USDT!
-                </p>
+                <h2>Enter Referral Code</h2>
+                <p>If someone referred you, enter their code here to get bonus!</p>
                 <div class="referral-input-container">
                     <div class="referral-input-group">
-                        <input type="text" class="input-field" id="referralCodeInput" placeholder="Enter friend's referral code">
-                        <button class="btn btn-primary" id="submitReferralBtn" style="margin: 0; min-width: 100px;">
-                            Apply
-                        </button>
+                        <input type="text" id="referralCodeInput" placeholder="Enter referral code">
+                        <button id="submitReferralBtn">Submit</button>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">share</span>
-                    </div>
-                    <h2>Your Referral Code</h2>
+                <h2>Your Referral Code</h2>
+                <p>Share this code with your friends. You get 0.02 USDT for each verified friend who joins!</p>
+                <div class="referral-code-box" id="referralCodeBox" title="Click to copy">
+                    <span id="userReferralCode">Loading...</span>
                 </div>
-                <p class="text-muted mb-16">
-                    Share your code and earn <strong>0.02 USDT</strong> for every friend who joins!
-                </p>
-                
-                <div class="referral-code-box" id="referralCodeBox">
-                    <span id="userReferralCode">LOADING...</span>
-                </div>
-                
-                <div class="text-center">
-                    <h3 style="margin-bottom: 12px; color: var(--text-dark); font-size: 14px;">
-                        <span class="material-icons" style="font-size: 16px; vertical-align: middle;">link</span>
-                        Your Referral Link
-                    </h3>
-                    <div id="referralLink" style="
-                        background: var(--light-blue);
-                        padding: 16px;
-                        border-radius: 12px;
-                        word-break: break-all;
-                        font-size: 14px;
-                        cursor: pointer;
-                        border: 1px dashed var(--primary-blue);
-                        margin-bottom: 8px;
-                        color: var(--primary-blue);
-                        font-weight: 500;
-                    ">
-                        Generating your link...
-                    </div>
-                    <p class="text-muted" style="font-size: 12px;">
-                        Click to copy your referral link
-                    </p>
-                </div>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px;">Click on the code above to copy it</p>
             </div>
         </div>
 
-        <!-- Status Message -->
+        <!-- Common Elements -->
         <div class="status-message" id="statusMessage"></div>
     </div>
 
     <!-- Footer Navigation -->
     <footer class="footer-nav">
-        <button class="nav-btn active" id="navHome">
-            <span class="material-icons nav-icon">home</span>
-            <span>Home</span>
-        </button>
-        <button class="nav-btn" id="navWithdraw">
-            <span class="material-icons nav-icon">payments</span>
-            <span>Withdraw</span>
-        </button>
-        <button class="nav-btn" id="navRefer">
-            <span class="material-icons nav-icon">group</span>
-            <span>Referrals</span>
-        </button>
+        <button class="nav-btn active" id="navHome"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span><span>Home</span></button>
+        <button class="nav-btn" id="navWithdraw"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.31 8.91a1 1 0 0 0-1.42 0l-4.24 4.24-2.12-2.12a1 1 0 1 0-1.42 1.42l2.83 2.83a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0 0-1.42zM20 12a8 8 0 1 1-8-8 8 8 0 0 1 8 8zm-2 0a6 6 0 1 0-6 6 6 6 0 0 0 6-6z"/></svg></span><span>Withdraw</span></button>
+        <button class="nav-btn" id="navRefer"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span><span>Referrals</span></button>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tg = window.Telegram.WebApp;
-            let appInitialized = false;
 
-            // DOM Elements
-            const elements = {
-                loadingScreen: document.getElementById('loading-screen'),
-                maintenanceBanner: document.getElementById('maintenanceBanner'),
-                maintenanceMessage: document.getElementById('maintenanceMessage'),
-                balanceDisplay: document.getElementById('balanceDisplay'),
-                adCountDisplay: document.getElementById('adCountDisplay'),
-                dailyAdCountDisplay: document.getElementById('dailyAdCountDisplay'),
-                rewardedBtn: document.getElementById('rewardedBtn'),
-                mainWithdrawBtn: document.getElementById('mainWithdrawBtn'),
-                statusMessage: document.getElementById('statusMessage'),
-                withdrawBalanceDisplay: document.getElementById('withdrawBalanceDisplay'),
-                paymentAddress: document.getElementById('paymentAddress'),
-                finalWithdrawBtn: document.getElementById('finalWithdrawBtn'),
-                referralCountDisplay: document.getElementById('referralCountDisplay'),
-                referralBonusDisplay: document.getElementById('referralBonusDisplay'),
-                adminPanel: document.getElementById('adminPanel'),
-                adminUserId: document.getElementById('adminUserId'),
-                adminBalanceInput: document.getElementById('adminBalanceInput'),
-                adminStats: document.getElementById('adminStats'),
-                referralCodeInput: document.getElementById('referralCodeInput'),
-                submitReferralBtn: document.getElementById('submitReferralBtn'),
-                userReferralCode: document.getElementById('userReferralCode'),
-                referralCodeBox: document.getElementById('referralCodeBox'),
-                referralLink: document.getElementById('referralLink'),
-                referralInfoCard: document.getElementById('referralInfoCard'),
-                referredByInfo: document.getElementById('referredByInfo'),
-                withdrawalHistory: document.getElementById('withdrawalHistory'),
-                emptyWithdrawalHistory: document.getElementById('emptyWithdrawalHistory'),
-                userList: document.getElementById('userList'),
-                adminWithdrawalList: document.getElementById('adminWithdrawalList'),
-                // Bot status elements
-                statusActiveBtn: document.getElementById('statusActiveBtn'),
-                statusMaintenanceBtn: document.getElementById('statusMaintenanceBtn'),
-                statusPausedBtn: document.getElementById('statusPausedBtn'),
-                statusMessageInput: document.getElementById('statusMessageInput'),
-                // Admin buttons
-                adminAddBalanceBtn: document.getElementById('adminAddBalanceBtn'),
-                adminResetStatsBtn: document.getElementById('adminResetStatsBtn'),
-                adminExportAllDataBtn: document.getElementById('adminExportAllDataBtn'),
-                adminImportDataBtn: document.getElementById('adminImportDataBtn'),
-                adminAddBonusToAllBtn: document.getElementById('adminAddBonusToAllBtn'),
-                adminResetAllStatsBtn: document.getElementById('adminResetAllStatsBtn'),
-                adminExportUserDataBtn: document.getElementById('adminExportUserDataBtn'),
-                adminClearAllDataBtn: document.getElementById('adminClearAllDataBtn')
-            };
+            // --- DOM Elements ---
+            const balanceDisplay = document.getElementById('balanceDisplay'), 
+                  adCountDisplay = document.getElementById('adCountDisplay'),
+                  dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay'), 
+                  rewardedBtn = document.getElementById('rewardedBtn'),
+                  mainWithdrawBtn = document.getElementById('mainWithdrawBtn'), 
+                  statusMessage = document.getElementById('statusMessage'),
+                  withdrawBalanceDisplay = document.getElementById('withdrawBalanceDisplay'), 
+                  paymentAddressInput = document.getElementById('paymentAddress'),
+                  finalWithdrawBtn = document.getElementById('finalWithdrawBtn'), 
+                  referralCountDisplay = document.getElementById('referralCountDisplay'), 
+                  referralBonusDisplay = document.getElementById('referralBonusDisplay'), 
+                  adminPanel = document.getElementById('adminPanel'), 
+                  userInfoDisplay = document.getElementById('userInfo'), 
+                  referralCodeInput = document.getElementById('referralCodeInput'), 
+                  submitReferralBtn = document.getElementById('submitReferralBtn'), 
+                  userReferralCodeDisplay = document.getElementById('userReferralCode'),
+                  referralCodeBox = document.getElementById('referralCodeBox'), 
+                  usdtPriceDisplay = document.getElementById('usdtPrice'), 
+                  priceChangeDisplay = document.getElementById('priceChange'), 
+                  chartPlaceholder = document.getElementById('chartPlaceholder'),
+                  totalUsersDisplay = document.getElementById('totalUsers'), 
+                  totalAdsDisplay = document.getElementById('totalAds'),
+                  totalUSDTDisplay = document.getElementById('totalUSDT'), 
+                  totalReferralsDisplay = document.getElementById('totalReferrals'),
+                  resetAllBtn = document.getElementById('resetAllBtn'), 
+                  resetReferralsBtn = document.getElementById('resetReferralsBtn'),
+                  deleteAllBtn = document.getElementById('deleteAllBtn'), 
+                  refreshStatsBtn = document.getElementById('refreshStatsBtn');
 
-            // App Configuration
-            const CONFIG = {
-                ADMIN_IDS: [7904032877, 6357701459, 8401848644],
-                BOT_USERNAME: 'TorreAds_Bot',
-                WITHDRAW_WEBHOOK_URL: 'https://eo3h4zf914hhqv7.m.pipedream.net',
-                WITHDRAW_THRESHOLD: 0.50,
-                AD_REWARD: 0.002,
-                REFERRAL_BONUS: 0.02,
-                DAILY_AD_LIMIT: 100
-            };
+            // --- App Constants & Configuration ---
+            const ADMIN_ID = 6357701459;
+            const BOT_USERNAME = 'TorreAds_Bot';
+            const WEBAPP_URL = 'https://torreads.onrender.com';
+            const WITHDRAW_WEBHOOK_URL = 'https://eo3h4zf914hhqv7.m.pipedream.net';
+            
+            // JSONBin.io Configuration - GÜNCELLENDİ
+            const JSONBIN_BIN_ID = '68dcfa1fae596e708f0235a7';
+            const JSONBIN_API_KEY = '$2a$10$t0i.TuifzioNY0cd8HzoDOxB94YLcVc.gbHkv.qmFQzFJcbl9uVrK';
+            const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3/b';
+            
+            const WITHDRAW_THRESHOLD = 0.50;
+            const AD_REWARD_CENTS = 0.2; // 0.002 USDT
+            const REFERRAL_BONUS_USDT = 0.02; // Referans olana 0.02 USDT
+            const REFERRER_BONUS_USDT = 0.02; // Referans verene 0.02 USDT
+            const DAILY_AD_LIMIT = 100;
 
-            // App State
+            // --- App State ---
             let state = {
-                userId: null,
-                balance: 0,
-                totalAds: 0,
-                dailyAds: 0,
+                balanceInCents: 0,
+                totalAdCount: 0,
+                dailyAdCount: 0,
                 lastAdDate: null,
                 referralCount: 0,
                 referredBy: null,
                 hasClaimedReferral: false,
                 referralCode: null,
+                userId: null,
                 referredUsers: [],
-                withdrawalHistory: []
+                points: 0,
+                dailyAdWatchCount: 0,
+                lastAdWatchDate: null,
+                referrals: [],
+                hasJoinedChannel: false,
+                hasJoinedGroup: false
             };
 
-            // Bot Status
-            let botStatus = {
-                status: 'active', // active, maintenance, paused
-                message: 'Bot is under maintenance'
+            // USDT Price Data
+            let usdtPriceData = {
+                current: 1.00,
+                change: 0.00,
+                history: []
             };
 
-            // Initialize App
-            async function initializeApp() {
-                try {
-                    console.log('🚀 Starting TorreAds...');
-                    
-                    // Initialize Telegram Web App
-                    tg.ready();
-                    tg.expand();
-                    
-                    // Get user data
-                    const user = tg.initDataUnsafe.user;
-                    if (!user || !user.id) {
-                        throw new Error('Telegram user data not available');
-                    }
-                    
-                    state.userId = user.id.toString();
-                    console.log('✅ User ID:', state.userId);
-                    
-                    // Load state from localStorage
-                    loadState();
-                    loadBotStatus();
-                    
-                    // Check if user is admin
-                    if (CONFIG.ADMIN_IDS.includes(parseInt(state.userId))) {
-                        showAdminPanel();
-                    }
-                    
-                    // Setup UI
-                    updateUI();
-                    setupEventListeners();
-                    
-                    // Initialize GigaPub
-                    await initializeGigaPub();
-                    
-                    // Hide loading screen
-                    elements.loadingScreen.style.display = 'none';
-                    appInitialized = true;
-                    
-                    console.log('✅ App initialized successfully');
-                    showStatus('Welcome to TorreAds! 🎉', 'status-success', 3000);
-                    
-                } catch (error) {
-                    console.error('❌ App initialization failed:', error);
-                    elements.loadingScreen.innerHTML = `
-                        <div style="text-align: center; color: var(--error);">
-                            <h3>Initialization Failed</h3>
-                            <p>Please refresh the page</p>
-                            <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 20px;">
-                                <span class="material-icons">refresh</span>
-                                Refresh Page
-                            </button>
-                        </div>
-                    `;
+            // ---- JSONBin.io Entegrasyonu ----
+            class JsonBinManager {
+                constructor(binId, apiKey) {
+                    this.binId = binId;
+                    this.apiKey = apiKey;
+                    this.baseUrl = `${JSONBIN_BASE_URL}/${binId}`;
                 }
-            }
-
-            // State Management
-            function loadState() {
-                try {
-                    const saved = localStorage.getItem(`torreads_${state.userId}`);
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
+                
+                async fetchBin() {
+                    try {
+                        const response = await fetch(`${this.baseUrl}/latest`, {
+                            headers: {
+                                'X-Master-Key': this.apiKey,
+                                'X-Bin-Meta': 'false'
+                            }
+                        });
                         
-                        // Check if it's a new day
-                        const today = new Date().toDateString();
-                        if (parsed.lastAdDate !== today) {
-                            parsed.dailyAds = 0;
-                            parsed.lastAdDate = today;
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         
-                        Object.assign(state, parsed);
-                        console.log('✅ State loaded:', state);
+                        const data = await response.json();
+                        return data || {};
+                    } catch (error) {
+                        console.error('Error fetching from JSONBin:', error);
+                        // Boş bir obje döndür
+                        return { users: {}, globalStats: this.getDefaultGlobalStats() };
+                    }
+                }
+                
+                async updateBin(data) {
+                    try {
+                        const response = await fetch(this.baseUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': this.apiKey
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Error updating JSONBin:', error);
+                        throw error;
+                    }
+                }
+                
+                getDefaultGlobalStats() {
+                    return {
+                        totalUsers: 0,
+                        totalAds: 0,
+                        totalUSDT: 0,
+                        totalReferrals: 0
+                    };
+                }
+                
+                async getAllUsers() {
+                    const binData = await this.fetchBin();
+                    return binData.users || {};
+                }
+                
+                async saveUser(userId, userData) {
+                    const binData = await this.fetchBin();
+                    
+                    if (!binData.users) {
+                        binData.users = {};
+                    }
+                    
+                    binData.users[userId] = userData;
+                    
+                    // Global stats güncelle
+                    if (!binData.globalStats) {
+                        binData.globalStats = this.getDefaultGlobalStats();
+                    }
+                    
+                    await this.updateBin(binData);
+                    return binData;
+                }
+                
+                async updateGlobalStats(stats) {
+                    const binData = await this.fetchBin();
+                    
+                    if (!binData.globalStats) {
+                        binData.globalStats = this.getDefaultGlobalStats();
+                    }
+                    
+                    Object.assign(binData.globalStats, stats);
+                    await this.updateBin(binData);
+                }
+                
+                async resetAllStats() {
+                    const binData = await this.fetchBin();
+                    
+                    if (binData.users) {
+                        // Tüm kullanıcıların istatistiklerini sıfırla
+                        for (const userId in binData.users) {
+                            binData.users[userId] = {
+                                ...binData.users[userId],
+                                balanceInCents: 0,
+                                totalAdCount: 0,
+                                dailyAdCount: 0,
+                                referralCount: 0,
+                                referredUsers: [],
+                                points: 0,
+                                dailyAdWatchCount: 0
+                            };
+                        }
+                    }
+                    
+                    // Global stats sıfırla
+                    binData.globalStats = {
+                        totalUsers: binData.globalStats ? binData.globalStats.totalUsers : 0,
+                        totalAds: 0,
+                        totalUSDT: 0,
+                        totalReferrals: 0
+                    };
+                    
+                    await this.updateBin(binData);
+                    return binData;
+                }
+                
+                async resetAllReferrals() {
+                    const binData = await this.fetchBin();
+                    
+                    if (binData.users) {
+                        // Tüm kullanıcıların referans istatistiklerini sıfırla
+                        for (const userId in binData.users) {
+                            binData.users[userId] = {
+                                ...binData.users[userId],
+                                referralCount: 0,
+                                referredUsers: [],
+                                referredBy: null,
+                                hasClaimedReferral: false
+                            };
+                        }
+                    }
+                    
+                    // Global referrals sıfırla
+                    if (binData.globalStats) {
+                        binData.globalStats.totalReferrals = 0;
+                    }
+                    
+                    await this.updateBin(binData);
+                    return binData;
+                }
+                
+                async deleteAllUsers() {
+                    const binData = {
+                        users: {},
+                        globalStats: this.getDefaultGlobalStats()
+                    };
+                    
+                    await this.updateBin(binData);
+                    return binData;
+                }
+            }
+            
+            // JSONBin Manager oluştur
+            const jsonBinManager = new JsonBinManager(JSONBIN_BIN_ID, JSONBIN_API_KEY);
+
+            // ---- Geliştirilmiş GigaPub Entegrasyonu ----
+            function initializeGigaPub() {
+                return new Promise((resolve, reject) => {
+                    if (typeof window.showGiga === 'function') {
+                        console.log('GigaPub SDK loaded successfully');
+                        resolve();
                     } else {
-                        // New user setup
-                        state.referralCode = generateReferralCode();
-                        state.lastAdDate = new Date().toDateString();
-                        state.withdrawalHistory = [];
-                        saveState();
-                        console.log('✅ New user state created');
+                        // 3 saniye bekleyip tekrar kontrol et
+                        setTimeout(() => {
+                            if (typeof window.showGiga === 'function') {
+                                console.log('GigaPub SDK loaded after delay');
+                                resolve();
+                            } else {
+                                console.log('GigaPub SDK not available, using fallback');
+                                resolve(); // Fallback ile devam et
+                            }
+                        }, 3000);
                     }
-                } catch (error) {
-                    console.error('❌ Error loading state:', error);
-                    state.referralCode = generateReferralCode();
-                    state.lastAdDate = new Date().toDateString();
-                    state.withdrawalHistory = [];
-                }
+                });
             }
 
-            function saveState() {
+            // ---- Referans Doğrulama Fonksiyonu ----
+            async function isValidReferralCode(referralCode) {
                 try {
-                    localStorage.setItem(`torreads_${state.userId}`, JSON.stringify(state));
-                    console.log('💾 State saved');
-                } catch (error) {
-                    console.error('❌ Error saving state:', error);
-                }
-            }
-
-            function loadBotStatus() {
-                try {
-                    const saved = localStorage.getItem('torreads_bot_status');
-                    if (saved) {
-                        botStatus = JSON.parse(saved);
-                        console.log('✅ Bot status loaded:', botStatus);
+                    const allUsers = await jsonBinManager.getAllUsers();
+                    
+                    for (const userId in allUsers) {
+                        const user = allUsers[userId];
+                        if (user.referralCode === referralCode) {
+                            return true;
+                        }
                     }
+                    
+                    return false;
                 } catch (error) {
-                    console.error('❌ Error loading bot status:', error);
+                    console.error('Error checking referral code:', error);
+                    return false;
                 }
             }
 
-            function saveBotStatus() {
-                try {
-                    localStorage.setItem('torreads_bot_status', JSON.stringify(botStatus));
-                    console.log('💾 Bot status saved');
-                } catch (error) {
-                    console.error('❌ Error saving bot status:', error);
-                }
-            }
-
-            function generateReferralCode() {
+            // ---- State Management ----
+            function getTodayDateString() { return new Date().toISOString().split('T')[0]; }
+            
+            function generateReferralCode(userId) {
                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                 let code = '';
                 for (let i = 0; i < 8; i++) {
@@ -1330,799 +674,601 @@
                 }
                 return code;
             }
-
-            // GigaPub Integration
-            function initializeGigaPub() {
-                return new Promise((resolve) => {
-                    if (typeof window.showGiga === 'function') {
-                        console.log('✅ GigaPub loaded');
-                        resolve();
-                    } else {
-                        setTimeout(() => {
-                            if (typeof window.showGiga === 'function') {
-                                console.log('✅ GigaPub loaded after delay');
-                                resolve();
-                            } else {
-                                console.log('⚠️ GigaPub not available');
-                                resolve();
-                            }
-                        }, 2000);
+            
+            async function loadState() {
+                try {
+                    const user = tg.initDataUnsafe.user;
+                    if (user && user.id) {
+                        state.userId = user.id.toString();
+                        
+                        // JSONBin'dan kullanıcı verilerini yükle
+                        const allUsers = await jsonBinManager.getAllUsers();
+                        const savedState = allUsers[state.userId];
+                        
+                        if (savedState) {
+                            console.log('Loading state from JSONBin:', savedState);
+                            state = {
+                                balanceInCents: Math.round((savedState.points || savedState.balanceInCents || 0) * 100),
+                                totalAdCount: savedState.totalAdCount || savedState.dailyAdWatchCount || 0,
+                                dailyAdCount: savedState.dailyAdCount || savedState.dailyAdWatchCount || 0,
+                                lastAdDate: savedState.lastAdDate || savedState.lastAdWatchDate || null,
+                                referralCount: savedState.referralCount || (savedState.referrals ? savedState.referrals.length : 0) || 0,
+                                referredBy: savedState.referredBy || null,
+                                hasClaimedReferral: savedState.hasClaimedReferral || false,
+                                referralCode: savedState.referralCode || generateReferralCode(state.userId),
+                                userId: state.userId,
+                                referredUsers: savedState.referredUsers || [],
+                                points: savedState.points || (savedState.balanceInCents ? savedState.balanceInCents / 100 : 0),
+                                dailyAdWatchCount: savedState.dailyAdWatchCount || savedState.dailyAdCount || 0,
+                                lastAdWatchDate: savedState.lastAdWatchDate || savedState.lastAdDate || null,
+                                referrals: savedState.referrals || [],
+                                hasJoinedChannel: savedState.hasJoinedChannel || false,
+                                hasJoinedGroup: savedState.hasJoinedGroup || false
+                            };
+                        } else {
+                            // Yeni kullanıcı için state oluştur
+                            console.log('Creating new state for user:', state.userId);
+                            state.referralCode = generateReferralCode(state.userId);
+                            state.points = 0;
+                            state.dailyAdWatchCount = 0;
+                            state.lastAdWatchDate = getTodayDateString();
+                            state.referrals = [];
+                            state.hasJoinedChannel = false;
+                            state.hasJoinedGroup = false;
+                            await saveState(); // Hemen kaydet
+                        }
                     }
-                });
-            }
-
-            // UI Management
-            function updateUI() {
-                if (!state.userId) return;
-
-                // Update maintenance banner
-                updateMaintenanceBanner();
-
-                // Update balance and stats
-                elements.balanceDisplay.textContent = `USDT ${state.balance.toFixed(3)}`;
-                elements.adCountDisplay.textContent = state.totalAds;
-                elements.dailyAdCountDisplay.textContent = `${state.dailyAds}/${CONFIG.DAILY_AD_LIMIT}`;
-                elements.withdrawBalanceDisplay.textContent = `USDT ${state.balance.toFixed(3)}`;
-                
-                // Update referral stats
-                elements.referralCountDisplay.textContent = state.referralCount;
-                elements.referralBonusDisplay.textContent = (state.referralCount * CONFIG.REFERRAL_BONUS).toFixed(2);
-                
-                // Update referral code
-                if (state.referralCode) {
-                    elements.userReferralCode.textContent = state.referralCode;
-                    elements.referralLink.textContent = `https://t.me/${CONFIG.BOT_USERNAME}?start=${state.referralCode}`;
+                } catch (e) { 
+                    console.error("Could not load state", e);
+                    if (state.userId && !state.referralCode) {
+                        state.referralCode = generateReferralCode(state.userId);
+                    }
                 }
-
-                // Update referral input state
-                if (state.referredBy || state.hasClaimedReferral) {
-                    elements.submitReferralBtn.disabled = true;
-                    elements.submitReferralBtn.textContent = state.referredBy ? '✅ Applied' : '✅ Claimed';
-                    elements.referralCodeInput.disabled = true;
-                    elements.referralCodeInput.placeholder = state.referredBy ? 
-                        `Referred by: ${state.referredBy}` : 'Bonus claimed';
+                
+                const today = getTodayDateString();
+                if (state.lastAdDate !== today || state.lastAdWatchDate !== today) {
+                    console.log('Resetting daily counters for new day');
+                    state.dailyAdCount = 0;
+                    state.dailyAdWatchCount = 0;
+                    state.lastAdDate = today;
+                    state.lastAdWatchDate = today;
+                    await saveState();
+                }
+            }
+            
+            async function saveState() {
+                try {
+                    if (state.userId) {
+                        const stateToSave = {
+                            balanceInCents: state.balanceInCents,
+                            totalAdCount: state.totalAdCount,
+                            dailyAdCount: state.dailyAdCount,
+                            lastAdDate: state.lastAdDate,
+                            referralCount: state.referralCount,
+                            referredBy: state.referredBy,
+                            hasClaimedReferral: state.hasClaimedReferral,
+                            referralCode: state.referralCode,
+                            userId: state.userId,
+                            referredUsers: state.referredUsers,
+                            points: state.balanceInCents / 100,
+                            dailyAdWatchCount: state.dailyAdCount,
+                            lastAdWatchDate: state.lastAdDate,
+                            referrals: state.referredUsers,
+                            hasJoinedChannel: state.hasJoinedChannel,
+                            hasJoinedGroup: state.hasJoinedGroup
+                        };
+                        
+                        await jsonBinManager.saveUser(state.userId, stateToSave);
+                        console.log('State saved successfully. Balance:', stateToSave.points, 'Referrals:', stateToSave.referralCount);
+                    }
+                } catch (e) { 
+                    console.error("Could not save state", e);
+                }
+            }
+            
+            // ---- Admin Fonksiyonları ----
+            async function updateAdminStats() {
+                try {
+                    const binData = await jsonBinManager.fetchBin();
+                    const globalStats = binData.globalStats || jsonBinManager.getDefaultGlobalStats();
                     
-                    if (state.referredBy) {
-                        elements.referralInfoCard.style.display = 'block';
-                        elements.referredByInfo.textContent = state.referredBy;
+                    // Kullanıcı sayısını hesapla
+                    const users = binData.users || {};
+                    globalStats.totalUsers = Object.keys(users).length;
+                    
+                    // Toplam reklam ve USDT'yi hesapla
+                    let totalAds = 0;
+                    let totalUSDT = 0;
+                    let totalReferrals = 0;
+                    
+                    for (const userId in users) {
+                        const user = users[userId];
+                        totalAds += user.totalAdCount || 0;
+                        totalUSDT += (user.balanceInCents || 0) / 100;
+                        totalReferrals += user.referralCount || 0;
                     }
-                }
-
-                // Update withdrawal buttons
-                const canWithdraw = state.balance >= CONFIG.WITHDRAW_THRESHOLD;
-                elements.mainWithdrawBtn.disabled = !canWithdraw;
-                elements.mainWithdrawBtn.textContent = canWithdraw ? 
-                    'Withdraw Earnings' : `Reach ${CONFIG.WITHDRAW_THRESHOLD} USDT to Withdraw`;
-                
-                elements.finalWithdrawBtn.disabled = !canWithdraw;
-                elements.finalWithdrawBtn.textContent = canWithdraw ? 
-                    `Withdraw ${state.balance.toFixed(3)} USDT` : 
-                    `Minimum ${CONFIG.WITHDRAW_THRESHOLD} USDT required`;
-
-                // Update ad button based on bot status
-                const adLimitReached = state.dailyAds >= CONFIG.DAILY_AD_LIMIT;
-                const isBotActive = botStatus.status === 'active';
-                
-                elements.rewardedBtn.disabled = adLimitReached || !isBotActive;
-                
-                if (!isBotActive) {
-                    elements.rewardedBtn.textContent = 'Temporarily Unavailable';
-                } else {
-                    elements.rewardedBtn.textContent = adLimitReached ? 
-                        'Daily Limit Reached' : 
-                        `Watch Ad & Earn +${CONFIG.AD_REWARD} USDT`;
-                }
-
-                // Update withdrawal history
-                updateWithdrawalHistory();
-                
-                // Update admin panels if admin
-                if (CONFIG.ADMIN_IDS.includes(parseInt(state.userId))) {
-                    updateAdminStats();
-                    updateUserList();
-                    updateAdminWithdrawalList();
-                    updateBotStatusUI();
+                    
+                    globalStats.totalAds = totalAds;
+                    globalStats.totalUSDT = totalUSDT.toFixed(2);
+                    globalStats.totalReferrals = totalReferrals;
+                    
+                    // Global stats'ı güncelle
+                    await jsonBinManager.updateGlobalStats(globalStats);
+                    
+                    // UI'ı güncelle
+                    totalUsersDisplay.textContent = globalStats.totalUsers;
+                    totalAdsDisplay.textContent = globalStats.totalAds;
+                    totalUSDTDisplay.textContent = globalStats.totalUSDT;
+                    totalReferralsDisplay.textContent = globalStats.totalReferrals;
+                    
+                } catch (error) {
+                    console.error('Error updating admin stats:', error);
                 }
             }
-
-            function updateMaintenanceBanner() {
-                if (botStatus.status !== 'active') {
-                    elements.maintenanceBanner.style.display = 'block';
-                    elements.maintenanceMessage.textContent = botStatus.message;
-                } else {
-                    elements.maintenanceBanner.style.display = 'none';
-                }
-            }
-
-            function updateBotStatusUI() {
-                // Reset all buttons
-                elements.statusActiveBtn.classList.remove('active');
-                elements.statusMaintenanceBtn.classList.remove('active');
-                elements.statusPausedBtn.classList.remove('active');
-                
-                // Set active button
-                if (botStatus.status === 'active') {
-                    elements.statusActiveBtn.classList.add('active');
-                } else if (botStatus.status === 'maintenance') {
-                    elements.statusMaintenanceBtn.classList.add('active');
-                } else if (botStatus.status === 'paused') {
-                    elements.statusPausedBtn.classList.add('active');
-                }
-                
-                // Set message input
-                elements.statusMessageInput.value = botStatus.message;
-            }
-
-            function updateWithdrawalHistory() {
-                if (state.withdrawalHistory.length === 0) {
-                    elements.emptyWithdrawalHistory.style.display = 'block';
+            
+            async function resetAllStats() {
+                if (!confirm('Are you sure you want to reset ALL user stats? This cannot be undone!')) {
                     return;
                 }
                 
-                elements.emptyWithdrawalHistory.style.display = 'none';
-                elements.withdrawalHistory.innerHTML = '';
+                try {
+                    await jsonBinManager.resetAllStats();
+                    showStatus('All user stats have been reset successfully!', 'success');
+                    await updateAdminStats();
+                    
+                    // Admin kullanıcısının UI'ını güncelle
+                    if (state.userId) {
+                        state.balanceInCents = 0;
+                        state.totalAdCount = 0;
+                        state.dailyAdCount = 0;
+                        state.referralCount = 0;
+                        state.points = 0;
+                        state.dailyAdWatchCount = 0;
+                        updateUI();
+                    }
+                } catch (error) {
+                    console.error('Error resetting all stats:', error);
+                    showStatus('Error resetting stats: ' + error.message, 'error');
+                }
+            }
+            
+            async function resetAllReferrals() {
+                if (!confirm('Are you sure you want to reset ALL referral data? This cannot be undone!')) {
+                    return;
+                }
                 
-                state.withdrawalHistory.slice().reverse().forEach((withdrawal, index) => {
-                    const withdrawalElement = document.createElement('div');
-                    withdrawalElement.className = 'withdrawal-item';
-                    withdrawalElement.innerHTML = `
-                        <div class="withdrawal-header">
-                            <div class="withdrawal-amount">${withdrawal.amount} USDT</div>
-                            <div class="withdrawal-status status-${withdrawal.status}">
-                                ${withdrawal.status}
-                            </div>
-                        </div>
-                        <div class="withdrawal-details">
-                            ${withdrawal.walletAddress}
-                        </div>
-                        <div class="withdrawal-date">
-                            ${new Date(withdrawal.timestamp).toLocaleDateString()} • 
-                            ${new Date(withdrawal.timestamp).toLocaleTimeString()}
-                        </div>
-                    `;
-                    elements.withdrawalHistory.appendChild(withdrawalElement);
-                });
+                try {
+                    await jsonBinManager.resetAllReferrals();
+                    showStatus('All referral data has been reset successfully!', 'success');
+                    await updateAdminStats();
+                    
+                    // Admin kullanıcısının UI'ını güncelle
+                    if (state.userId) {
+                        state.referralCount = 0;
+                        state.referredUsers = [];
+                        state.referredBy = null;
+                        state.hasClaimedReferral = false;
+                        updateUI();
+                    }
+                } catch (error) {
+                    console.error('Error resetting referrals:', error);
+                    showStatus('Error resetting referrals: ' + error.message, 'error');
+                }
+            }
+            
+            async function deleteAllUsers() {
+                if (!confirm('Are you sure you want to DELETE ALL user data? This cannot be undone!')) {
+                    return;
+                }
+                
+                try {
+                    await jsonBinManager.deleteAllUsers();
+                    showStatus('All user data has been deleted successfully!', 'success');
+                    await updateAdminStats();
+                    
+                    // Admin kullanıcısının UI'ını güncelle
+                    if (state.userId) {
+                        state.balanceInCents = 0;
+                        state.totalAdCount = 0;
+                        state.dailyAdCount = 0;
+                        state.referralCount = 0;
+                        state.points = 0;
+                        state.dailyAdWatchCount = 0;
+                        state.referredUsers = [];
+                        state.referredBy = null;
+                        state.hasClaimedReferral = false;
+                        updateUI();
+                    }
+                } catch (error) {
+                    console.error('Error deleting all users:', error);
+                    showStatus('Error deleting users: ' + error.message, 'error');
+                }
             }
 
-            function showView(viewId) {
-                if (!appInitialized) return;
+            // ---- Geliştirilmiş Referans Bonus Fonksiyonu ----
+            async function giveReferralBonusToReferrer(referralCode) {
+                try {
+                    const allUsers = await jsonBinManager.getAllUsers();
+                    let bonusGiven = false;
+                    
+                    console.log('Searching for referrer with code:', referralCode);
+                    
+                    for (const userId in allUsers) {
+                        const userState = allUsers[userId];
+                        
+                        if (userState && userState.referralCode === referralCode) {
+                            console.log('Found referrer! Giving bonus to:', userId);
+                            
+                            // Referans verenin bakiyesini güncelle - 0.02 USDT
+                            const currentBalance = userState.balanceInCents || 0;
+                            userState.balanceInCents = currentBalance + (REFERRER_BONUS_USDT * 100);
+                            
+                            // Referans sayısını artır
+                            userState.referralCount = (userState.referralCount || 0) + 1;
+                            
+                            // Referans edilen kullanıcıları güncelle
+                            userState.referredUsers = userState.referredUsers || [];
+                            if (!userState.referredUsers.includes(state.userId)) {
+                                userState.referredUsers.push(state.userId);
+                            }
+                            
+                            // JSONBin uyumluluk alanlarını güncelle
+                            userState.points = userState.balanceInCents / 100;
+                            userState.referrals = userState.referredUsers;
+                            
+                            // State'i kaydet
+                            await jsonBinManager.saveUser(userId, userState);
+                            bonusGiven = true;
+                            
+                            console.log(`Bonus given successfully! New balance: ${userState.balanceInCents/100} USDT, Referral count: ${userState.referralCount}`);
+                            break;
+                        }
+                    }
+                    
+                    return bonusGiven;
+                } catch (error) {
+                    console.error('Error processing referral bonus:', error);
+                    return false;
+                }
+            }
+            
+            // ---- USDT Price Functions ----
+            async function fetchUSDTPrice() {
+                try {
+                    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd&include_24hr_change=true');
+                    const data = await response.json();
+                    
+                    if (data.tether) {
+                        usdtPriceData.current = data.tether.usd;
+                        usdtPriceData.change = data.tether.usd_24h_change || 0;
+                        
+                        usdtPriceDisplay.textContent = usdtPriceData.current.toFixed(4);
+                        priceChangeDisplay.textContent = `${usdtPriceData.change >= 0 ? '+' : ''}${usdtPriceData.change.toFixed(2)}%`;
+                        priceChangeDisplay.className = `price-change ${usdtPriceData.change >= 0 ? 'positive' : 'negative'}`;
+                        
+                        chartPlaceholder.textContent = `USDT Price: $${usdtPriceData.current.toFixed(4)} (${usdtPriceData.change >= 0 ? '+' : ''}${usdtPriceData.change.toFixed(2)}%)`;
+                    }
+                } catch (error) {
+                    console.error('Error fetching USDT price:', error);
+                    usdtPriceDisplay.textContent = '1.0000';
+                    priceChangeDisplay.textContent = '0.00%';
+                    chartPlaceholder.textContent = 'Live USDT Price Chart';
+                }
+            }
+            
+            // ---- UI Updates & View Management ----
+            function updateUI() {
+                const balanceInUSDT = (state.balanceInCents / 100).toFixed(3);
                 
+                console.log('Updating UI with balance:', balanceInUSDT, 'referral count:', state.referralCount);
+                
+                balanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+                adCountDisplay.textContent = state.totalAdCount;
+                dailyAdCountDisplay.textContent = `${state.dailyAdCount} / ${DAILY_AD_LIMIT}`;
+                withdrawBalanceDisplay.textContent = `USDT ${balanceInUSDT}`;
+                
+                // Referans sayısını ve kazancı güncelle
+                referralCountDisplay.textContent = state.referralCount;
+                const referralBonus = (state.referralCount * REFERRER_BONUS_USDT).toFixed(2);
+                referralBonusDisplay.textContent = `USDT ${referralBonus}`;
+                
+                if (state.referralCode) {
+                    userReferralCodeDisplay.textContent = state.referralCode;
+                }
+
+                if (state.referredBy || state.hasClaimedReferral) {
+                    submitReferralBtn.disabled = true;
+                    submitReferralBtn.textContent = state.referredBy ? 'Referral Applied' : 'Bonus Claimed';
+                    referralCodeInput.disabled = true;
+                    referralCodeInput.placeholder = state.referredBy ? 
+                        `Referred by: ${state.referredBy}` : 'Bonus already claimed';
+                } else {
+                    submitReferralBtn.disabled = false;
+                    submitReferralBtn.textContent = 'Submit';
+                    referralCodeInput.disabled = false;
+                    referralCodeInput.placeholder = 'Enter referral code';
+                }
+
+                const isWithdrawalPossible = parseFloat(balanceInUSDT) >= WITHDRAW_THRESHOLD;
+                mainWithdrawBtn.disabled = !isWithdrawalPossible;
+                mainWithdrawBtn.textContent = isWithdrawalPossible ? 'Go to Withdraw' : `Reach ${WITHDRAW_THRESHOLD.toFixed(2)} USDT to Withdraw`;
+                
+                finalWithdrawBtn.disabled = !isWithdrawalPossible;
+                finalWithdrawBtn.textContent = isWithdrawalPossible ? `Withdraw ${balanceInUSDT} USDT` : `Minimum ${WITHDRAW_THRESHOLD.toFixed(2)} USDT required`;
+                
+                const adLimitReached = state.dailyAdCount >= DAILY_AD_LIMIT;
+                rewardedBtn.disabled = adLimitReached;
+                rewardedBtn.textContent = adLimitReached ? 'Daily Limit Reached' : `Watch Ad (+${(AD_REWARD_CENTS / 100).toFixed(3)} USDT)`;
+            }
+            
+            function showView(viewId) {
                 document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
                 document.getElementById(viewId).style.display = 'block';
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                
-                const navMap = {
-                    'home-view': 'navHome',
-                    'withdraw-view': 'navWithdraw', 
-                    'referral-view': 'navRefer'
-                };
-                
-                if (navMap[viewId]) {
-                    document.getElementById(navMap[viewId]).classList.add('active');
-                }
+                const activeNavId = { 'home-view': 'navHome', 'withdraw-view': 'navWithdraw', 'referral-view': 'navRefer' }[viewId];
+                if (activeNavId) document.getElementById(activeNavId).classList.add('active');
+            }
+            
+            function showStatus(message, type = 'info') {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message ${type}`;
+                statusMessage.style.display = 'block';
+                setTimeout(() => { statusMessage.style.display = 'none'; }, 5000);
             }
 
-            function showStatus(message, type, duration = 4000) {
-                clearTimeout(window.statusTimeout);
-                elements.statusMessage.textContent = message;
-                elements.statusMessage.className = `status-message ${type}`;
-                elements.statusMessage.style.display = 'block';
-                window.statusTimeout = setTimeout(() => {
-                    elements.statusMessage.style.display = 'none';
-                }, duration);
-            }
-
-            // Bot Status Functions
-            function setBotStatus(status, message = '') {
-                botStatus.status = status;
-                if (message) {
-                    botStatus.message = message;
-                } else {
-                    // Default messages
-                    switch(status) {
-                        case 'active':
-                            botStatus.message = 'Bot is running normally';
-                            break;
-                        case 'maintenance':
-                            botStatus.message = 'Bot is under maintenance';
-                            break;
-                        case 'paused':
-                            botStatus.message = 'Bot is temporarily paused';
-                            break;
-                    }
-                }
-                
-                saveBotStatus();
-                updateUI();
-                showStatus(`Bot status set to: ${status}`, 'status-success');
-            }
-
-            // Ad System
-            async function requestAd() {
-                if (!appInitialized) {
-                    showStatus('App is initializing...', 'status-error');
-                    return;
-                }
-
-                if (botStatus.status !== 'active') {
-                    showStatus(botStatus.message, 'status-error');
-                    return;
-                }
-
-                if (state.dailyAds >= CONFIG.DAILY_AD_LIMIT) {
-                    showStatus('Daily ad limit reached!', 'status-error');
-                    return;
-                }
-                
-                elements.rewardedBtn.disabled = true;
-                elements.rewardedBtn.classList.add('btn-loading');
-                
-                showStatus('Loading ad...', 'status-info');
-                
-                try {
-                    if (typeof window.showGiga === 'function') {
-                        await window.showGiga()
-                            .then(() => handleAdSuccess())
-                            .catch(error => {
-                                console.error('GigaPub error:', error);
-                                setTimeout(handleAdSuccess, 2000);
-                            });
-                    } else {
-                        setTimeout(handleAdSuccess, 2000);
-                    }
-                } catch (error) {
-                    console.error('Ad error:', error);
-                    setTimeout(handleAdSuccess, 2000);
-                }
-            }
-
-            function handleAdSuccess() {
-                state.balance += CONFIG.AD_REWARD;
-                state.totalAds++;
-                state.dailyAds++;
-                state.lastAdDate = new Date().toDateString();
-                
-                saveState();
-                updateUI();
-                
-                elements.rewardedBtn.disabled = false;
-                elements.rewardedBtn.classList.remove('btn-loading');
-                
-                showStatus(`+${CONFIG.AD_REWARD} USDT earned! 🎉`, 'status-success');
-            }
-
-            // Withdrawal System
-            async function handleWithdrawal() {
-                if (!appInitialized) return;
-
-                const walletAddress = elements.paymentAddress.value.trim();
-                
-                if (state.balance < CONFIG.WITHDRAW_THRESHOLD) {
-                    showStatus(`Minimum withdrawal is ${CONFIG.WITHDRAW_THRESHOLD} USDT`, 'status-error');
-                    return;
-                }
-                
-                if (!walletAddress.startsWith('T') || walletAddress.length < 34) {
-                    showStatus('Please enter valid TRC20 address', 'status-error');
-                    return;
-                }
-
-                const user = tg.initDataUnsafe.user;
-                const withdrawalData = {
-                    userId: user.id,
-                    userInfo: `${user.first_name} ${user.last_name || ''}`.trim(),
-                    username: user.username,
-                    referralCode: state.referralCode,
-                    amount: state.balance.toFixed(3),
-                    walletAddress: walletAddress,
-                    timestamp: new Date().toISOString(),
-                    status: 'pending'
-                };
-
-                // Add to withdrawal history
-                state.withdrawalHistory.push(withdrawalData);
-                
-                // Save withdrawal to global withdrawals
-                saveWithdrawalToGlobal(withdrawalData);
-
-                try {
-                    const response = await fetch(CONFIG.WITHDRAW_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(withdrawalData)
-                    });
-
-                    if (response.ok) {
-                        state.balance = 0;
-                        saveState();
-                        updateUI();
-                        elements.paymentAddress.value = '';
-                        showView('home-view');
-                        showStatus('Withdrawal request sent! ✅', 'status-success');
-                    } else {
-                        throw new Error('Webhook failed');
-                    }
-                } catch (error) {
-                    console.error('Withdrawal error:', error);
-                    tg.sendData(JSON.stringify(withdrawalData, null, 2));
-                    state.balance = 0;
-                    saveState();
-                    updateUI();
-                    elements.paymentAddress.value = '';
-                    showView('home-view');
-                    showStatus('Withdrawal request sent! ✅', 'status-success');
-                }
-            }
-
-            function saveWithdrawalToGlobal(withdrawalData) {
-                try {
-                    let globalWithdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
-                    globalWithdrawals.push(withdrawalData);
-                    localStorage.setItem('torreads_withdrawals', JSON.stringify(globalWithdrawals));
-                } catch (error) {
-                    console.error('Error saving global withdrawal:', error);
-                }
-            }
-
-            // Referral System - COMPLETELY REWRITTEN
-            function setupReferralCopy() {
-                elements.referralCodeBox.onclick = () => {
-                    navigator.clipboard.writeText(state.referralCode).then(() => {
-                        showStatus('Referral code copied! 📋', 'status-success');
-                    });
-                };
-                
-                elements.referralLink.onclick = () => {
-                    const link = `https://t.me/${CONFIG.BOT_USERNAME}?start=${state.referralCode}`;
-                    navigator.clipboard.writeText(link).then(() => {
-                        showStatus('Referral link copied! 🔗', 'status-success');
-                    });
-                };
-            }
-
-            function handleReferralSubmission() {
-                if (!appInitialized) return;
-
-                const code = elements.referralCodeInput.value.trim().toUpperCase();
-                
-                if (!code) {
-                    showStatus('Enter referral code', 'status-error');
-                    return;
-                }
-                
-                if (code === state.referralCode) {
-                    showStatus("Can't use your own code", 'status-error');
-                    return;
-                }
-                
-                if (state.referredBy) {
-                    showStatus('Already used referral', 'status-error');
-                    return;
-                }
-                
-                // Simple validation
-                if (code.length !== 8 || !/^[A-Z0-9]+$/.test(code)) {
-                    showStatus('Invalid code format', 'status-error');
-                    return;
-                }
-
-                // NEW REFERRAL SYSTEM - Search for referrer
-                const referrerFound = findAndRewardReferrer(code);
-                
-                if (referrerFound) {
-                    // Give bonus to current user
-                    state.referredBy = code;
-                    state.hasClaimedReferral = true;
-                    state.balance += CONFIG.REFERRAL_BONUS;
-                    
-                    saveState();
-                    updateUI();
-                    
-                    showStatus(`+${CONFIG.REFERRAL_BONUS} USDT bonus! Referrer also received ${CONFIG.REFERRAL_BONUS} USDT 🎁`, 'status-success');
-                } else {
-                    showStatus('Referral code not found', 'status-error');
-                }
-            }
-
-            // NEW: Improved referral system
-            function findAndRewardReferrer(referralCode) {
-                console.log('🔍 Searching for referrer with code:', referralCode);
-                
-                // Search all users in localStorage
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('torreads_') && key !== `torreads_${state.userId}`) {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            
-                            if (userData && userData.referralCode === referralCode) {
-                                console.log('🎯 Found referrer! User ID:', userData.userId);
-                                
-                                // Give bonus to referrer
-                                userData.balance = (userData.balance || 0) + CONFIG.REFERRAL_BONUS;
-                                userData.referralCount = (userData.referralCount || 0) + 1;
-                                userData.referredUsers = userData.referredUsers || [];
-                                
-                                if (!userData.referredUsers.includes(state.userId)) {
-                                    userData.referredUsers.push(state.userId);
-                                }
-                                
-                                // Save referrer's updated state
-                                localStorage.setItem(key, JSON.stringify(userData));
-                                console.log(`💰 Bonus given! Referrer new balance: ${userData.balance} USDT, Referral count: ${userData.referralCount}`);
-                                
-                                return true;
-                            }
-                        } catch (e) {
-                            console.error('Error processing referral:', e);
-                        }
-                    }
-                }
-                
-                console.log('❌ Referrer not found for code:', referralCode);
-                return false;
-            }
-
-            // Admin Functions
-            function showAdminPanel() {
-                elements.adminPanel.style.display = 'block';
-                elements.adminUserId.textContent = state.userId;
-            }
-
-            function showAdminTab(tabName) {
-                // Hide all tabs
-                document.querySelectorAll('.admin-section').forEach(section => {
-                    section.classList.remove('active');
-                });
-                document.querySelectorAll('.admin-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                // Show selected tab
-                document.getElementById(`admin-${tabName}`).classList.add('active');
-                event.target.classList.add('active');
-                
-                // Update tab content
-                if (tabName === 'stats') updateAdminStats();
-                if (tabName === 'users') updateUserList();
-                if (tabName === 'withdrawals') updateAdminWithdrawalList();
-            }
-
-            function updateAdminStats() {
-                let totalUsers = 0;
-                let totalBalance = 0;
-                let totalAds = 0;
-                let totalWithdrawals = 0;
-                let pendingWithdrawals = 0;
-                
-                // Count users and stats
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            totalUsers++;
-                            totalBalance += userData.balance || 0;
-                            totalAds += userData.totalAds || 0;
-                        } catch (e) {
-                            console.error('Error reading user data:', e);
-                        }
-                    }
-                }
-                
-                // Count withdrawals
-                try {
-                    const withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
-                    totalWithdrawals = withdrawals.length;
-                    pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').length;
-                } catch (e) {
-                    console.error('Error reading withdrawals:', e);
-                }
-                
-                elements.adminStats.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${totalUsers}</div>
-                            <div class="stat-label">Total Users</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${totalBalance.toFixed(2)}</div>
-                            <div class="stat-label">Total Balance</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${totalAds}</div>
-                            <div class="stat-label">Total Ads</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${totalWithdrawals}</div>
-                            <div class="stat-label">Withdrawals</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 12px; font-size: 12px; color: var(--dark-gray);">
-                        <div>Pending Withdrawals: <strong>${pendingWithdrawals}</strong></div>
-                        <div>Bot Status: <strong>${botStatus.status}</strong></div>
-                    </div>
-                `;
-            }
-
-            function updateUserList() {
-                const users = [];
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            users.push({
-                                id: userData.userId,
-                                balance: userData.balance || 0,
-                                ads: userData.totalAds || 0,
-                                referrals: userData.referralCount || 0,
-                                name: `User ${userData.userId}`
-                            });
-                        } catch (e) {
-                            console.error('Error reading user data:', e);
-                        }
-                    }
-                }
-                
-                // Sort by balance (descending)
-                users.sort((a, b) => b.balance - a.balance);
-                
-                elements.userList.innerHTML = users.slice(0, 10).map(user => `
-                    <div class="user-item">
-                        <div class="user-header">
-                            <div class="user-name">${user.name}</div>
-                            <div class="user-balance">${user.balance.toFixed(2)} USDT</div>
-                        </div>
-                        <div class="user-details">
-                            <span>Ads: ${user.ads}</span>
-                            <span>Refs: ${user.referrals}</span>
-                            <span>ID: ${user.id}</span>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            function updateAdminWithdrawalList() {
-                try {
-                    const withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
-                    
-                    if (withdrawals.length === 0) {
-                        elements.adminWithdrawalList.innerHTML = '<div class="text-muted text-center">No withdrawal requests</div>';
-                        return;
-                    }
-                    
-                    elements.adminWithdrawalList.innerHTML = withdrawals.slice().reverse().map(withdrawal => `
-                        <div class="withdrawal-item">
-                            <div class="withdrawal-header">
-                                <div class="withdrawal-amount">${withdrawal.amount} USDT</div>
-                                <div class="withdrawal-status status-${withdrawal.status}">
-                                    ${withdrawal.status}
-                                </div>
-                            </div>
-                            <div class="withdrawal-details">
-                                <strong>User:</strong> ${withdrawal.userInfo} (${withdrawal.userId})<br>
-                                <strong>Wallet:</strong> ${withdrawal.walletAddress}<br>
-                                <strong>Ref Code:</strong> ${withdrawal.referralCode}
-                            </div>
-                            <div class="withdrawal-date">
-                                ${new Date(withdrawal.timestamp).toLocaleString()}
-                            </div>
-                            <div style="margin-top: 8px; display: flex; gap: 8px;">
-                                <button class="admin-btn add-balance" style="padding: 4px 8px; font-size: 10px;" 
-                                    onclick="adminUpdateWithdrawal('${withdrawal.userId}', '${withdrawal.timestamp}', 'completed')">
-                                    ✅ Complete
-                                </button>
-                                <button class="admin-btn reset-stats" style="padding: 4px 8px; font-size: 10px;"
-                                    onclick="adminUpdateWithdrawal('${withdrawal.userId}', '${withdrawal.timestamp}', 'rejected')">
-                                    ❌ Reject
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-                } catch (error) {
-                    console.error('Error loading withdrawals:', error);
-                    elements.adminWithdrawalList.innerHTML = '<div class="text-center text-muted">Error loading withdrawals</div>';
-                }
-            }
-
-            // Admin button functions
-            function adminAddBalance() {
-                const amount = parseFloat(elements.adminBalanceInput.value);
-                if (amount && amount > 0) {
-                    state.balance += amount;
-                    saveState();
-                    updateUI();
-                    updateAdminStats();
-                    elements.adminBalanceInput.value = '';
-                    showStatus(`Added ${amount} USDT to balance`, 'status-success');
-                } else {
-                    showStatus('Please enter a valid amount', 'status-error');
-                }
-            }
-
-            function adminResetStats() {
-                state.balance = 0;
-                state.totalAds = 0;
-                state.dailyAds = 0;
-                state.referralCount = 0;
-                saveState();
-                updateUI();
-                updateAdminStats();
-                showStatus('User stats reset', 'status-success');
-            }
-
-            function adminExportAllData() {
-                const allData = {};
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('torreads_')) {
-                        allData[key] = JSON.parse(localStorage.getItem(key));
-                    }
-                }
-                
-                const data = JSON.stringify(allData, null, 2);
-                const blob = new Blob([data], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `torreads_all_data_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showStatus('All data exported', 'status-success');
-            }
-
-            function adminImportData() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = e => {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        try {
-                            const imported = JSON.parse(e.target.result);
-                            Object.assign(state, imported);
-                            saveState();
-                            updateUI();
-                            updateAdminStats();
-                            showStatus('Data imported successfully', 'status-success');
-                        } catch (error) {
-                            showStatus('Invalid data file', 'status-error');
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            }
-
-            function adminAddBonusToAll() {
-                let count = 0;
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            userData.balance += 0.10; // Add 0.10 USDT to everyone
-                            localStorage.setItem(key, JSON.stringify(userData));
-                            count++;
-                        } catch (e) {
-                            console.error('Error adding bonus:', e);
-                        }
-                    }
-                }
-                showStatus(`Added 0.10 USDT bonus to ${count} users`, 'status-success');
-                updateAdminStats();
-            }
-
-            function adminResetAllStats() {
-                if (confirm('Are you sure you want to reset ALL users stats? This cannot be undone!')) {
-                    let count = 0;
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key.startsWith('torreads_') && !key.includes('withdrawals')) {
-                            try {
-                                const userData = JSON.parse(localStorage.getItem(key));
-                                userData.balance = 0;
-                                userData.totalAds = 0;
-                                userData.dailyAds = 0;
-                                localStorage.setItem(key, JSON.stringify(userData));
-                                count++;
-                            } catch (e) {
-                                console.error('Error resetting stats:', e);
-                            }
-                        }
-                    }
-                    showStatus(`Reset stats for ${count} users`, 'status-success');
-                    updateAdminStats();
-                }
-            }
-
-            function adminExportUserData() {
-                const data = JSON.stringify(state, null, 2);
-                const blob = new Blob([data], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `torreads_user_${state.userId}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showStatus('User data exported', 'status-success');
-            }
-
-            function adminClearAllData() {
-                if (confirm('DANGER! This will delete ALL data including users and withdrawals. Continue?')) {
-                    localStorage.clear();
-                    showStatus('All data cleared', 'status-success');
-                    setTimeout(() => location.reload(), 1000);
-                }
-            }
-
-            window.adminUpdateWithdrawal = function(userId, timestamp, newStatus) {
-                try {
-                    let withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
-                    const withdrawal = withdrawals.find(w => w.userId === userId && w.timestamp === timestamp);
-                    
-                    if (withdrawal) {
-                        withdrawal.status = newStatus;
-                        localStorage.setItem('torreads_withdrawals', JSON.stringify(withdrawals));
-                        updateAdminWithdrawalList();
-                        showStatus(`Withdrawal ${newStatus}`, 'status-success');
-                    }
-                } catch (error) {
-                    console.error('Error updating withdrawal:', error);
-                    showStatus('Error updating withdrawal', 'status-error');
-                }
-            };
-
-            window.showAdminTab = showAdminTab;
-
-            // Event Listeners
+            // ---- Event Listeners ----
             function setupEventListeners() {
-                console.log('🔧 Setting up event listeners...');
-                
                 // Navigation
                 document.getElementById('navHome').addEventListener('click', () => showView('home-view'));
                 document.getElementById('navWithdraw').addEventListener('click', () => showView('withdraw-view'));
                 document.getElementById('navRefer').addEventListener('click', () => showView('referral-view'));
                 
-                // Actions
-                elements.rewardedBtn.addEventListener('click', requestAd);
-                elements.mainWithdrawBtn.addEventListener('click', () => {
-                    if (state.balance >= CONFIG.WITHDRAW_THRESHOLD) {
-                        showView('withdraw-view');
+                // Referans kodunu kopyalama
+                referralCodeBox.addEventListener('click', () => {
+                    if (state.referralCode) {
+                        navigator.clipboard.writeText(state.referralCode).then(() => {
+                            showStatus('Referral code copied to clipboard!', 'success');
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                        });
                     }
                 });
-                elements.finalWithdrawBtn.addEventListener('click', handleWithdrawal);
-                elements.submitReferralBtn.addEventListener('click', handleReferralSubmission);
                 
-                // Bot status controls
-                elements.statusActiveBtn.addEventListener('click', () => setBotStatus('active', elements.statusMessageInput.value));
-                elements.statusMaintenanceBtn.addEventListener('click', () => setBotStatus('maintenance', elements.statusMessageInput.value));
-                elements.statusPausedBtn.addEventListener('click', () => setBotStatus('paused', elements.statusMessageInput.value));
+                // Manuel referans kodu gönderme
+                submitReferralBtn.addEventListener('click', async () => {
+                    const referralCode = referralCodeInput.value.trim().toUpperCase();
+                    
+                    if (!referralCode) {
+                        showStatus('Please enter a referral code', 'error');
+                        return;
+                    }
+                    
+                    if (state.referredBy || state.hasClaimedReferral) {
+                        showStatus('You have already claimed a referral bonus', 'error');
+                        return;
+                    }
+                    
+                    if (referralCode === state.referralCode) {
+                        showStatus('You cannot use your own referral code', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        const isValid = await isValidReferralCode(referralCode);
+                        
+                        if (isValid) {
+                            // Referans verene bonus ver
+                            const bonusGiven = await giveReferralBonusToReferrer(referralCode);
+                            
+                            if (bonusGiven) {
+                                // Mevcut kullanıcıya da bonus ver
+                                state.balanceInCents += (REFERRAL_BONUS_USDT * 100);
+                                state.referredBy = referralCode;
+                                state.hasClaimedReferral = true;
+                                
+                                await saveState();
+                                updateUI();
+                                
+                                showStatus(`Success! You received ${REFERRAL_BONUS_USDT} USDT bonus for using referral code!`, 'success');
+                            } else {
+                                showStatus('Error processing referral bonus. Please try again.', 'error');
+                            }
+                        } else {
+                            showStatus('Invalid referral code. Please check and try again.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error validating referral code:', error);
+                        showStatus('Error validating referral code. Please try again.', 'error');
+                    }
+                });
                 
-                // Admin buttons
-                elements.adminAddBalanceBtn.addEventListener('click', adminAddBalance);
-                elements.adminResetStatsBtn.addEventListener('click', adminResetStats);
-                elements.adminExportAllDataBtn.addEventListener('click', adminExportAllData);
-                elements.adminImportDataBtn.addEventListener('click', adminImportData);
-                elements.adminAddBonusToAllBtn.addEventListener('click', adminAddBonusToAll);
-                elements.adminResetAllStatsBtn.addEventListener('click', adminResetAllStats);
-                elements.adminExportUserDataBtn.addEventListener('click', adminExportUserData);
-                elements.adminClearAllDataBtn.addEventListener('click', adminClearAllData);
+                // Reklam izleme butonu
+                rewardedBtn.addEventListener('click', async () => {
+                    if (state.dailyAdCount >= DAILY_AD_LIMIT) {
+                        showStatus('Daily ad limit reached. Try again tomorrow!', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        // GigaPub SDK'yı başlat
+                        await initializeGigaPub();
+                        
+                        if (typeof window.showGiga === 'function') {
+                            // GigaPub reklamını göster
+                            window.showGiga({
+                                placementId: '986',
+                                onReward: () => {
+                                    console.log('Reward granted via GigaPub');
+                                    processAdReward();
+                                },
+                                onClose: () => {
+                                    console.log('Ad closed');
+                                },
+                                onError: (error) => {
+                                    console.log('Ad error:', error);
+                                    showStatus('Ad error. Please try again.', 'error');
+                                }
+                            });
+                        } else {
+                            // Fallback: Manuel ödül ver
+                            console.log('GigaPub not available, using fallback reward');
+                            processAdReward();
+                        }
+                    } catch (error) {
+                        console.error('Error showing ad:', error);
+                        // Fallback: Manuel ödül ver
+                        processAdReward();
+                    }
+                });
                 
-                // Referral copy
-                setupReferralCopy();
-
-                console.log('✅ Event listeners setup completed');
+                // Çekim butonları
+                mainWithdrawBtn.addEventListener('click', () => {
+                    if (parseFloat(state.balanceInCents / 100) >= WITHDRAW_THRESHOLD) {
+                        showView('withdraw-view');
+                    } else {
+                        showStatus(`Minimum withdrawal is ${WITHDRAW_THRESHOLD.toFixed(2)} USDT`, 'error');
+                    }
+                });
+                
+                finalWithdrawBtn.addEventListener('click', async () => {
+                    const address = paymentAddressInput.value.trim();
+                    if (!address) {
+                        showStatus('Please enter your USDT wallet address', 'error');
+                        return;
+                    }
+                    
+                    if (address.length < 10) {
+                        showStatus('Please enter a valid USDT wallet address', 'error');
+                        return;
+                    }
+                    
+                    const balanceInUSDT = (state.balanceInCents / 100).toFixed(3);
+                    
+                    if (parseFloat(balanceInUSDT) < WITHDRAW_THRESHOLD) {
+                        showStatus(`Minimum withdrawal is ${WITHDRAW_THRESHOLD.toFixed(2)} USDT`, 'error');
+                        return;
+                    }
+                    
+                    try {
+                        // Webhook'a çekim isteği gönder
+                        const response = await fetch(WITHDRAW_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                userId: state.userId,
+                                username: tg.initDataUnsafe.user?.username || 'Unknown',
+                                address: address,
+                                amount: balanceInUSDT,
+                                timestamp: new Date().toISOString()
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            showStatus(`Withdrawal request for ${balanceInUSDT} USDT submitted successfully!`, 'success');
+                            
+                            // Bakiyeyi sıfırla
+                            state.balanceInCents = 0;
+                            await saveState();
+                            updateUI();
+                            
+                            // Adres alanını temizle
+                            paymentAddressInput.value = '';
+                        } else {
+                            throw new Error('Webhook request failed');
+                        }
+                    } catch (error) {
+                        console.error('Withdrawal error:', error);
+                        showStatus('Withdrawal request failed. Please try again.', 'error');
+                    }
+                });
+                
+                // Admin butonları
+                resetAllBtn.addEventListener('click', resetAllStats);
+                resetReferralsBtn.addEventListener('click', resetAllReferrals);
+                deleteAllBtn.addEventListener('click', deleteAllUsers);
+                refreshStatsBtn.addEventListener('click', updateAdminStats);
+            }
+            
+            // ---- Reklam Ödül İşleme ----
+            async function processAdReward() {
+                const today = getTodayDateString();
+                
+                // Günlük limit kontrolü
+                if (state.dailyAdCount >= DAILY_AD_LIMIT) {
+                    showStatus('Daily ad limit reached. Try again tomorrow!', 'error');
+                    return;
+                }
+                
+                // Ödülü ver
+                state.balanceInCents += AD_REWARD_CENTS;
+                state.totalAdCount++;
+                state.dailyAdCount++;
+                state.lastAdDate = today;
+                
+                // JSONBin uyumluluk alanlarını güncelle
+                state.points = state.balanceInCents / 100;
+                state.dailyAdWatchCount = state.dailyAdCount;
+                state.lastAdWatchDate = today;
+                
+                await saveState();
+                updateUI();
+                
+                showStatus(`+${(AD_REWARD_CENTS / 100).toFixed(3)} USDT earned! Ads today: ${state.dailyAdCount}/${DAILY_AD_LIMIT}`, 'success');
+                
+                // Günlük limit kontrolü
+                if (state.dailyAdCount >= DAILY_AD_LIMIT) {
+                    showStatus('Daily ad limit reached! Come back tomorrow for more ads.', 'info');
+                }
             }
 
-            // Auto-save state
-            setInterval(saveState, 30000);
-            window.addEventListener('beforeunload', saveState);
+            // ---- Admin Kontrolü ----
+            function checkAdminStatus() {
+                const user = tg.initDataUnsafe.user;
+                if (user && user.id === ADMIN_ID) {
+                    adminPanel.style.display = 'block';
+                    userInfoDisplay.textContent = `Admin User: ${user.first_name || 'Admin'} (ID: ${user.id})`;
+                    updateAdminStats();
+                } else {
+                    adminPanel.style.display = 'none';
+                }
+            }
 
-            // Start the app
+            // ---- App Initialization ----
+            async function initializeApp() {
+                try {
+                    console.log('Initializing app...');
+                    
+                    // Telegram Web App'ı genişlet
+                    tg.expand();
+                    
+                    // State'i yükle
+                    await loadState();
+                    
+                    // Event listener'ları kur
+                    setupEventListeners();
+                    
+                    // UI'ı güncelle
+                    updateUI();
+                    
+                    // Admin kontrolü yap
+                    checkAdminStatus();
+                    
+                    // USDT fiyatını güncelle
+                    fetchUSDTPrice();
+                    setInterval(fetchUSDTPrice, 60000); // Her dakika güncelle
+                    
+                    // GigaPub SDK'yı başlat
+                    await initializeGigaPub();
+                    
+                    console.log('App initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                }
+            }
+
+            // Uygulamayı başlat
             initializeApp();
         });
     </script>
