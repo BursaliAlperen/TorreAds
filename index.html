@@ -6,7 +6,7 @@
     <title>TorreAds</title>
     
     <!-- GigaPub SDK -->
-    <script src="https://sdk.gigapub.com/sdk.js"></script>
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
 
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -382,18 +382,16 @@
                         console.log('GigaPub SDK loaded successfully');
                         resolve();
                     } else {
-                        // SDK yüklenmemişse, manuel olarak yükle
-                        const script = document.createElement('script');
-                        script.src = 'https://sdk.gigapub.com/sdk.js';
-                        script.onload = () => {
-                            console.log('GigaPub SDK manually loaded');
-                            setTimeout(resolve, 1000);
-                        };
-                        script.onerror = () => {
-                            console.log('GigaPub SDK failed to load, using fallback');
-                            resolve(); // Fallback ile devam et
-                        };
-                        document.head.appendChild(script);
+                        // 3 saniye bekleyip tekrar kontrol et
+                        setTimeout(() => {
+                            if (typeof window.showGiga === 'function') {
+                                console.log('GigaPub SDK loaded after delay');
+                                resolve();
+                            } else {
+                                console.log('GigaPub SDK not available, using fallback');
+                                resolve(); // Fallback ile devam et
+                            }
+                        }, 3000);
                     }
                 });
             }
@@ -510,7 +508,7 @@
                         };
                         
                         localStorage.setItem(`torreads_state_${state.userId}`, JSON.stringify(stateToSave));
-                        console.log('State saved successfully:', stateToSave);
+                        console.log('State saved successfully. Balance:', stateToSave.points, 'Referrals:', stateToSave.referralCount);
                     }
                 } catch (e) { 
                     console.error("Could not save state", e);
@@ -554,11 +552,6 @@
                                 bonusGiven = true;
                                 
                                 console.log(`Bonus given successfully! New balance: ${userState.balanceInCents/100} USDT, Referral count: ${userState.referralCount}`);
-                                
-                                // UI'ı güncellemek için event tetikle
-                                if (userState.userId === state.userId) {
-                                    updateUI();
-                                }
                             }
                         } catch (e) {
                             console.error('Error processing referral bonus:', e);
@@ -665,7 +658,7 @@
                 state.dailyAdWatchCount = state.dailyAdCount;
                 state.lastAdWatchDate = state.lastAdDate;
                 
-                console.log('Ad completed successfully. New balance:', state.balanceInCents/100);
+                console.log('Ad completed successfully. New balance:', state.balanceInCents/100, 'Total ads:', state.totalAdCount);
                 
                 showStatus(`Success! +${(AD_REWARD_CENTS / 100).toFixed(3)} USDT has been added.`, 'success');
                 saveState(); // Hemen kaydet
@@ -701,24 +694,35 @@
                 showStatus('Loading ad, please wait...', 'info');
                 
                 try {
-                    // GigaPub'u kullan
+                    // GigaPub'u kullan - DOĞRU KOD
                     if (typeof window.showGiga === 'function') {
                         console.log('Showing GigaPub ad');
-                        await window.showGiga("main");
-                        handleAdSuccess();
+                        await window.showGiga()
+                            .then(() => {
+                                console.log('GigaPub ad completed successfully');
+                                handleAdSuccess();
+                            })
+                            .catch((error) => {
+                                console.error('GigaPub ad error:', error);
+                                // Fallback: Simüle edilmiş reklam
+                                console.log('Using simulated ad fallback');
+                                setTimeout(() => {
+                                    handleAdSuccess();
+                                }, 2000);
+                            });
                     } else {
                         // Fallback: Simüle edilmiş reklam
-                        console.log('Using simulated ad fallback');
+                        console.log('GigaPub not available, using simulated ad fallback');
                         setTimeout(() => {
                             handleAdSuccess();
-                        }, 3000);
+                        }, 2000);
                     }
                 } catch (error) {
                     console.error('Ad display error:', error);
                     // Fallback her zaman çalışsın
                     setTimeout(() => {
                         handleAdSuccess();
-                    }, 3000);
+                    }, 2000);
                 }
             }
 
@@ -880,6 +884,11 @@
                 fetchUSDTPrice();
                 
                 setInterval(fetchUSDTPrice, 30000);
+            });
+
+            // Sayfa kapanmadan önce state'i kaydet
+            window.addEventListener('beforeunload', function() {
+                saveState();
             });
         });
     </script>
