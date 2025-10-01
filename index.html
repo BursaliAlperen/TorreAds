@@ -483,6 +483,10 @@
             font-weight: 600;
             font-size: 12px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
         
         .admin-btn.add-balance {
@@ -571,18 +575,21 @@
             margin-bottom: 16px;
             border-bottom: 2px solid var(--medium-gray);
             padding-bottom: 12px;
+            flex-wrap: wrap;
         }
         
         .admin-tab {
-            padding: 8px 16px;
+            padding: 8px 12px;
             border: none;
             border-radius: 8px;
             background: var(--light-gray);
             color: var(--dark-gray);
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             transition: all 0.3s ease;
+            flex: 1;
+            min-width: 70px;
         }
         
         .admin-tab.active {
@@ -707,6 +714,16 @@
             .stats-grid {
                 gap: 12px;
             }
+            
+            .admin-tabs {
+                gap: 4px;
+            }
+            
+            .admin-tab {
+                padding: 6px 8px;
+                font-size: 10px;
+                min-width: 60px;
+            }
         }
     </style>
 </head>
@@ -820,11 +837,11 @@
                         <input type="number" class="input-field" id="adminBalanceInput" placeholder="Add balance amount (USDT)">
                     </div>
                     <div class="admin-actions">
-                        <button class="admin-btn add-balance" onclick="adminAddBalance()">
+                        <button class="admin-btn add-balance" id="adminAddBalanceBtn">
                             <span class="material-icons" style="font-size: 14px;">add</span>
                             Add Balance
                         </button>
-                        <button class="admin-btn reset-stats" onclick="adminResetStats()">
+                        <button class="admin-btn reset-stats" id="adminResetStatsBtn">
                             <span class="material-icons" style="font-size: 14px;">refresh</span>
                             Reset Stats
                         </button>
@@ -843,11 +860,11 @@
                 <div id="admin-stats" class="admin-section">
                     <div id="adminStats"></div>
                     <div class="admin-actions" style="margin-top: 16px;">
-                        <button class="admin-btn export-data" onclick="adminExportAllData()">
+                        <button class="admin-btn export-data" id="adminExportAllDataBtn">
                             <span class="material-icons" style="font-size: 14px;">download</span>
                             Export All Data
                         </button>
-                        <button class="admin-btn import-data" onclick="adminImportData()">
+                        <button class="admin-btn import-data" id="adminImportDataBtn">
                             <span class="material-icons" style="font-size: 14px;">upload</span>
                             Import Data
                         </button>
@@ -857,19 +874,19 @@
                 <!-- Tools Tab -->
                 <div id="admin-tools" class="admin-section">
                     <div class="admin-actions">
-                        <button class="admin-btn add-balance" onclick="adminAddBonusToAll()">
+                        <button class="admin-btn add-balance" id="adminAddBonusToAllBtn">
                             <span class="material-icons" style="font-size: 14px;">celebration</span>
                             Add Bonus to All
                         </button>
-                        <button class="admin-btn reset-stats" onclick="adminResetAllStats()">
+                        <button class="admin-btn reset-stats" id="adminResetAllStatsBtn">
                             <span class="material-icons" style="font-size: 14px;">delete_sweep</span>
                             Reset All Stats
                         </button>
-                        <button class="admin-btn export-data" onclick="adminExportUserData()">
+                        <button class="admin-btn export-data" id="adminExportUserDataBtn">
                             <span class="material-icons" style="font-size: 14px;">person</span>
                             Export User Data
                         </button>
-                        <button class="admin-btn import-data" onclick="adminClearAllData()">
+                        <button class="admin-btn import-data" id="adminClearAllDataBtn">
                             <span class="material-icons" style="font-size: 14px;">warning</span>
                             Clear All Data
                         </button>
@@ -1069,7 +1086,16 @@
                 withdrawalHistory: document.getElementById('withdrawalHistory'),
                 emptyWithdrawalHistory: document.getElementById('emptyWithdrawalHistory'),
                 userList: document.getElementById('userList'),
-                adminWithdrawalList: document.getElementById('adminWithdrawalList')
+                adminWithdrawalList: document.getElementById('adminWithdrawalList'),
+                // Admin buttons
+                adminAddBalanceBtn: document.getElementById('adminAddBalanceBtn'),
+                adminResetStatsBtn: document.getElementById('adminResetStatsBtn'),
+                adminExportAllDataBtn: document.getElementById('adminExportAllDataBtn'),
+                adminImportDataBtn: document.getElementById('adminImportDataBtn'),
+                adminAddBonusToAllBtn: document.getElementById('adminAddBonusToAllBtn'),
+                adminResetAllStatsBtn: document.getElementById('adminResetAllStatsBtn'),
+                adminExportUserDataBtn: document.getElementById('adminExportUserDataBtn'),
+                adminClearAllDataBtn: document.getElementById('adminClearAllDataBtn')
             };
 
             // App Configuration
@@ -1503,7 +1529,7 @@
                     return;
                 }
                 
-                // Simple validation - in real app, validate against backend
+                // Simple validation
                 if (code.length !== 8 || !/^[A-Z0-9]+$/.test(code)) {
                     showStatus('Invalid code format', 'status-error');
                     return;
@@ -1515,16 +1541,22 @@
                 state.balance += CONFIG.REFERRAL_BONUS;
                 
                 // Find referrer and give them bonus + increase referral count
-                giveReferralBonusToReferrer(code);
+                const bonusGiven = giveReferralBonusToReferrer(code);
                 
                 saveState();
                 updateUI();
-                showStatus(`+${CONFIG.REFERRAL_BONUS} USDT referral bonus! 🎁`, 'status-success');
+                
+                if (bonusGiven) {
+                    showStatus(`+${CONFIG.REFERRAL_BONUS} USDT bonus! Referrer also received ${CONFIG.REFERRAL_BONUS} USDT 🎁`, 'status-success');
+                } else {
+                    showStatus(`+${CONFIG.REFERRAL_BONUS} USDT bonus! 🎁`, 'status-success');
+                }
             }
 
             // FIXED: Referrer bonus function
             function giveReferralBonusToReferrer(referralCode) {
                 let bonusGiven = false;
+                console.log('🔍 Searching for referrer with code:', referralCode);
                 
                 // Search all users in localStorage
                 for (let i = 0; i < localStorage.length; i++) {
@@ -1532,12 +1564,13 @@
                     if (key.startsWith('torreads_') && key !== `torreads_${state.userId}`) {
                         try {
                             const userData = JSON.parse(localStorage.getItem(key));
+                            console.log('📁 Checking user:', userData.userId, 'Code:', userData.referralCode);
                             
                             if (userData && userData.referralCode === referralCode) {
                                 console.log('🎯 Found referrer! Giving bonus to:', userData.userId);
                                 
                                 // Give bonus to referrer
-                                userData.balance += CONFIG.REFERRAL_BONUS;
+                                userData.balance = (userData.balance || 0) + CONFIG.REFERRAL_BONUS;
                                 userData.referralCount = (userData.referralCount || 0) + 1;
                                 userData.referredUsers = userData.referredUsers || [];
                                 
@@ -1728,7 +1761,8 @@
                 }
             }
 
-            window.adminAddBalance = function() {
+            // Admin button functions - FIXED
+            function adminAddBalance() {
                 const amount = parseFloat(elements.adminBalanceInput.value);
                 if (amount && amount > 0) {
                     state.balance += amount;
@@ -1737,10 +1771,12 @@
                     updateAdminStats();
                     elements.adminBalanceInput.value = '';
                     showStatus(`Added ${amount} USDT to balance`, 'status-success');
+                } else {
+                    showStatus('Please enter a valid amount', 'status-error');
                 }
-            };
+            }
 
-            window.adminResetStats = function() {
+            function adminResetStats() {
                 state.balance = 0;
                 state.totalAds = 0;
                 state.dailyAds = 0;
@@ -1749,9 +1785,9 @@
                 updateUI();
                 updateAdminStats();
                 showStatus('User stats reset', 'status-success');
-            };
+            }
 
-            window.adminExportAllData = function() {
+            function adminExportAllData() {
                 const allData = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1768,9 +1804,10 @@
                 a.download = `torreads_all_data_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-            };
+                showStatus('All data exported', 'status-success');
+            }
 
-            window.adminImportData = function() {
+            function adminImportData() {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.json';
@@ -1792,26 +1829,9 @@
                     reader.readAsText(file);
                 };
                 input.click();
-            };
+            }
 
-            window.adminUpdateWithdrawal = function(userId, timestamp, newStatus) {
-                try {
-                    let withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
-                    const withdrawal = withdrawals.find(w => w.userId === userId && w.timestamp === timestamp);
-                    
-                    if (withdrawal) {
-                        withdrawal.status = newStatus;
-                        localStorage.setItem('torreads_withdrawals', JSON.stringify(withdrawals));
-                        updateAdminWithdrawalList();
-                        showStatus(`Withdrawal ${newStatus}`, 'status-success');
-                    }
-                } catch (error) {
-                    console.error('Error updating withdrawal:', error);
-                    showStatus('Error updating withdrawal', 'status-error');
-                }
-            };
-
-            window.adminAddBonusToAll = function() {
+            function adminAddBonusToAll() {
                 let count = 0;
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1828,9 +1848,9 @@
                 }
                 showStatus(`Added 0.10 USDT bonus to ${count} users`, 'status-success');
                 updateAdminStats();
-            };
+            }
 
-            window.adminResetAllStats = function() {
+            function adminResetAllStats() {
                 if (confirm('Are you sure you want to reset ALL users stats? This cannot be undone!')) {
                     let count = 0;
                     for (let i = 0; i < localStorage.length; i++) {
@@ -1851,9 +1871,9 @@
                     showStatus(`Reset stats for ${count} users`, 'status-success');
                     updateAdminStats();
                 }
-            };
+            }
 
-            window.adminExportUserData = function() {
+            function adminExportUserData() {
                 const data = JSON.stringify(state, null, 2);
                 const blob = new Blob([data], {type: 'application/json'});
                 const url = URL.createObjectURL(blob);
@@ -1862,18 +1882,40 @@
                 a.download = `torreads_user_${state.userId}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-            };
+                showStatus('User data exported', 'status-success');
+            }
 
-            window.adminClearAllData = function() {
+            function adminClearAllData() {
                 if (confirm('DANGER! This will delete ALL data including users and withdrawals. Continue?')) {
                     localStorage.clear();
                     showStatus('All data cleared', 'status-success');
                     setTimeout(() => location.reload(), 1000);
                 }
+            }
+
+            window.adminUpdateWithdrawal = function(userId, timestamp, newStatus) {
+                try {
+                    let withdrawals = JSON.parse(localStorage.getItem('torreads_withdrawals') || '[]');
+                    const withdrawal = withdrawals.find(w => w.userId === userId && w.timestamp === timestamp);
+                    
+                    if (withdrawal) {
+                        withdrawal.status = newStatus;
+                        localStorage.setItem('torreads_withdrawals', JSON.stringify(withdrawals));
+                        updateAdminWithdrawalList();
+                        showStatus(`Withdrawal ${newStatus}`, 'status-success');
+                    }
+                } catch (error) {
+                    console.error('Error updating withdrawal:', error);
+                    showStatus('Error updating withdrawal', 'status-error');
+                }
             };
 
-            // Event Listeners
+            window.showAdminTab = showAdminTab;
+
+            // Event Listeners - FIXED
             function setupEventListeners() {
+                console.log('🔧 Setting up event listeners...');
+                
                 // Navigation
                 document.getElementById('navHome').addEventListener('click', () => showView('home-view'));
                 document.getElementById('navWithdraw').addEventListener('click', () => showView('withdraw-view'));
@@ -1889,8 +1931,20 @@
                 elements.finalWithdrawBtn.addEventListener('click', handleWithdrawal);
                 elements.submitReferralBtn.addEventListener('click', handleReferralSubmission);
                 
+                // Admin buttons - FIXED: Direct event listeners
+                elements.adminAddBalanceBtn.addEventListener('click', adminAddBalance);
+                elements.adminResetStatsBtn.addEventListener('click', adminResetStats);
+                elements.adminExportAllDataBtn.addEventListener('click', adminExportAllData);
+                elements.adminImportDataBtn.addEventListener('click', adminImportData);
+                elements.adminAddBonusToAllBtn.addEventListener('click', adminAddBonusToAll);
+                elements.adminResetAllStatsBtn.addEventListener('click', adminResetAllStats);
+                elements.adminExportUserDataBtn.addEventListener('click', adminExportUserData);
+                elements.adminClearAllDataBtn.addEventListener('click', adminClearAllData);
+                
                 // Referral copy
                 setupReferralCopy();
+
+                console.log('✅ Event listeners setup completed');
             }
 
             // Auto-save state
