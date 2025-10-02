@@ -1350,12 +1350,46 @@
                         <div class="task-description">${task.description}</div>
                     </div>
                     <div class="task-reward">${task.reward} USDT</div>
-                    <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="completeTask('${task.id}')">
+                    <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="startTask('${task.id}', '${task.link}')">
                         ${isCompleted ? 'Tamamlandı' : 'Başla'}
                     </button>
                 `;
                 tasksList.appendChild(taskItem);
             });
+        }
+        
+        // GÖREV BAŞLAMA FONKSİYONU - Linke yönlendirme özelliği eklendi
+        function startTask(taskId, taskLink) {
+            const task = appData.manualTasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            if (userData.completedTasks.includes(taskId)) {
+                showStatusMessage('Bu görevi zaten tamamladınız.', 'error');
+                return;
+            }
+            
+            // Linke yönlendir
+            if (taskLink && taskLink !== '#' && taskLink !== '') {
+                showStatusMessage('Görev sayfasına yönlendiriliyorsunuz...', 'info');
+                
+                // Yeni sekmede aç
+                setTimeout(() => {
+                    window.open(taskLink, '_blank');
+                    
+                    // Kullanıcıyı bilgilendir
+                    showStatusMessage('Görev sayfası açıldı. Görevi tamamladıktan sonra buraya dönüp "Görev Tamamlandı" butonuna tıklayın.', 'info');
+                    
+                    // Görev tamamlama butonunu göster
+                    setTimeout(() => {
+                        if (confirm('Görevi tamamladınız mı? Tamamladıysanız OK butonuna tıklayın.')) {
+                            completeTask(taskId);
+                        }
+                    }, 3000);
+                }, 1500);
+            } else {
+                // Link yoksa direkt tamamla
+                completeTask(taskId);
+            }
         }
         
         async function completeTask(taskId) {
@@ -1649,6 +1683,7 @@
         window.adminAddTask = adminAddTask;
         window.adminDeleteTask = adminDeleteTask;
         window.completeTask = completeTask;
+        window.startTask = startTask;
     </script>
 </body>
 </html>
