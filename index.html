@@ -10,7 +10,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
-        /* CSS kodu aynı kalacak, değişiklik yapmıyorum */
+        /* CSS kodu aynı kalacak */
         :root {
             --tg-theme-bg-color: #f5f9ff; --tg-theme-text-color: #1a365d; --tg-theme-button-color: #2c7be5;
             --tg-theme-button-text-color: #ffffff; --tg-theme-hint-color: #5a7ba7; --success-color: #00d97e;
@@ -531,6 +531,7 @@
             <button class="btn" id="mainWithdrawBtn" disabled>Çekim Yapmak İçin 0.50 USDT'ye Ulaş</button>
         </div>
 
+        <!-- Diğer view'lar aynı kalacak -->
         <div id="withdraw-view" class="view">
             <div class="header"><h1>Para Çekme</h1><p>Kazancınızı talep edin</p></div>
             <div class="card">
@@ -794,7 +795,7 @@
         };
         
         let appData = {
-            adReward: 0.001, // 0.001 olarak güncellendi
+            adReward: 0.001,
             minWithdraw: 0.50,
             referralReward: 0.02,
             manualTasks: [],
@@ -812,7 +813,7 @@
         // Veri senkronizasyonu için değişkenler
         let isDataSyncing = false;
         let lastSyncTime = 0;
-        const SYNC_INTERVAL = 10000; // 10 saniyede bir senkronizasyon
+        const SYNC_INTERVAL = 10000;
         
         // Buton event listener'larını başlat
         function initEventListeners() {
@@ -1173,16 +1174,22 @@
                 document.getElementById('paymentAddress').value = userData.paymentAddress;
             }
             
+            updateRewardedAdButton();
+            updateManualTasks();
+        }
+        
+        // Reklam butonunu güncelle - YENİ FONKSİYON
+        function updateRewardedAdButton() {
             const rewardedBtn = document.getElementById('rewardedBtn');
+            
             if (userData.dailyAdCount >= 100) {
                 rewardedBtn.disabled = true;
                 rewardedBtn.textContent = 'Günlük Limit Doldu';
+                rewardedBtn.classList.remove('btn-loading');
             } else {
                 rewardedBtn.disabled = false;
                 rewardedBtn.textContent = `Reklam İzle (+${appData.adReward.toFixed(3)} USDT)`;
             }
-            
-            updateManualTasks();
         }
         
         function updateWithdrawButton() {
@@ -1236,17 +1243,14 @@
                     .catch((error) => {
                         console.error('Reklam hatası:', error);
                         showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                        adBtn.classList.remove('btn-loading');
-                        adBtn.disabled = userData.dailyAdCount >= 100;
+                        updateRewardedAdButton(); // Butonu hemen güncelle
                     });
             } else {
                 // Fallback: Reklam gösterilemezse test modu
                 console.log('GigaPub SDK bulunamadı, test modu aktif');
-                setTimeout(async () => {
+                setTimeout(() => {
                     handleAdCompleted();
-                    adBtn.classList.remove('btn-loading');
-                    adBtn.disabled = userData.dailyAdCount >= 100;
-                }, 2000);
+                }, 1000);
             }
         }
         
@@ -1260,6 +1264,9 @@
             saveUserData();
             updateUI();
             showStatusMessage(`Tebrikler! ${reward.toFixed(3)} USDT kazandınız.`, 'success');
+            
+            // Butonu hemen güncelle - bekleme olmadan
+            updateRewardedAdButton();
         }
         
         async function processWithdrawal() {
@@ -1780,7 +1787,7 @@
         async function clearAllData() {
             if (confirm('TÜM verileri silmek istediğinizden emin misiniz?')) {
                 appData = {
-                    adReward: 0.001, // 0.001 olarak güncellendi
+                    adReward: 0.001,
                     minWithdraw: 0.50,
                     referralReward: 0.02,
                     manualTasks: [
