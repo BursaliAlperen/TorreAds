@@ -658,9 +658,9 @@
     </div>
 
     <script>
-        // YENİ JSONBIN.IO KONFİGÜRASYONU
-        const JSONBIN_API_KEY = '$2a$10$6L5UeX3VzQn8Q9R8T1Y2Z.4M7N8B0V2C3X4Z6Q7W8E9R0T1Y2U3I';
-        const JSONBIN_BIN_ID = '67ea1f5be41b4d34e442a1c3';
+        // JSONBIN.IO KONFİGÜRASYONU - YENİ BİN ID VE API KEY
+        const JSONBIN_API_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY.';
+        const JSONBIN_BIN_ID = '68de237cae596e708f0333b0';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
@@ -692,7 +692,8 @@
             taskEarnings: 0,
             withdrawHistory: [],
             paymentAddress: '',
-            firstName: ''
+            firstName: '',
+            lastUpdated: Date.now()
         };
         
         let appData = {
@@ -710,103 +711,218 @@
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
         
+        // Veri senkronizasyonu için değişkenler
+        let isDataSyncing = false;
+        let lastSyncTime = 0;
+        const SYNC_INTERVAL = 30000; // 30 saniyede bir senkronizasyon
+        
         async function initApp() {
-            const initData = tg.initDataUnsafe;
-            userData.userId = initData.user?.id?.toString() || 'test_user_' + Math.floor(Math.random() * 10000);
-            userData.firstName = initData.user?.first_name || 'Kullanıcı';
+            const initData = tg.initDataUnsafe || {};
+            const user = initData.user || {};
             
-            await loadAppDataFromJSONBin();
-            loadUserData();
+            userData.userId = user.id || 'test_user_' + Date.now();
+            userData.firstName = user.first_name || 'Kullanıcı';
             
-            if (!userData.referralCode) {
-                userData.referralCode = generateReferralCode();
-                saveUserData();
-            }
-            
+            // Admin kontrolü
             if (ADMIN_USER_IDS.includes(userData.userId.toString())) {
                 adminHeaderBtn.style.display = 'flex';
             }
             
+            // JSONBin'den verileri yükle
+            await loadAppData();
+            
+            // Eğer kullanıcı verisi yoksa veya güncel değilse, yeni kullanıcı oluştur
+            if (!appData.users[userData.userId]) {
+                userData.referralCode = generateReferralCode();
+                appData.users[userData.userId] = userData;
+                await saveAppData();
+            } else {
+                userData = appData.users[userData.userId];
+                userData.lastUpdated = Date.now();
+            }
+            
+            // UI'ı güncelle
             updateUI();
-            initEventListeners();
-            showStatusMessage(`Hoş geldiniz, ${userData.firstName}!`, 'success');
+            
+            // Reklam butonunu etkinleştir
+            document.getElementById('rewardedBtn').addEventListener('click', showRewardedAd);
+            
+            // Çekim butonlarını etkinleştir
+            document.getElementById('mainWithdrawBtn').addEventListener('click', () => showView('withdraw-view'));
+            document.getElementById('finalWithdrawBtn').addEventListener('click', processWithdrawal);
+            
+            // Referans butonlarını etkinleştir
+            document.getElementById('submitReferralBtn').addEventListener('click', submitReferralCode);
+            document.getElementById('referralCodeBox').addEventListener('click', copyReferralCode);
+            document.getElementById('referralLinkBox').addEventListener('click', copyReferralLink);
+            
+            // Admin butonlarını etkinleştir
+            adminHeaderBtn.addEventListener('click', () => showView('admin-view'));
+            document.getElementById('searchUserBtn').addEventListener('click', searchUser);
+            document.getElementById('adminAddTaskBtn').addEventListener('click', addTask);
+            document.getElementById('resetAdsBtn').addEventListener('click', resetAllDailyAds);
+            document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
+            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+            
+            // Navigasyon butonlarını etkinleştir
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const viewId = button.getAttribute('data-view');
+                    showView(viewId);
+                    
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                });
+            });
+            
+            // Periyodik senkronizasyon başlat
+            setInterval(syncData, SYNC_INTERVAL);
+            
+            // Sayfa yüklendiğinde senkronizasyon yap
+            setTimeout(syncData, 2000);
         }
         
-        async function loadAppDataFromJSONBin() {
+        // JSONBin'den verileri yükle
+        async function loadAppData() {
             try {
                 const response = await fetch(JSONBIN_URL, {
-                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    if (data.record) {
-                        appData = { ...appData, ...data.record };
+                    const result = await response.json();
+                    if (result.record) {
+                        appData = result.record;
+                        console.log('JSONBin verileri başarıyla yüklendi');
                     }
                 } else {
-                    appData.manualTasks = [
-                        {
-                            id: 'task_1',
-                            title: 'Telegram Kanalımıza Katılın',
-                            description: 'Resmi Telegram kanalımıza katılarak ödül kazanın',
-                            link: 'https://t.me/torreadschannel',
-                            reward: 0.005,
-                            completedBy: []
-                        }
-                    ];
-                    await saveAppDataToJSONBin();
+                    console.error('JSONBin yükleme hatası:', response.status);
                 }
             } catch (error) {
-                appData.manualTasks = [
-                    {
-                        id: 'task_1',
-                        title: 'Telegram Kanalımıza Katılın',
-                        description: 'Resmi Telegram kanalımıza katılarak ödül kazanın',
-                        link: 'https://t.me/torreadschannel',
-                        reward: 0.005,
-                        completedBy: []
-                    }
-                ];
+                console.error('JSONBin yükleme hatası:', error);
             }
         }
         
-        async function saveAppDataToJSONBin() {
+        // JSONBin'e verileri kaydet
+        async function saveAppData() {
+            if (isDataSyncing) return;
+            
+            isDataSyncing = true;
+            appData.lastUpdated = Date.now();
+            
             try {
-                appData.lastUpdated = Date.now();
                 const response = await fetch(JSONBIN_UPDATE_URL, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(appData)
                 });
+                
+                if (response.ok) {
+                    console.log('JSONBin verileri başarıyla kaydedildi');
+                    lastSyncTime = Date.now();
+                } else {
+                    console.error('JSONBin kaydetme hatası:', response.status);
+                }
             } catch (error) {
-                console.error('JSONBin save error:', error);
+                console.error('JSONBin kaydetme hatası:', error);
+            } finally {
+                isDataSyncing = false;
             }
         }
         
-        function loadUserData() {
-            const savedUserData = localStorage.getItem(`torreads_user_${userData.userId}`);
-            if (savedUserData) {
-                try {
-                    const parsedData = JSON.parse(savedUserData);
-                    userData = { ...userData, ...parsedData };
-                } catch (e) {}
+        // Veri senkronizasyonu
+        async function syncData() {
+            if (isDataSyncing) return;
+            
+            try {
+                await loadAppData();
+                
+                // Kullanıcı verilerini güncelle
+                if (appData.users[userData.userId]) {
+                    const remoteData = appData.users[userData.userId];
+                    
+                    // Yerel veriler daha güncelse, uzaktakini güncelle
+                    if (userData.lastUpdated > remoteData.lastUpdated) {
+                        appData.users[userData.userId] = userData;
+                        await saveAppData();
+                    } else if (remoteData.lastUpdated > userData.lastUpdated) {
+                        // Uzaktaki veriler daha güncelse, yereli güncelle
+                        userData = remoteData;
+                        updateUI();
+                    }
+                } else {
+                    // Kullanıcı verisi yoksa, ekle
+                    appData.users[userData.userId] = userData;
+                    await saveAppData();
+                }
+            } catch (error) {
+                console.error('Senkronizasyon hatası:', error);
+            }
+        }
+        
+        function updateUI() {
+            // Ana sayfa güncellemeleri
+            document.getElementById('balanceDisplay').textContent = `USDT ${userData.balance.toFixed(3)}`;
+            document.getElementById('adCountDisplay').textContent = userData.adCount;
+            document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / 100`;
+            
+            // Çekim butonunu güncelle
+            const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
+            if (userData.balance >= appData.minWithdraw) {
+                mainWithdrawBtn.disabled = false;
+                mainWithdrawBtn.textContent = `Para Çek (USDT ${userData.balance.toFixed(3)})`;
+            } else {
+                mainWithdrawBtn.disabled = true;
+                mainWithdrawBtn.textContent = `Çekim Yapmak İçin ${appData.minWithdraw.toFixed(2)} USDT'ye Ulaş`;
             }
             
-            const today = new Date().toDateString();
-            if (userData.lastAdDate !== today) {
-                userData.dailyAdCount = 0;
-                userData.lastAdDate = today;
-                saveUserData();
+            // Çekim sayfası güncellemeleri
+            document.getElementById('withdrawBalanceDisplay').textContent = `USDT ${userData.balance.toFixed(3)}`;
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            if (userData.balance >= appData.minWithdraw && userData.paymentAddress) {
+                finalWithdrawBtn.disabled = false;
+            } else {
+                finalWithdrawBtn.disabled = true;
+            }
+            
+            // Referans sayfası güncellemeleri
+            document.getElementById('referralCountDisplay').textContent = userData.referrals.length;
+            document.getElementById('referralBonusDisplay').textContent = `USDT ${userData.referralBonus.toFixed(3)}`;
+            document.getElementById('userReferralCode').textContent = userData.referralCode;
+            document.getElementById('userReferralLink').textContent = `https://t.me/torre_ads_bot?start=${userData.referralCode}`;
+            
+            // Görevler sayfası güncellemeleri
+            document.getElementById('completedTasks').textContent = userData.completedTasks.length;
+            document.getElementById('taskEarnings').textContent = `USDT ${userData.taskEarnings.toFixed(3)}`;
+            updateTasksList();
+            
+            // Admin paneli güncellemeleri
+            updateAdminPanel();
+        }
+        
+        function showView(viewId) {
+            views.forEach(view => view.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+            
+            if (viewId === 'admin-view') {
+                updateAdminPanel();
             }
         }
         
-        function saveUserData() {
-            try {
-                localStorage.setItem(`torreads_user_${userData.userId}`, JSON.stringify(userData));
-            } catch (e) {}
+        function showStatusMessage(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
         }
         
         function generateReferralCode() {
@@ -818,142 +934,95 @@
             return result;
         }
         
-        function updateUI() {
-            document.getElementById('balanceDisplay').textContent = `USDT ${userData.balance.toFixed(3)}`;
-            document.getElementById('withdrawBalanceDisplay').textContent = `USDT ${userData.balance.toFixed(3)}`;
-            document.getElementById('adCountDisplay').textContent = userData.adCount;
-            document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / 100`;
-            document.getElementById('referralCountDisplay').textContent = userData.referrals.length;
-            document.getElementById('referralBonusDisplay').textContent = `USDT ${userData.referralBonus.toFixed(3)}`;
-            document.getElementById('completedTasks').textContent = userData.completedTasks.length;
-            document.getElementById('taskEarnings').textContent = `USDT ${userData.taskEarnings.toFixed(3)}`;
-            document.getElementById('userReferralCode').textContent = userData.referralCode;
-            document.getElementById('userReferralLink').textContent = `https://t.me/torreads_bot?start=${userData.referralCode}`;
+        // GigaPub reklam gösterimi
+        function showRewardedAd() {
+            const btn = document.getElementById('rewardedBtn');
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
             
-            const withdrawBtn = document.getElementById('mainWithdrawBtn');
-            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
-            
-            if (userData.balance >= appData.minWithdraw) {
-                withdrawBtn.disabled = false;
-                withdrawBtn.textContent = `Para Çek (USDT ${userData.balance.toFixed(3)})`;
-                finalWithdrawBtn.disabled = false;
-            } else {
-                withdrawBtn.disabled = true;
-                withdrawBtn.textContent = `Çekim Yapmak İçin ${appData.minWithdraw.toFixed(2)} USDT'ye Ulaş`;
-                finalWithdrawBtn.disabled = true;
-            }
-            
-            if (userData.paymentAddress) {
-                document.getElementById('paymentAddress').value = userData.paymentAddress;
-            }
-            
-            const rewardedBtn = document.getElementById('rewardedBtn');
+            // Günlük reklam limiti kontrolü
             if (userData.dailyAdCount >= 100) {
-                rewardedBtn.disabled = true;
-                rewardedBtn.textContent = 'Günlük Limit Doldu';
-            } else {
-                rewardedBtn.disabled = false;
-                rewardedBtn.textContent = `Reklam İzle (+${appData.adReward.toFixed(3)} USDT)`;
-            }
-            
-            updateManualTasks();
-        }
-        
-        function initEventListeners() {
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const targetView = button.getAttribute('data-view');
-                    switchView(targetView);
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                });
-            });
-            
-            adminHeaderBtn.addEventListener('click', () => {
-                switchView('admin-view');
-                navButtons.forEach(btn => btn.classList.remove('active'));
-            });
-            
-            document.getElementById('rewardedBtn').addEventListener('click', () => showAd());
-            document.getElementById('mainWithdrawBtn').addEventListener('click', () => {
-                switchView('withdraw-view');
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                document.querySelector('.nav-btn[data-view="withdraw-view"]').classList.add('active');
-            });
-            
-            document.getElementById('finalWithdrawBtn').addEventListener('click', processWithdrawal);
-            document.getElementById('referralCodeBox').addEventListener('click', () => {
-                copyToClipboard(userData.referralCode);
-                showStatusMessage('Referans kodu kopyalandı!', 'success');
-            });
-            
-            document.getElementById('referralLinkBox').addEventListener('click', () => {
-                copyToClipboard(`https://t.me/torreads_bot?start=${userData.referralCode}`);
-                showStatusMessage('Referans linki kopyalandı!', 'success');
-            });
-            
-            document.getElementById('submitReferralBtn').addEventListener('click', submitReferralCode);
-            document.getElementById('searchUserBtn').addEventListener('click', searchUser);
-            document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
-            document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
-            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
-            document.getElementById('adminAddTaskBtn').addEventListener('click', adminAddTask);
-        }
-        
-        function showAd() {
-            if (userData.dailyAdCount >= 100) {
-                showStatusMessage('Bugünkü reklam limitinize ulaştınız. Yarın tekrar deneyin!', 'error');
+                showStatusMessage('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin!', 'error');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
                 return;
             }
             
-            const adBtn = document.getElementById('rewardedBtn');
-            adBtn.classList.add('btn-loading');
-            adBtn.disabled = true;
+            // Son reklam tarihi kontrolü
+            const today = new Date().toDateString();
+            if (userData.lastAdDate !== today) {
+                userData.dailyAdCount = 0;
+                userData.lastAdDate = today;
+            }
             
-            // GERÇEK REKLAM ENTEGRASYONU
-            if (typeof gigapub !== 'undefined') {
-                gigapub.showAd()
-                    .then(() => {
-                        const reward = appData.adReward;
-                        userData.balance += reward;
+            try {
+                // GigaPub reklam gösterimi
+                if (window.gigapub) {
+                    window.gigapub.showRewardedAd({
+                        adUnitId: '986',
+                        onReward: () => {
+                            // Reklam başarıyla izlendi
+                            userData.balance += appData.adReward;
+                            userData.adCount++;
+                            userData.dailyAdCount++;
+                            userData.lastUpdated = Date.now();
+                            
+                            // JSONBin'e kaydet
+                            appData.users[userData.userId] = userData;
+                            saveAppData();
+                            
+                            // UI'ı güncelle
+                            updateUI();
+                            
+                            showStatusMessage(`Tebrikler! ${appData.adReward.toFixed(3)} USDT kazandınız!`, 'success');
+                            btn.classList.remove('btn-loading');
+                            btn.disabled = false;
+                        },
+                        onClose: () => {
+                            // Reklam kapatıldı
+                            btn.classList.remove('btn-loading');
+                            btn.disabled = false;
+                        },
+                        onError: (error) => {
+                            // Reklam hatası
+                            console.error('Reklam hatası:', error);
+                            showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                            btn.classList.remove('btn-loading');
+                            btn.disabled = false;
+                        }
+                    });
+                } else {
+                    // GigaPub yoksa, test modu
+                    setTimeout(() => {
+                        userData.balance += appData.adReward;
                         userData.adCount++;
                         userData.dailyAdCount++;
-                        userData.lastAdDate = new Date().toDateString();
-                        saveUserData();
+                        userData.lastUpdated = Date.now();
+                        
+                        // JSONBin'e kaydet
+                        appData.users[userData.userId] = userData;
+                        saveAppData();
+                        
+                        // UI'ı güncelle
                         updateUI();
-                        showStatusMessage(`Tebrikler! ${reward.toFixed(3)} USDT kazandınız.`, 'success');
-                    })
-                    .catch((error) => {
-                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                    })
-                    .finally(() => {
-                        adBtn.classList.remove('btn-loading');
-                        adBtn.disabled = userData.dailyAdCount >= 100;
-                    });
-            } else {
-                // Fallback: Reklam gösterilemezse ödül verme
-                setTimeout(() => {
-                    showStatusMessage('Reklam servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.', 'error');
-                    adBtn.classList.remove('btn-loading');
-                    adBtn.disabled = userData.dailyAdCount >= 100;
-                }, 2000);
+                        
+                        showStatusMessage(`Tebrikler! ${appData.adReward.toFixed(3)} USDT kazandınız!`, 'success');
+                        btn.classList.remove('btn-loading');
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Reklam gösterim hatası:', error);
+                showStatusMessage('Reklam gösterilirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
             }
         }
         
-        function switchView(viewId) {
-            views.forEach(view => view.style.display = 'none');
-            const targetView = document.getElementById(viewId);
-            if (targetView) targetView.style.display = 'block';
+        function processWithdrawal() {
+            const address = document.getElementById('paymentAddress').value.trim();
             
-            if (viewId === 'admin-view' && ADMIN_USER_IDS.includes(userData.userId.toString())) {
-                updateAdminPanel();
-            }
-        }
-        
-        async function processWithdrawal() {
-            const paymentAddress = document.getElementById('paymentAddress').value.trim();
-            
-            if (!paymentAddress) {
+            if (!address) {
                 showStatusMessage('Lütfen geçerli bir USDT cüzdan adresi girin.', 'error');
                 return;
             }
@@ -963,36 +1032,45 @@
                 return;
             }
             
-            userData.paymentAddress = paymentAddress;
-            const withdrawal = {
-                id: Date.now().toString(),
+            // Çekim talebi oluştur
+            const withdrawRequest = {
                 userId: userData.userId,
+                userName: userData.firstName,
                 amount: userData.balance,
-                address: paymentAddress,
-                date: new Date().toISOString(),
+                address: address,
+                timestamp: Date.now(),
                 status: 'pending'
             };
             
-            if (!userData.withdrawHistory) userData.withdrawHistory = [];
-            userData.withdrawHistory.push(withdrawal);
-            appData.withdrawRequests.push(withdrawal);
-            userData.balance = 0;
+            // Çekim talebini kaydet
+            appData.withdrawRequests.push(withdrawRequest);
             
-            saveUserData();
-            await saveAppDataToJSONBin();
+            // Kullanıcı bakiyesini sıfırla
+            userData.withdrawHistory.push({
+                amount: userData.balance,
+                address: address,
+                timestamp: Date.now(),
+                status: 'pending'
+            });
+            
+            userData.balance = 0;
+            userData.lastUpdated = Date.now();
+            
+            // JSONBin'e kaydet
+            appData.users[userData.userId] = userData;
+            saveAppData();
+            
+            // UI'ı güncelle
             updateUI();
             
-            showStatusMessage(`Çekim talebiniz alındı. ${withdrawal.amount.toFixed(3)} USDT yakında gönderilecek.`, 'success');
-            switchView('home-view');
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.nav-btn[data-view="home-view"]').classList.add('active');
+            showStatusMessage('Çekim talebiniz alındı. En kısa sürede işleme alınacaktır.', 'success');
+            showView('home-view');
         }
         
         function submitReferralCode() {
-            const referralCodeInput = document.getElementById('referralCodeInput');
-            const referralCode = referralCodeInput.value.trim().toUpperCase();
+            const code = document.getElementById('referralCodeInput').value.trim().toUpperCase();
             
-            if (!referralCode) {
+            if (!code) {
                 showStatusMessage('Lütfen bir referans kodu girin.', 'error');
                 return;
             }
@@ -1002,150 +1080,180 @@
                 return;
             }
             
-            if (referralCode === userData.referralCode) {
+            // Kodu kendine kullanma kontrolü
+            if (code === userData.referralCode) {
                 showStatusMessage('Kendi referans kodunuzu kullanamazsınız.', 'error');
                 return;
             }
             
-            let referrerFound = false;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        if (user.referralCode === referralCode) {
-                            userData.referredBy = user.userId;
-                            userData.balance += appData.referralReward;
-                            userData.referralBonus += appData.referralReward;
-                            
-                            if (!user.referrals) user.referrals = [];
-                            user.referrals.push({ userId: userData.userId, date: new Date().toISOString() });
-                            user.referralBonus += appData.referralReward;
-                            user.balance += appData.referralReward;
-                            
-                            saveUserData();
-                            localStorage.setItem(key, JSON.stringify(user));
-                            referrerFound = true;
-                            break;
-                        }
-                    } catch (e) {}
+            // Kodu kullanan kullanıcıyı bul
+            let referrer = null;
+            for (const userId in appData.users) {
+                if (appData.users[userId].referralCode === code) {
+                    referrer = appData.users[userId];
+                    break;
                 }
             }
             
-            if (referrerFound) {
-                showStatusMessage(`Referans kodunuz başarıyla kaydedildi! ${appData.referralReward.toFixed(3)} USDT bonus kazandınız.`, 'success');
-                referralCodeInput.value = '';
-                updateUI();
-            } else {
-                showStatusMessage('Geçersiz referans kodu. Lütfen tekrar deneyin.', 'error');
+            if (!referrer) {
+                showStatusMessage('Geçersiz referans kodu.', 'error');
+                return;
             }
+            
+            // Referansı kaydet
+            userData.referredBy = referrer.userId;
+            referrer.referrals.push(userData.userId);
+            referrer.referralBonus += appData.referralReward;
+            referrer.balance += appData.referralReward;
+            referrer.lastUpdated = Date.now();
+            
+            // JSONBin'e kaydet
+            appData.users[userData.userId] = userData;
+            appData.users[referrer.userId] = referrer;
+            saveAppData();
+            
+            // UI'ı güncelle
+            updateUI();
+            
+            showStatusMessage(`Referans kodunuz başarıyla kullanıldı! ${appData.referralReward.toFixed(3)} USDT bonus kazandınız.`, 'success');
+            document.getElementById('referralCodeInput').value = '';
         }
         
-        function copyToClipboard(text) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text);
-            } else {
+        function copyReferralCode() {
+            const code = userData.referralCode;
+            navigator.clipboard.writeText(code).then(() => {
+                showStatusMessage('Referans kodu panoya kopyalandı!', 'success');
+            }).catch(() => {
+                // Fallback
                 const textArea = document.createElement('textarea');
-                textArea.value = text;
+                textArea.value = code;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-            }
+                showStatusMessage('Referans kodu panoya kopyalandı!', 'success');
+            });
         }
         
-        function showStatusMessage(message, type) {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
-            statusMessage.style.display = 'block';
-            setTimeout(() => statusMessage.style.display = 'none', 5000);
+        function copyReferralLink() {
+            const link = `https://t.me/torre_ads_bot?start=${userData.referralCode}`;
+            navigator.clipboard.writeText(link).then(() => {
+                showStatusMessage('Referans linki panoya kopyalandı!', 'success');
+            }).catch(() => {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = link;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showStatusMessage('Referans linki panoya kopyalandı!', 'success');
+            });
+        }
+        
+        function updateTasksList() {
+            const tasksList = document.getElementById('manualTasksList');
+            tasksList.innerHTML = '';
+            
+            appData.manualTasks.forEach((task, index) => {
+                const isCompleted = userData.completedTasks.includes(task.id);
+                
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                        <div class="task-reward">Ödül: ${task.reward.toFixed(3)} USDT</div>
+                    </div>
+                    <button class="task-btn" ${isCompleted ? 'disabled' : ''} data-task-id="${task.id}">
+                        ${isCompleted ? 'Tamamlandı' : 'Katıl'}
+                    </button>
+                `;
+                
+                tasksList.appendChild(taskElement);
+                
+                // Buton etkinliği ekle
+                if (!isCompleted) {
+                    const button = taskElement.querySelector('.task-btn');
+                    button.addEventListener('click', () => completeTask(task.id, index));
+                }
+            });
+        }
+        
+        function completeTask(taskId, taskIndex) {
+            const task = appData.manualTasks[taskIndex];
+            
+            // Görevi tamamla
+            userData.completedTasks.push(taskId);
+            userData.taskEarnings += task.reward;
+            userData.balance += task.reward;
+            userData.lastUpdated = Date.now();
+            
+            // JSONBin'e kaydet
+            appData.users[userData.userId] = userData;
+            saveAppData();
+            
+            // UI'ı güncelle
+            updateUI();
+            
+            showStatusMessage(`Tebrikler! ${task.reward.toFixed(3)} USDT kazandınız!`, 'success');
         }
         
         function updateAdminPanel() {
-            let totalUsers = 0, totalAds = 0, totalWithdrawals = 0, totalBalance = 0;
+            // Genel istatistikler
+            document.getElementById('totalUsers').textContent = Object.keys(appData.users).length;
             
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        totalUsers++;
-                        totalAds += user.adCount || 0;
-                        totalBalance += user.balance || 0;
-                        totalWithdrawals += user.withdrawHistory ? user.withdrawHistory.length : 0;
-                    } catch (e) {}
-                }
+            let totalAds = 0;
+            let totalBalance = 0;
+            let totalWithdrawals = 0;
+            
+            for (const userId in appData.users) {
+                totalAds += appData.users[userId].adCount;
+                totalBalance += appData.users[userId].balance;
+                totalWithdrawals += appData.users[userId].withdrawHistory.length;
             }
             
-            document.getElementById('totalUsers').textContent = totalUsers;
             document.getElementById('totalAds').textContent = totalAds;
             document.getElementById('totalWithdrawals').textContent = totalWithdrawals;
             document.getElementById('totalBalance').textContent = `USDT ${totalBalance.toFixed(2)}`;
             
-            updateAdminUserList();
-            updateWithdrawalRequests();
+            // Çekim talepleri
+            updateWithdrawRequestsList();
+            
+            // Görev listesi
             updateAdminTasksList();
         }
         
-        function updateAdminUserList() {
-            const userList = document.getElementById('adminUserList');
-            userList.innerHTML = '';
-            
-            let userCount = 0;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        const userItem = document.createElement('div');
-                        userItem.className = 'admin-user-item';
-                        userItem.innerHTML = `
-                            <div class="admin-user-info">
-                                <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                                <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
-                            </div>
-                            <div class="admin-user-actions">
-                                <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                                <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                                <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                            </div>
-                        `;
-                        userList.appendChild(userItem);
-                        userCount++;
-                    } catch (e) {}
-                }
-            }
-            
-            if (userCount === 0) {
-                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
-            }
-        }
-        
-        function updateWithdrawalRequests() {
+        function updateWithdrawRequestsList() {
             const requestsList = document.getElementById('withdrawRequestsList');
             requestsList.innerHTML = '';
             
-            if (appData.withdrawRequests.length === 0) {
-                requestsList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Bekleyen çekim talebi yok.</div>';
-                return;
-            }
-            
             appData.withdrawRequests
                 .filter(request => request.status === 'pending')
-                .forEach(request => {
-                    const requestItem = document.createElement('div');
-                    requestItem.className = 'withdraw-request-item';
-                    requestItem.innerHTML = `
+                .forEach((request, index) => {
+                    const requestElement = document.createElement('div');
+                    requestElement.className = 'withdraw-request-item';
+                    requestElement.innerHTML = `
                         <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">Kullanıcı: ${request.userId}</div>
-                            <div class="withdraw-request-details">Miktar: USDT ${request.amount.toFixed(3)} | Adres: ${request.address}</div>
+                            <div class="withdraw-request-user">${request.userName} (${request.userId})</div>
+                            <div class="withdraw-request-details">
+                                Miktar: ${request.amount.toFixed(3)} USDT<br>
+                                Adres: ${request.address}<br>
+                                Tarih: ${new Date(request.timestamp).toLocaleString()}
+                            </div>
                         </div>
                         <div class="withdraw-request-actions">
-                            <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal('${request.id}', 'approved')">Onayla</button>
-                            <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal('${request.id}', 'rejected')">Reddet</button>
+                            <button class="withdraw-action-btn approve" data-index="${index}">Onayla</button>
+                            <button class="withdraw-action-btn reject" data-index="${index}">Reddet</button>
                         </div>
                     `;
-                    requestsList.appendChild(requestItem);
+                    
+                    requestsList.appendChild(requestElement);
+                    
+                    // Buton etkinlikleri
+                    requestElement.querySelector('.approve').addEventListener('click', () => approveWithdrawal(index));
+                    requestElement.querySelector('.reject').addEventListener('click', () => rejectWithdrawal(index));
                 });
         }
         
@@ -1153,356 +1261,275 @@
             const tasksList = document.getElementById('adminTasksList');
             tasksList.innerHTML = '';
             
-            if (appData.manualTasks.length === 0) {
-                tasksList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz görev yok.</div>';
-                return;
-            }
-            
             appData.manualTasks.forEach((task, index) => {
-                const taskItem = document.createElement('div');
-                taskItem.className = 'task-item';
-                taskItem.innerHTML = `
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
                     <div class="task-info">
                         <div class="task-title">${task.title}</div>
                         <div class="task-description">${task.description}</div>
-                        <div class="task-description">${task.completedBy.length} kullanıcı tamamladı</div>
+                        <div class="task-reward">Ödül: ${task.reward.toFixed(3)} USDT</div>
+                        <div class="task-link">Link: ${task.link}</div>
                     </div>
-                    <div class="task-reward">${task.reward} USDT</div>
-                    <button class="task-btn" onclick="adminDeleteTask(${index})">Sil</button>
+                    <button class="admin-action-btn" data-task-index="${index}">Sil</button>
                 `;
-                tasksList.appendChild(taskItem);
-            });
-        }
-        
-        function updateManualTasks() {
-            const tasksList = document.getElementById('manualTasksList');
-            tasksList.innerHTML = '';
-            
-            if (appData.manualTasks.length === 0) {
-                tasksList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz görev yok. Görevler yakında eklenecek!</div>';
-                return;
-            }
-            
-            appData.manualTasks.forEach(task => {
-                const isCompleted = userData.completedTasks.includes(task.id);
-                const taskItem = document.createElement('div');
-                taskItem.className = 'task-item';
-                taskItem.innerHTML = `
-                    <div class="task-info">
-                        <div class="task-title">${task.title}</div>
-                        <div class="task-description">${task.description}</div>
-                    </div>
-                    <div class="task-reward">${task.reward} USDT</div>
-                    <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="completeTask('${task.id}')">
-                        ${isCompleted ? 'Tamamlandı' : 'Başla'}
-                    </button>
-                `;
-                tasksList.appendChild(taskItem);
-            });
-        }
-        
-        async function completeTask(taskId) {
-            const task = appData.manualTasks.find(t => t.id === taskId);
-            if (!task) return;
-            
-            if (userData.completedTasks.includes(taskId)) {
-                showStatusMessage('Bu görevi zaten tamamladınız.', 'error');
-                return;
-            }
-            
-            showStatusMessage('Görev tamamlanıyor...', 'info');
-            
-            setTimeout(async () => {
-                userData.completedTasks.push(taskId);
-                userData.taskEarnings += task.reward;
-                userData.balance += task.reward;
                 
-                if (!task.completedBy.includes(userData.userId)) {
-                    task.completedBy.push(userData.userId);
-                }
+                tasksList.appendChild(taskElement);
                 
-                saveUserData();
-                await saveAppDataToJSONBin();
-                updateUI();
-                showStatusMessage(`Tebrikler! ${task.reward} USDT kazandınız.`, 'success');
-            }, 2000);
+                // Sil butonu etkinliği
+                taskElement.querySelector('.admin-action-btn').addEventListener('click', () => deleteTask(index));
+            });
         }
         
         function searchUser() {
-            const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+            const searchTerm = document.getElementById('userSearch').value.trim();
             const userList = document.getElementById('adminUserList');
             userList.innerHTML = '';
             
-            let foundUsers = 0;
-            
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        const userName = (user.firstName || '').toLowerCase();
-                        const userId = user.userId.toString();
-                        
-                        if (userName.includes(searchTerm) || userId.includes(searchTerm)) {
-                            const userItem = document.createElement('div');
-                            userItem.className = 'admin-user-item';
-                            userItem.innerHTML = `
-                                <div class="admin-user-info">
-                                    <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                                    <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
-                                </div>
-                                <div class="admin-user-actions">
-                                    <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                                    <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                                    <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                                </div>
-                            `;
-                            userList.appendChild(userItem);
-                            foundUsers++;
-                        }
-                    } catch (e) {}
-                }
-            }
-            
-            if (foundUsers === 0) {
-                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
-            }
-        }
-        
-        function adminAddBalance(userId, amount) {
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        if (user.userId === userId) {
-                            user.balance += amount;
-                            localStorage.setItem(key, JSON.stringify(user));
-                            
-                            if (userData.userId === userId) {
-                                userData.balance += amount;
-                                updateUI();
-                            }
-                            
-                            showStatusMessage(`${userId} kullanıcısına ${amount} USDT eklendi.`, 'success');
-                            updateAdminPanel();
-                            return;
-                        }
-                    } catch (e) {}
-                }
-            }
-            showStatusMessage('Kullanıcı bulunamadı.', 'error');
-        }
-        
-        function adminResetUser(userId) {
-            if (confirm(`${userId} kullanıcısını sıfırlamak istediğinizden emin misiniz?`)) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        try {
-                            const user = JSON.parse(localStorage.getItem(key));
-                            if (user.userId === userId) {
-                                const newUserData = {
-                                    userId: user.userId,
-                                    username: user.username,
-                                    firstName: user.firstName,
-                                    balance: 0,
-                                    adCount: 0,
-                                    dailyAdCount: 0,
-                                    lastAdDate: new Date().toDateString(),
-                                    referralCode: user.referralCode,
-                                    referredBy: user.referredBy,
-                                    referrals: user.referrals || [],
-                                    referralBonus: user.referralBonus || 0,
-                                    completedTasks: [],
-                                    taskEarnings: 0,
-                                    withdrawHistory: user.withdrawHistory || [],
-                                    paymentAddress: user.paymentAddress || ''
-                                };
-                                
-                                localStorage.setItem(key, JSON.stringify(newUserData));
-                                
-                                if (userData.userId === userId) {
-                                    userData = newUserData;
-                                    updateUI();
-                                }
-                                
-                                showStatusMessage(`${userId} kullanıcısı sıfırlandı.`, 'success');
-                                updateAdminPanel();
-                                return;
-                            }
-                        } catch (e) {}
-                    }
-                }
-                showStatusMessage('Kullanıcı bulunamadı.', 'error');
-            }
-        }
-        
-        async function adminProcessWithdrawal(requestId, action) {
-            const requestIndex = appData.withdrawRequests.findIndex(req => req.id === requestId);
-            if (requestIndex === -1) {
-                showStatusMessage('Çekim talebi bulunamadı.', 'error');
+            if (!searchTerm) {
+                showStatusMessage('Lütfen bir arama terimi girin.', 'error');
                 return;
             }
             
-            const request = appData.withdrawRequests[requestIndex];
+            let foundUsers = [];
             
-            if (action === 'approved') {
-                appData.withdrawRequests[requestIndex].status = 'approved';
-                showStatusMessage(`Çekim talebi onaylandı. ${request.amount.toFixed(3)} USDT gönderildi.`, 'success');
-            } else {
-                appData.withdrawRequests[requestIndex].status = 'rejected';
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        try {
-                            const user = JSON.parse(localStorage.getItem(key));
-                            if (user.userId === request.userId) {
-                                user.balance += request.amount;
-                                if (user.withdrawHistory) {
-                                    const userWithdrawalIndex = user.withdrawHistory.findIndex(w => w.id === requestId);
-                                    if (userWithdrawalIndex !== -1) {
-                                        user.withdrawHistory[userWithdrawalIndex].status = 'rejected';
-                                    }
-                                }
-                                localStorage.setItem(key, JSON.stringify(user));
-                                
-                                if (userData.userId === request.userId) {
-                                    userData.balance += request.amount;
-                                    updateUI();
-                                }
-                                break;
-                            }
-                        } catch (e) {}
-                    }
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                if (userId.includes(searchTerm) || user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    foundUsers.push(user);
                 }
-                showStatusMessage('Çekim talebi reddedildi ve bakiye iade edildi.', 'success');
             }
             
-            await saveAppDataToJSONBin();
-            updateWithdrawalRequests();
+            if (foundUsers.length === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
+                return;
+            }
+            
+            foundUsers.forEach(user => {
+                const userElement = document.createElement('div');
+                userElement.className = 'admin-user-item';
+                userElement.innerHTML = `
+                    <div class="admin-user-info">
+                        <div class="admin-user-id">${user.firstName} (${user.userId})</div>
+                        <div class="admin-user-balance">
+                            Bakiye: ${user.balance.toFixed(3)} USDT | 
+                            Reklam: ${user.adCount} | 
+                            Referans: ${user.referrals.length}
+                        </div>
+                    </div>
+                    <div class="admin-user-actions">
+                        <button class="admin-action-btn add-balance" data-user-id="${user.userId}">+ Bakiye</button>
+                        <button class="admin-action-btn reset-ads" data-user-id="${user.userId}">Reklam Sıfırla</button>
+                    </div>
+                `;
+                
+                userList.appendChild(userElement);
+                
+                // Buton etkinlikleri
+                userElement.querySelector('.add-balance').addEventListener('click', () => addUserBalance(user.userId));
+                userElement.querySelector('.reset-ads').addEventListener('click', () => resetUserAds(user.userId));
+            });
         }
         
-        async function adminAddTask() {
+        function addTask() {
             const title = document.getElementById('adminTaskTitle').value.trim();
             const description = document.getElementById('adminTaskDescription').value.trim();
             const link = document.getElementById('adminTaskLink').value.trim();
             const reward = parseFloat(document.getElementById('adminTaskReward').value);
             
-            if (!title || !description) {
-                showStatusMessage('Lütfen görev başlığı ve açıklaması girin.', 'error');
+            if (!title || !description || !link || isNaN(reward) || reward <= 0) {
+                showStatusMessage('Lütfen tüm alanları doğru şekilde doldurun.', 'error');
                 return;
             }
             
-            if (isNaN(reward) || reward <= 0) {
-                showStatusMessage('Lütfen geçerli bir ödül miktarı girin.', 'error');
-                return;
-            }
-            
-            const task = {
+            const newTask = {
                 id: 'task_' + Date.now(),
-                title,
-                description,
-                link: link || '#',
-                reward,
-                completedBy: []
+                title: title,
+                description: description,
+                link: link,
+                reward: reward
             };
             
-            appData.manualTasks.push(task);
+            appData.manualTasks.push(newTask);
+            saveAppData();
             
+            // Formu temizle
             document.getElementById('adminTaskTitle').value = '';
             document.getElementById('adminTaskDescription').value = '';
             document.getElementById('adminTaskLink').value = '';
             document.getElementById('adminTaskReward').value = '0.005';
             
-            await saveAppDataToJSONBin();
-            updateAdminPanel();
+            // UI'ı güncelle
+            updateAdminTasksList();
+            updateTasksList();
+            
             showStatusMessage('Görev başarıyla eklendi!', 'success');
         }
         
-        async function adminDeleteTask(index) {
+        function deleteTask(index) {
             if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
                 appData.manualTasks.splice(index, 1);
-                await saveAppDataToJSONBin();
-                updateAdminPanel();
-                showStatusMessage('Görev silindi!', 'success');
+                saveAppData();
+                
+                // UI'ı güncelle
+                updateAdminTasksList();
+                updateTasksList();
+                
+                showStatusMessage('Görev başarıyla silindi!', 'success');
             }
         }
         
-        function resetDailyAds() {
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        user.dailyAdCount = 0;
-                        user.lastAdDate = new Date().toDateString();
-                        localStorage.setItem(key, JSON.stringify(user));
-                    } catch (e) {}
+        function approveWithdrawal(index) {
+            const request = appData.withdrawRequests[index];
+            request.status = 'approved';
+            
+            // Kullanıcının çekim geçmişini güncelle
+            if (appData.users[request.userId]) {
+                const user = appData.users[request.userId];
+                const withdrawRecord = user.withdrawHistory.find(w => 
+                    w.timestamp === request.timestamp && w.amount === request.amount
+                );
+                
+                if (withdrawRecord) {
+                    withdrawRecord.status = 'approved';
+                    user.lastUpdated = Date.now();
                 }
             }
             
-            userData.dailyAdCount = 0;
-            userData.lastAdDate = new Date().toDateString();
-            saveUserData();
-            updateUI();
-            showStatusMessage('Tüm kullanıcıların günlük reklamları sıfırlandı.', 'success');
+            saveAppData();
+            updateWithdrawRequestsList();
+            
+            showStatusMessage('Çekim talebi onaylandı!', 'success');
         }
         
-        async function updateRewards() {
-            const newAdReward = parseFloat(prompt('Yeni reklam ödülü (USDT):', appData.adReward));
-            const newReferralReward = parseFloat(prompt('Yeni referans ödülü (USDT):', appData.referralReward));
-            const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarı (USDT):', appData.minWithdraw));
+        function rejectWithdrawal(index) {
+            const request = appData.withdrawRequests[index];
+            request.status = 'rejected';
             
-            if (!isNaN(newAdReward) && newAdReward > 0) appData.adReward = newAdReward;
-            if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralReward = newReferralReward;
-            if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) appData.minWithdraw = newMinWithdraw;
-            
-            await saveAppDataToJSONBin();
-            updateUI();
-            showStatusMessage('Ödüller güncellendi.', 'success');
-        }
-        
-        async function clearAllData() {
-            if (confirm('TÜM verileri silmek istediğinizden emin misiniz?')) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        localStorage.removeItem(key);
-                        i--;
-                    }
+            // Kullanıcının bakiyesini geri yükle
+            if (appData.users[request.userId]) {
+                const user = appData.users[request.userId];
+                user.balance += request.amount;
+                
+                const withdrawRecord = user.withdrawHistory.find(w => 
+                    w.timestamp === request.timestamp && w.amount === request.amount
+                );
+                
+                if (withdrawRecord) {
+                    withdrawRecord.status = 'rejected';
                 }
                 
+                user.lastUpdated = Date.now();
+            }
+            
+            saveAppData();
+            updateWithdrawRequestsList();
+            
+            showStatusMessage('Çekim talebi reddedildi ve bakiye iade edildi!', 'success');
+        }
+        
+        function addUserBalance(userId) {
+            const amount = parseFloat(prompt('Eklemek istediğiniz USDT miktarını girin:'));
+            
+            if (isNaN(amount) || amount <= 0) {
+                showStatusMessage('Geçersiz miktar!', 'error');
+                return;
+            }
+            
+            if (appData.users[userId]) {
+                appData.users[userId].balance += amount;
+                appData.users[userId].lastUpdated = Date.now();
+                saveAppData();
+                
+                showStatusMessage(`${amount.toFixed(3)} USDT kullanıcıya eklendi!`, 'success');
+                
+                // UI'ı güncelle
+                if (userId === userData.userId) {
+                    userData = appData.users[userId];
+                    updateUI();
+                }
+            }
+        }
+        
+        function resetUserAds(userId) {
+            if (appData.users[userId]) {
+                appData.users[userId].dailyAdCount = 0;
+                appData.users[userId].lastUpdated = Date.now();
+                saveAppData();
+                
+                showStatusMessage('Kullanıcının günlük reklamları sıfırlandı!', 'success');
+                
+                // UI'ı güncelle
+                if (userId === userData.userId) {
+                    userData = appData.users[userId];
+                    updateUI();
+                }
+            }
+        }
+        
+        function resetAllDailyAds() {
+            if (confirm('Tüm kullanıcıların günlük reklam sayılarını sıfırlamak istediğinizden emin misiniz?')) {
+                for (const userId in appData.users) {
+                    appData.users[userId].dailyAdCount = 0;
+                    appData.users[userId].lastUpdated = Date.now();
+                }
+                
+                saveAppData();
+                
+                // UI'ı güncelle
+                if (appData.users[userData.userId]) {
+                    userData = appData.users[userData.userId];
+                    updateUI();
+                }
+                
+                showStatusMessage('Tüm kullanıcıların günlük reklamları sıfırlandı!', 'success');
+            }
+        }
+        
+        function updateRewards() {
+            const newAdReward = parseFloat(prompt('Yeni reklam ödülünü girin (USDT):', appData.adReward));
+            const newReferralReward = parseFloat(prompt('Yeni referans ödülünü girin (USDT):', appData.referralReward));
+            const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarını girin (USDT):', appData.minWithdraw));
+            
+            if (!isNaN(newAdReward) && newAdReward > 0) {
+                appData.adReward = newAdReward;
+            }
+            
+            if (!isNaN(newReferralReward) && newReferralReward > 0) {
+                appData.referralReward = newReferralReward;
+            }
+            
+            if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) {
+                appData.minWithdraw = newMinWithdraw;
+            }
+            
+            saveAppData();
+            updateUI();
+            
+            showStatusMessage('Ödüller başarıyla güncellendi!', 'success');
+        }
+        
+        function clearAllData() {
+            if (confirm('TÜM verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
                 appData = {
                     adReward: 0.002,
                     minWithdraw: 0.50,
                     referralReward: 0.02,
-                    manualTasks: [
-                        {
-                            id: 'task_1',
-                            title: 'Telegram Kanalımıza Katılın',
-                            description: 'Resmi Telegram kanalımıza katılarak ödül kazanın',
-                            link: 'https://t.me/torreadschannel',
-                            reward: 0.005,
-                            completedBy: []
-                        }
-                    ],
+                    manualTasks: [],
                     withdrawRequests: [],
                     users: {},
                     lastUpdated: Date.now()
                 };
                 
-                await saveAppDataToJSONBin();
+                saveAppData();
                 
+                // Yerel kullanıcı verilerini de sıfırla
                 userData = {
                     userId: userData.userId,
-                    username: userData.username,
-                    firstName: userData.firstName,
                     balance: 0,
                     adCount: 0,
                     dailyAdCount: 0,
-                    lastAdDate: new Date().toDateString(),
+                    lastAdDate: '',
                     referralCode: generateReferralCode(),
                     referredBy: '',
                     referrals: [],
@@ -1510,24 +1537,22 @@
                     completedTasks: [],
                     taskEarnings: 0,
                     withdrawHistory: [],
-                    paymentAddress: ''
+                    paymentAddress: '',
+                    firstName: userData.firstName,
+                    lastUpdated: Date.now()
                 };
                 
-                saveUserData();
+                appData.users[userData.userId] = userData;
+                saveAppData();
+                
                 updateUI();
-                updateAdminPanel();
-                showStatusMessage('Tüm veriler temizlendi.', 'success');
+                
+                showStatusMessage('Tüm veriler başarıyla temizlendi!', 'success');
             }
         }
         
+        // Uygulamayı başlat
         document.addEventListener('DOMContentLoaded', initApp);
-        
-        window.adminAddBalance = adminAddBalance;
-        window.adminResetUser = adminResetUser;
-        window.adminProcessWithdrawal = adminProcessWithdrawal;
-        window.adminAddTask = adminAddTask;
-        window.adminDeleteTask = adminDeleteTask;
-        window.completeTask = completeTask;
     </script>
 </body>
 </html>
