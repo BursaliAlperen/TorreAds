@@ -782,6 +782,15 @@
             // JSONBin'den verileri yükle
             await loadAppDataFromJSONBin();
             
+            // REFERANS KODU KONTROLÜ - Telegram start parametresini kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = urlParams.get('start');
+            
+            if (startParam) {
+                // Referans linki ile giriş yapılmış
+                await handleReferralLink(startParam);
+            }
+            
             // Kullanıcı verisini kontrol et
             if (appData.users[userData.userId]) {
                 // Kullanıcı zaten varsa, verileri yükle
@@ -811,6 +820,60 @@
             
             // Periyodik senkronizasyon başlat
             setInterval(syncData, SYNC_INTERVAL);
+        }
+        
+        // REFERANS LİNKİ İLE GİRİŞ İŞLEMİ
+        async function handleReferralLink(referralCode) {
+            if (!referralCode) return;
+            
+            // Kullanıcı zaten bir referans kodu kullanmış mı kontrol et
+            if (userData.referredBy) {
+                console.log('Kullanıcı zaten bir referans kodu kullanmış');
+                return;
+            }
+            
+            // Kendi referans kodunu kullanma kontrolü
+            if (referralCode === userData.referralCode) {
+                console.log('Kullanıcı kendi referans kodunu kullanmaya çalışıyor');
+                return;
+            }
+            
+            // Referans kodunu kullanan kullanıcıyı bul
+            let referrer = null;
+            for (const userId in appData.users) {
+                if (appData.users[userId].referralCode === referralCode) {
+                    referrer = appData.users[userId];
+                    break;
+                }
+            }
+            
+            if (!referrer) {
+                console.log('Geçersiz referans kodu:', referralCode);
+                return;
+            }
+            
+            // Referansı kaydet
+            userData.referredBy = referrer.userId;
+            userData.balance += appData.referralReward;
+            userData.referralBonus += appData.referralReward;
+            
+            // Referans veren kullanıcıyı güncelle
+            if (!referrer.referrals) referrer.referrals = [];
+            referrer.referrals.push({
+                userId: userData.userId,
+                userName: userData.firstName,
+                date: new Date().toISOString()
+            });
+            referrer.referralBonus += appData.referralReward;
+            referrer.balance += appData.referralReward;
+            
+            // JSONBin'e kaydet
+            appData.users[userData.userId] = userData;
+            appData.users[referrer.userId] = referrer;
+            await saveAppDataToJSONBin();
+            
+            console.log(`Referans başarıyla kaydedildi: ${referrer.userId} -> ${userData.userId}`);
+            showStatusMessage(`Referans linki ile giriş yaptınız! ${appData.referralReward.toFixed(3)} USDT bonus kazandınız.`, 'success');
         }
         
         async function loadAppDataFromJSONBin() {
@@ -940,7 +1003,7 @@
             document.getElementById('withdrawBalanceDisplay').textContent = `USDT ${userData.balance.toFixed(3)}`;
             document.getElementById('adCountDisplay').textContent = userData.adCount;
             document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / 100`;
-            document.getElementById('referralCountDisplay').textContent = userData.referrals.length;
+            document.getElementById('referralCountDisplay').textContent = userData.referrals ? userData.referrals.length : 0;
             document.getElementById('referralBonusDisplay').textContent = `USDT ${userData.referralBonus.toFixed(3)}`;
             document.getElementById('completedTasks').textContent = userData.completedTasks.length;
             document.getElementById('taskEarnings').textContent = `USDT ${userData.taskEarnings.toFixed(3)}`;
@@ -1114,8 +1177,13 @@
                     userData.balance += appData.referralReward;
                     userData.referralBonus += appData.referralReward;
                     
+                    // Referans veren kullanıcıyı güncelle
                     if (!user.referrals) user.referrals = [];
-                    user.referrals.push({ userId: userData.userId, date: new Date().toISOString() });
+                    user.referrals.push({
+                        userId: userData.userId,
+                        userName: userData.firstName,
+                        date: new Date().toISOString()
+                    });
                     user.referralBonus += appData.referralReward;
                     user.balance += appData.referralReward;
                     
@@ -1198,7 +1266,7 @@
                 userItem.innerHTML = `
                     <div class="admin-user-info">
                         <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                        <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
+                        <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
                     </div>
                     <div class="admin-user-actions">
                         <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
@@ -1335,7 +1403,7 @@
                     userItem.innerHTML = `
                         <div class="admin-user-info">
                             <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                            <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
+                            <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
                         </div>
                         <div class="admin-user-actions">
                             <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
