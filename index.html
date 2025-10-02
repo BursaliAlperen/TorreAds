@@ -714,7 +714,7 @@
         // Veri senkronizasyonu için değişkenler
         let isDataSyncing = false;
         let lastSyncTime = 0;
-        const SYNC_INTERVAL = 30000; // 30 saniyede bir senkronizasyon
+        const SYNC_INTERVAL = 10000; // 10 saniyede bir senkronizasyon
         
         // Buton event listener'larını başlat
         function initEventListeners() {
@@ -779,12 +779,26 @@
             userData.userId = initData.user?.id?.toString() || 'test_user_' + Math.floor(Math.random() * 10000);
             userData.firstName = initData.user?.first_name || 'Kullanıcı';
             
+            // JSONBin'den verileri yükle
             await loadAppDataFromJSONBin();
-            loadUserData();
             
-            if (!userData.referralCode) {
+            // Kullanıcı verisini kontrol et
+            if (appData.users[userData.userId]) {
+                // Kullanıcı zaten varsa, verileri yükle
+                userData = { ...userData, ...appData.users[userData.userId] };
+            } else {
+                // Yeni kullanıcı oluştur
                 userData.referralCode = generateReferralCode();
-                saveUserData();
+                appData.users[userData.userId] = userData;
+                await saveAppDataToJSONBin();
+            }
+            
+            // Günlük reklam kontrolü
+            const today = new Date().toDateString();
+            if (userData.lastAdDate !== today) {
+                userData.dailyAdCount = 0;
+                userData.lastAdDate = today;
+                await saveUserData();
             }
             
             if (ADMIN_USER_IDS.includes(userData.userId.toString())) {
@@ -794,6 +808,9 @@
             updateUI();
             initEventListeners();
             showStatusMessage(`Hoş geldiniz, ${userData.firstName}!`, 'success');
+            
+            // Periyodik senkronizasyon başlat
+            setInterval(syncData, SYNC_INTERVAL);
         }
         
         async function loadAppDataFromJSONBin() {
@@ -806,8 +823,11 @@
                     const data = await response.json();
                     if (data.record) {
                         appData = { ...appData, ...data.record };
+                        console.log('JSONBin verileri başarıyla yüklendi');
                     }
                 } else {
+                    console.error('JSONBin yükleme hatası:', response.status);
+                    // Varsayılan görevleri oluştur
                     appData.manualTasks = [
                         {
                             id: 'task_1',
@@ -821,6 +841,8 @@
                     await saveAppDataToJSONBin();
                 }
             } catch (error) {
+                console.error('JSONBin yükleme hatası:', error);
+                // Varsayılan görevleri oluştur
                 appData.manualTasks = [
                     {
                         id: 'task_1',
@@ -835,8 +857,12 @@
         }
         
         async function saveAppDataToJSONBin() {
+            if (isDataSyncing) return;
+            
+            isDataSyncing = true;
+            appData.lastUpdated = Date.now();
+            
             try {
-                appData.lastUpdated = Date.now();
                 const response = await fetch(JSONBIN_UPDATE_URL, {
                     method: 'PUT',
                     headers: {
@@ -845,32 +871,59 @@
                     },
                     body: JSON.stringify(appData)
                 });
+                
+                if (response.ok) {
+                    console.log('JSONBin verileri başarıyla kaydedildi');
+                    lastSyncTime = Date.now();
+                } else {
+                    console.error('JSONBin kaydetme hatası:', response.status);
+                }
             } catch (error) {
-                console.error('JSONBin save error:', error);
+                console.error('JSONBin kaydetme hatası:', error);
+            } finally {
+                isDataSyncing = false;
             }
         }
         
-        function loadUserData() {
-            const savedUserData = localStorage.getItem(`torreads_user_${userData.userId}`);
-            if (savedUserData) {
-                try {
-                    const parsedData = JSON.parse(savedUserData);
-                    userData = { ...userData, ...parsedData };
-                } catch (e) {}
-            }
+        async function saveUserData() {
+            // Kullanıcı verisini güncelle
+            userData.lastUpdated = Date.now();
+            appData.users[userData.userId] = userData;
             
-            const today = new Date().toDateString();
-            if (userData.lastAdDate !== today) {
-                userData.dailyAdCount = 0;
-                userData.lastAdDate = today;
-                saveUserData();
-            }
-        }
-        
-        function saveUserData() {
+            // JSONBin'e kaydet
+            await saveAppDataToJSONBin();
+            
+            // Yedek olarak localStorage'a da kaydet
             try {
                 localStorage.setItem(`torreads_user_${userData.userId}`, JSON.stringify(userData));
-            } catch (e) {}
+            } catch (e) {
+                console.error('LocalStorage kaydetme hatası:', e);
+            }
+        }
+        
+        async function syncData() {
+            if (isDataSyncing) return;
+            
+            try {
+                await loadAppDataFromJSONBin();
+                
+                // Kullanıcı verilerini güncelle
+                if (appData.users[userData.userId]) {
+                    const remoteData = appData.users[userData.userId];
+                    
+                    // Yerel veriler daha güncelse, uzaktakini güncelle
+                    if (userData.lastUpdated > remoteData.lastUpdated) {
+                        appData.users[userData.userId] = userData;
+                        await saveAppDataToJSONBin();
+                    } else if (remoteData.lastUpdated > userData.lastUpdated) {
+                        // Uzaktaki veriler daha güncelse, yereli güncelle
+                        userData = remoteData;
+                        updateUI();
+                    }
+                }
+            } catch (error) {
+                console.error('Senkronizasyon hatası:', error);
+            }
         }
         
         function generateReferralCode() {
@@ -952,20 +1005,23 @@
             adBtn.classList.add('btn-loading');
             adBtn.disabled = true;
             
-            // GERÇEK REKLAM ENTEGRASYONU
-            if (typeof gigapub !== 'undefined') {
-                gigapub.showAd()
+            // GÜNCELLENMİŞ REKLAM ENTEGRASYONU - window.showGiga kullanımı
+            if (typeof window.showGiga !== 'undefined') {
+                window.showGiga("main")
                     .then(() => {
+                        // Reklam başarıyla izlendi
                         const reward = appData.adReward;
                         userData.balance += reward;
                         userData.adCount++;
                         userData.dailyAdCount++;
                         userData.lastAdDate = new Date().toDateString();
+                        
                         saveUserData();
                         updateUI();
                         showStatusMessage(`Tebrikler! ${reward.toFixed(3)} USDT kazandınız.`, 'success');
                     })
                     .catch((error) => {
+                        console.error('Reklam hatası:', error);
                         showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                     })
                     .finally(() => {
@@ -973,9 +1029,18 @@
                         adBtn.disabled = userData.dailyAdCount >= 100;
                     });
             } else {
-                // Fallback: Reklam gösterilemezse ödül verme
-                setTimeout(() => {
-                    showStatusMessage('Reklam servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.', 'error');
+                // Fallback: Reklam gösterilemezse test modu
+                setTimeout(async () => {
+                    const reward = appData.adReward;
+                    userData.balance += reward;
+                    userData.adCount++;
+                    userData.dailyAdCount++;
+                    userData.lastAdDate = new Date().toDateString();
+                    
+                    await saveUserData();
+                    updateUI();
+                    
+                    showStatusMessage(`Tebrikler! ${reward.toFixed(3)} USDT kazandınız. (Test Modu)`, 'success');
                     adBtn.classList.remove('btn-loading');
                     adBtn.disabled = userData.dailyAdCount >= 100;
                 }, 2000);
@@ -999,6 +1064,7 @@
             const withdrawal = {
                 id: Date.now().toString(),
                 userId: userData.userId,
+                userName: userData.firstName,
                 amount: userData.balance,
                 address: paymentAddress,
                 date: new Date().toISOString(),
@@ -1010,8 +1076,7 @@
             appData.withdrawRequests.push(withdrawal);
             userData.balance = 0;
             
-            saveUserData();
-            await saveAppDataToJSONBin();
+            await saveUserData();
             updateUI();
             
             showStatusMessage(`Çekim talebiniz alındı. ${withdrawal.amount.toFixed(3)} USDT yakında gönderilecek.`, 'success');
@@ -1020,7 +1085,7 @@
             document.querySelector('.nav-btn[data-view="home-view"]').classList.add('active');
         }
         
-        function submitReferralCode() {
+        async function submitReferralCode() {
             const referralCodeInput = document.getElementById('referralCodeInput');
             const referralCode = referralCodeInput.value.trim().toUpperCase();
             
@@ -1039,28 +1104,28 @@
                 return;
             }
             
+            // JSONBin'de referans kodunu ara
             let referrerFound = false;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        if (user.referralCode === referralCode) {
-                            userData.referredBy = user.userId;
-                            userData.balance += appData.referralReward;
-                            userData.referralBonus += appData.referralReward;
-                            
-                            if (!user.referrals) user.referrals = [];
-                            user.referrals.push({ userId: userData.userId, date: new Date().toISOString() });
-                            user.referralBonus += appData.referralReward;
-                            user.balance += appData.referralReward;
-                            
-                            saveUserData();
-                            localStorage.setItem(key, JSON.stringify(user));
-                            referrerFound = true;
-                            break;
-                        }
-                    } catch (e) {}
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                if (user.referralCode === referralCode) {
+                    // Referansı kaydet
+                    userData.referredBy = user.userId;
+                    userData.balance += appData.referralReward;
+                    userData.referralBonus += appData.referralReward;
+                    
+                    if (!user.referrals) user.referrals = [];
+                    user.referrals.push({ userId: userData.userId, date: new Date().toISOString() });
+                    user.referralBonus += appData.referralReward;
+                    user.balance += appData.referralReward;
+                    
+                    // JSONBin'e kaydet
+                    appData.users[userData.userId] = userData;
+                    appData.users[userId] = user;
+                    await saveAppDataToJSONBin();
+                    
+                    referrerFound = true;
+                    break;
                 }
             }
             
@@ -1096,17 +1161,14 @@
         function updateAdminPanel() {
             let totalUsers = 0, totalAds = 0, totalWithdrawals = 0, totalBalance = 0;
             
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        totalUsers++;
-                        totalAds += user.adCount || 0;
-                        totalBalance += user.balance || 0;
-                        totalWithdrawals += user.withdrawHistory ? user.withdrawHistory.length : 0;
-                    } catch (e) {}
-                }
+            // JSONBin'deki kullanıcıları say
+            totalUsers = Object.keys(appData.users).length;
+            
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                totalAds += user.adCount || 0;
+                totalBalance += user.balance || 0;
+                totalWithdrawals += user.withdrawHistory ? user.withdrawHistory.length : 0;
             }
             
             document.getElementById('totalUsers').textContent = totalUsers;
@@ -1123,34 +1185,29 @@
             const userList = document.getElementById('adminUserList');
             userList.innerHTML = '';
             
-            let userCount = 0;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        const userItem = document.createElement('div');
-                        userItem.className = 'admin-user-item';
-                        userItem.innerHTML = `
-                            <div class="admin-user-info">
-                                <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                                <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
-                            </div>
-                            <div class="admin-user-actions">
-                                <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                                <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                                <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                            </div>
-                        `;
-                        userList.appendChild(userItem);
-                        userCount++;
-                    } catch (e) {}
-                }
+            const users = Object.values(appData.users);
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
+                return;
             }
             
-            if (userCount === 0) {
-                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
-            }
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'admin-user-item';
+                userItem.innerHTML = `
+                    <div class="admin-user-info">
+                        <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
+                        <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
+                    </div>
+                    <div class="admin-user-actions">
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                        <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
+                    </div>
+                `;
+                userList.appendChild(userItem);
+            });
         }
         
         function updateWithdrawalRequests() {
@@ -1169,7 +1226,7 @@
                     requestItem.className = 'withdraw-request-item';
                     requestItem.innerHTML = `
                         <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">Kullanıcı: ${request.userId}</div>
+                            <div class="withdraw-request-user">${request.userName} (${request.userId})</div>
                             <div class="withdraw-request-details">Miktar: USDT ${request.amount.toFixed(3)} | Adres: ${request.address}</div>
                         </div>
                         <div class="withdraw-request-actions">
@@ -1197,7 +1254,7 @@
                     <div class="task-info">
                         <div class="task-title">${task.title}</div>
                         <div class="task-description">${task.description}</div>
-                        <div class="task-description">${task.completedBy.length} kullanıcı tamamladı</div>
+                        <div class="task-description">${task.completedBy ? task.completedBy.length : 0} kullanıcı tamamladı</div>
                     </div>
                     <div class="task-reward">${task.reward} USDT</div>
                     <button class="task-btn" onclick="adminDeleteTask(${index})">Sil</button>
@@ -1249,12 +1306,12 @@
                 userData.taskEarnings += task.reward;
                 userData.balance += task.reward;
                 
+                if (!task.completedBy) task.completedBy = [];
                 if (!task.completedBy.includes(userData.userId)) {
                     task.completedBy.push(userData.userId);
                 }
                 
-                saveUserData();
-                await saveAppDataToJSONBin();
+                await saveUserData();
                 updateUI();
                 showStatusMessage(`Tebrikler! ${task.reward} USDT kazandınız.`, 'success');
             }, 2000);
@@ -1267,32 +1324,27 @@
             
             let foundUsers = 0;
             
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        const userName = (user.firstName || '').toLowerCase();
-                        const userId = user.userId.toString();
-                        
-                        if (userName.includes(searchTerm) || userId.includes(searchTerm)) {
-                            const userItem = document.createElement('div');
-                            userItem.className = 'admin-user-item';
-                            userItem.innerHTML = `
-                                <div class="admin-user-info">
-                                    <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
-                                    <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
-                                </div>
-                                <div class="admin-user-actions">
-                                    <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                                    <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                                    <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                                </div>
-                            `;
-                            userList.appendChild(userItem);
-                            foundUsers++;
-                        }
-                    } catch (e) {}
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                const userName = (user.firstName || '').toLowerCase();
+                const userIdStr = user.userId.toString();
+                
+                if (userName.includes(searchTerm) || userIdStr.includes(searchTerm)) {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'admin-user-item';
+                    userItem.innerHTML = `
+                        <div class="admin-user-info">
+                            <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
+                            <div class="admin-user-balance">Bakiye: USDT ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0}</div>
+                        </div>
+                        <div class="admin-user-actions">
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                            <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
+                        </div>
+                    `;
+                    userList.appendChild(userItem);
+                    foundUsers++;
                 }
             }
             
@@ -1301,72 +1353,60 @@
             }
         }
         
-        function adminAddBalance(userId, amount) {
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        if (user.userId === userId) {
-                            user.balance += amount;
-                            localStorage.setItem(key, JSON.stringify(user));
-                            
-                            if (userData.userId === userId) {
-                                userData.balance += amount;
-                                updateUI();
-                            }
-                            
-                            showStatusMessage(`${userId} kullanıcısına ${amount} USDT eklendi.`, 'success');
-                            updateAdminPanel();
-                            return;
-                        }
-                    } catch (e) {}
+        async function adminAddBalance(userId, amount) {
+            if (appData.users[userId]) {
+                appData.users[userId].balance += amount;
+                appData.users[userId].lastUpdated = Date.now();
+                
+                await saveAppDataToJSONBin();
+                
+                if (userData.userId === userId) {
+                    userData.balance += amount;
+                    updateUI();
                 }
+                
+                showStatusMessage(`${userId} kullanıcısına ${amount} USDT eklendi.`, 'success');
+                updateAdminPanel();
+            } else {
+                showStatusMessage('Kullanıcı bulunamadı.', 'error');
             }
-            showStatusMessage('Kullanıcı bulunamadı.', 'error');
         }
         
-        function adminResetUser(userId) {
+        async function adminResetUser(userId) {
             if (confirm(`${userId} kullanıcısını sıfırlamak istediğinizden emin misiniz?`)) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        try {
-                            const user = JSON.parse(localStorage.getItem(key));
-                            if (user.userId === userId) {
-                                const newUserData = {
-                                    userId: user.userId,
-                                    username: user.username,
-                                    firstName: user.firstName,
-                                    balance: 0,
-                                    adCount: 0,
-                                    dailyAdCount: 0,
-                                    lastAdDate: new Date().toDateString(),
-                                    referralCode: user.referralCode,
-                                    referredBy: user.referredBy,
-                                    referrals: user.referrals || [],
-                                    referralBonus: user.referralBonus || 0,
-                                    completedTasks: [],
-                                    taskEarnings: 0,
-                                    withdrawHistory: user.withdrawHistory || [],
-                                    paymentAddress: user.paymentAddress || ''
-                                };
-                                
-                                localStorage.setItem(key, JSON.stringify(newUserData));
-                                
-                                if (userData.userId === userId) {
-                                    userData = newUserData;
-                                    updateUI();
-                                }
-                                
-                                showStatusMessage(`${userId} kullanıcısı sıfırlandı.`, 'success');
-                                updateAdminPanel();
-                                return;
-                            }
-                        } catch (e) {}
+                if (appData.users[userId]) {
+                    const newUserData = {
+                        userId: appData.users[userId].userId,
+                        firstName: appData.users[userId].firstName,
+                        balance: 0,
+                        adCount: 0,
+                        dailyAdCount: 0,
+                        lastAdDate: new Date().toDateString(),
+                        referralCode: appData.users[userId].referralCode,
+                        referredBy: appData.users[userId].referredBy,
+                        referrals: appData.users[userId].referrals || [],
+                        referralBonus: appData.users[userId].referralBonus || 0,
+                        completedTasks: [],
+                        taskEarnings: 0,
+                        withdrawHistory: appData.users[userId].withdrawHistory || [],
+                        paymentAddress: appData.users[userId].paymentAddress || '',
+                        lastUpdated: Date.now()
+                    };
+                    
+                    appData.users[userId] = newUserData;
+                    
+                    await saveAppDataToJSONBin();
+                    
+                    if (userData.userId === userId) {
+                        userData = newUserData;
+                        updateUI();
                     }
+                    
+                    showStatusMessage(`${userId} kullanıcısı sıfırlandı.`, 'success');
+                    updateAdminPanel();
+                } else {
+                    showStatusMessage('Kullanıcı bulunamadı.', 'error');
                 }
-                showStatusMessage('Kullanıcı bulunamadı.', 'error');
             }
         }
         
@@ -1385,28 +1425,21 @@
             } else {
                 appData.withdrawRequests[requestIndex].status = 'rejected';
                 
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        try {
-                            const user = JSON.parse(localStorage.getItem(key));
-                            if (user.userId === request.userId) {
-                                user.balance += request.amount;
-                                if (user.withdrawHistory) {
-                                    const userWithdrawalIndex = user.withdrawHistory.findIndex(w => w.id === requestId);
-                                    if (userWithdrawalIndex !== -1) {
-                                        user.withdrawHistory[userWithdrawalIndex].status = 'rejected';
-                                    }
-                                }
-                                localStorage.setItem(key, JSON.stringify(user));
-                                
-                                if (userData.userId === request.userId) {
-                                    userData.balance += request.amount;
-                                    updateUI();
-                                }
-                                break;
-                            }
-                        } catch (e) {}
+                // Kullanıcının bakiyesini geri yükle
+                if (appData.users[request.userId]) {
+                    appData.users[request.userId].balance += request.amount;
+                    appData.users[request.userId].lastUpdated = Date.now();
+                    
+                    if (appData.users[request.userId].withdrawHistory) {
+                        const userWithdrawalIndex = appData.users[request.userId].withdrawHistory.findIndex(w => w.id === requestId);
+                        if (userWithdrawalIndex !== -1) {
+                            appData.users[request.userId].withdrawHistory[userWithdrawalIndex].status = 'rejected';
+                        }
+                    }
+                    
+                    if (userData.userId === request.userId) {
+                        userData.balance += request.amount;
+                        updateUI();
                     }
                 }
                 showStatusMessage('Çekim talebi reddedildi ve bakiye iade edildi.', 'success');
@@ -1462,22 +1495,16 @@
             }
         }
         
-        function resetDailyAds() {
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('torreads_user_')) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem(key));
-                        user.dailyAdCount = 0;
-                        user.lastAdDate = new Date().toDateString();
-                        localStorage.setItem(key, JSON.stringify(user));
-                    } catch (e) {}
-                }
+        async function resetDailyAds() {
+            for (const userId in appData.users) {
+                appData.users[userId].dailyAdCount = 0;
+                appData.users[userId].lastAdDate = new Date().toDateString();
+                appData.users[userId].lastUpdated = Date.now();
             }
             
             userData.dailyAdCount = 0;
             userData.lastAdDate = new Date().toDateString();
-            saveUserData();
+            await saveUserData();
             updateUI();
             showStatusMessage('Tüm kullanıcıların günlük reklamları sıfırlandı.', 'success');
         }
@@ -1498,14 +1525,6 @@
         
         async function clearAllData() {
             if (confirm('TÜM verileri silmek istediğinizden emin misiniz?')) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('torreads_user_')) {
-                        localStorage.removeItem(key);
-                        i--;
-                    }
-                }
-                
                 appData = {
                     adReward: 0.002,
                     minWithdraw: 0.50,
@@ -1529,7 +1548,6 @@
                 
                 userData = {
                     userId: userData.userId,
-                    username: userData.username,
                     firstName: userData.firstName,
                     balance: 0,
                     adCount: 0,
@@ -1542,10 +1560,13 @@
                     completedTasks: [],
                     taskEarnings: 0,
                     withdrawHistory: [],
-                    paymentAddress: ''
+                    paymentAddress: '',
+                    lastUpdated: Date.now()
                 };
                 
-                saveUserData();
+                appData.users[userData.userId] = userData;
+                await saveAppDataToJSONBin();
+                
                 updateUI();
                 updateAdminPanel();
                 showStatusMessage('Tüm veriler temizlendi.', 'success');
