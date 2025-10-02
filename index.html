@@ -893,24 +893,31 @@
                 console.log('JSONBin reklam ödülü 0.001 olarak güncellendi');
             }
             
-            // REFERANS KODU KONTROLÜ - Telegram start parametresini kontrol et
-            const urlParams = new URLSearchParams(window.location.search);
-            const startParam = urlParams.get('start');
-            
-            if (startParam) {
-                // Referans linki ile giriş yapılmış
-                await handleReferralLink(startParam);
-            }
-            
             // Kullanıcı verisini kontrol et
             if (appData.users[userData.userId]) {
                 // Kullanıcı zaten varsa, verileri yükle
                 userData = { ...userData, ...appData.users[userData.userId] };
+                console.log('Mevcut kullanıcı yüklendi:', userData.userId);
             } else {
                 // Yeni kullanıcı oluştur
                 userData.referralCode = generateReferralCode();
                 appData.users[userData.userId] = userData;
+                console.log('Yeni kullanıcı oluşturuldu:', userData.userId);
                 await saveAppDataToJSONBin();
+            }
+            
+            // REFERANS KODU KONTROLÜ - Telegram start parametresini kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = urlParams.get('start');
+            
+            console.log('URL parametreleri:', { startParam, currentUser: userData.userId });
+            
+            if (startParam && startParam !== userData.referralCode && !userData.referredBy) {
+                // Referans linki ile giriş yapılmış ve henüz referans kullanılmamış
+                console.log('Referans linki tespit edildi, işleniyor:', startParam);
+                await handleReferralLink(startParam);
+            } else if (userData.referredBy) {
+                console.log('Kullanıcı zaten referans kullanmış:', userData.referredBy);
             }
             
             // Günlük reklam kontrolü
@@ -980,7 +987,7 @@
                 });
         }
         
-        // REFERANS LİNKİ İLE GİRİŞ İŞLEMİ
+        // REFERANS LİNKİ İLE GİRİŞ İŞLEMİ - DÜZELTİLMİŞ VERSİYON
         async function handleReferralLink(referralCode) {
             if (!referralCode) return;
             
@@ -998,9 +1005,12 @@
             
             // Referans kodunu kullanan kullanıcıyı bul
             let referrer = null;
+            let referrerUserId = null;
+            
             for (const userId in appData.users) {
                 if (appData.users[userId].referralCode === referralCode) {
                     referrer = appData.users[userId];
+                    referrerUserId = userId;
                     break;
                 }
             }
@@ -1010,32 +1020,52 @@
                 return;
             }
             
-            // Referansı kaydet
-            userData.referredBy = referrer.userId;
+            console.log('Referans bulundu:', referrerUserId, '->', userData.userId);
+            
+            // Referansı kaydet - ÖNCE userData'yı güncelle
+            userData.referredBy = referrerUserId;
             userData.balance += appData.referralReward;
             userData.referralBonus += appData.referralReward;
             
             // Referans veren kullanıcıyı güncelle
             if (!referrer.referrals) referrer.referrals = [];
+            
+            // Yeni referansı ekle
             referrer.referrals.push({
                 userId: userData.userId,
                 userName: userData.firstName,
                 date: new Date().toISOString()
             });
+            
             referrer.referralBonus += appData.referralReward;
             referrer.balance += appData.referralReward;
+            referrer.lastUpdated = Date.now();
             
-            // JSONBin'e kaydet
+            // JSONBin'e kaydet - ÖNEMLİ: appData.users'i güncelle
             appData.users[userData.userId] = userData;
-            appData.users[referrer.userId] = referrer;
+            appData.users[referrerUserId] = referrer;
+            
+            console.log('Referans kaydediliyor...');
+            console.log('Referans veren yeni referans sayısı:', referrer.referrals.length);
+            console.log('Referans veren yeni bakiye:', referrer.balance);
+            
+            // JSONBin'e KESİNLİKLE kaydet
             await saveAppDataToJSONBin();
             
-            console.log(`Referans başarıyla kaydedildi: ${referrer.userId} -> ${userData.userId}`);
+            // Yerel veriyi de güncelle
+            await loadAppDataFromJSONBin();
+            
+            console.log(`Referans başarıyla kaydedildi: ${referrerUserId} -> ${userData.userId}`);
             showStatusMessage(`Referans linki ile giriş yaptınız! ${appData.referralReward.toFixed(3)} USDT bonus kazandınız.`, 'success');
+            
+            // UI'ı güncelle
+            updateUI();
         }
         
         async function loadAppDataFromJSONBin() {
             try {
+                console.log('JSONBin verileri yükleniyor...');
+                
                 const response = await fetch(JSONBIN_URL, {
                     headers: { 'X-Master-Key': JSONBIN_API_KEY }
                 });
@@ -1045,6 +1075,15 @@
                     if (data.record) {
                         appData = { ...appData, ...data.record };
                         console.log('JSONBin verileri başarıyla yüklendi');
+                        console.log('Toplam kullanıcı sayısı:', Object.keys(appData.users).length);
+                        
+                        // Debug: Referansları kontrol et
+                        for (const userId in appData.users) {
+                            const user = appData.users[userId];
+                            if (user.referrals && user.referrals.length > 0) {
+                                console.log(`Kullanıcı ${userId} referansları:`, user.referrals.length);
+                            }
+                        }
                     }
                 } else {
                     console.error('JSONBin yükleme hatası:', response.status);
@@ -1078,17 +1117,23 @@
         }
         
         async function saveAppDataToJSONBin() {
-            if (isDataSyncing) return;
+            if (isDataSyncing) {
+                console.log('Veri senkronizasyonu zaten devam ediyor, bekleniyor...');
+                return;
+            }
             
             isDataSyncing = true;
             appData.lastUpdated = Date.now();
             
             try {
+                console.log('JSONBin verileri kaydediliyor...');
+                
                 const response = await fetch(JSONBIN_UPDATE_URL, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Versioning': 'false'
                     },
                     body: JSON.stringify(appData)
                 });
@@ -1096,8 +1141,12 @@
                 if (response.ok) {
                     console.log('JSONBin verileri başarıyla kaydedildi');
                     lastSyncTime = Date.now();
+                    
+                    // Başarılı kayıttan sonra verileri tekrar yükle
+                    await loadAppDataFromJSONBin();
                 } else {
-                    console.error('JSONBin kaydetme hatası:', response.status);
+                    const errorText = await response.text();
+                    console.error('JSONBin kaydetme hatası:', response.status, errorText);
                 }
             } catch (error) {
                 console.error('JSONBin kaydetme hatası:', error);
@@ -1328,6 +1377,8 @@
             
             // JSONBin'de referans kodunu ara
             let referrerFound = false;
+            let referrerUserId = null;
+            
             for (const userId in appData.users) {
                 const user = appData.users[userId];
                 if (user.referralCode === referralCode) {
@@ -1345,6 +1396,7 @@
                     });
                     user.referralBonus += appData.referralReward;
                     user.balance += appData.referralReward;
+                    user.lastUpdated = Date.now();
                     
                     // JSONBin'e kaydet
                     appData.users[userData.userId] = userData;
@@ -1352,6 +1404,7 @@
                     await saveAppDataToJSONBin();
                     
                     referrerFound = true;
+                    referrerUserId = userId;
                     break;
                 }
             }
@@ -1846,4 +1899,3 @@
     </script>
 </body>
 </html>
-
