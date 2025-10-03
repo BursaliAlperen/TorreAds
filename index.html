@@ -1033,6 +1033,64 @@
             font-size: 14px;
         }
 
+        /* Progress Bar Styles */
+        .progress-container {
+            margin: 15px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-torre);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* User List Styles */
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+        }
+
+        .user-stats {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
         /* Responsive Design */
         @media (max-width: 480px) {
             .container {
@@ -1084,7 +1142,7 @@
                 </div>
                 <div class="coin-stats">
                     <div class="coin-stat">
-                        <div class="coin-stat-value" id="coinPrice">$0.000005</div>
+                        <div class="coin-stat-value" id="coinPrice">$0.000000</div>
                         <div>Torre Fiyatı</div>
                     </div>
                     <div class="coin-stat">
@@ -1104,13 +1162,37 @@
                 </button>
             </div>
             
+            <!-- Yakım İstatistikleri -->
+            <div class="card">
+                <h2><i class="fas fa-fire"></i> Yakım İstatistikleri</h2>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item">
+                        <h3 id="totalBurnedDisplay">0</h3>
+                        <p>Toplam Yakılan</p>
+                    </div>
+                    <div class="ad-info-item">
+                        <h3 id="burnLevelDisplay">1. Kademe</h3>
+                        <p>Yakım Kademesi</p>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Sonraki Kademe</span>
+                        <span id="nextLevelProgress">0/1000</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="burnProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- USDT Grafik Bölümü -->
             <div class="card">
                 <h2><i class="fas fa-chart-line"></i> USDT Fiyatı</h2>
                 <div class="chart-container">
                     <div class="chart-header">
                         <div class="chart-title">Tether (USDT)</div>
-                        <div class="chart-price" id="usdtPrice">$1.00</div>
+                        <div class="chart-price" id="usdtPrice">$1.0000</div>
                     </div>
                     <div class="chart-change-container">
                         <span class="chart-change" id="usdtChange">24s: 0.00%</span>
@@ -1128,7 +1210,7 @@
                 <div class="chart-container">
                     <div class="chart-header">
                         <div class="chart-title">Torre Coin (TRC)</div>
-                        <div class="chart-price" id="torrePrice">$0.000005</div>
+                        <div class="chart-price" id="torrePrice">$0.000000</div>
                     </div>
                     <div class="chart-change-container">
                         <span class="chart-change" id="torreChange">24s: 0.00%</span>
@@ -1143,7 +1225,7 @@
             <!-- Bakiye Kartı -->
             <div class="card">
                 <h2><i class="fas fa-wallet"></i> Mevcut Bakiyeler</h2>
-                <div class="balance-amount" id="usdtBalanceDisplay">USDT 0.00</div>
+                <div class="balance-amount" id="usdtBalanceDisplay">USDT 0.0000</div>
                 <div class="balance-amount torre-balance" id="torreBalanceDisplay">TRC 0</div>
                 <div class="ad-info-grid">
                     <div class="ad-info-item">
@@ -1160,7 +1242,7 @@
                 <div class="swap-section">
                     <div class="swap-header">
                         <h3><i class="fas fa-exchange-alt"></i> Torre Coin Takas</h3>
-                        <div class="swap-rate" id="swapRate">1 TRC = $0.000005</div>
+                        <div class="swap-rate" id="swapRate">1 TRC = $0.000000</div>
                     </div>
                     <div class="swap-inputs">
                         <div class="swap-input">
@@ -1233,7 +1315,7 @@
             
             <div class="card">
                 <h2><i class="fas fa-wallet"></i> Mevcut Bakiyeler</h2>
-                <div class="balance-amount" id="withdrawUsdtBalance">USDT 0.00</div>
+                <div class="balance-amount" id="withdrawUsdtBalance">USDT 0.0000</div>
                 <div class="balance-amount torre-balance" id="withdrawTorreBalance">TRC 0</div>
             </div>
             
@@ -1377,7 +1459,7 @@
                 <h2><i class="fas fa-cog"></i> Sistem Ayarları</h2>
                 <div class="input-group">
                     <label for="adminCoinPrice">Torre Coin Fiyatı (USDT)</label>
-                    <input type="number" id="adminCoinPrice" step="0.000001" value="0.000005">
+                    <input type="number" id="adminCoinPrice" step="0.000001" value="0.000000">
                 </div>
                 <div class="input-group">
                     <label for="adminRewardRangeMin">Minimum Ödül (TRC)</label>
@@ -1404,6 +1486,13 @@
                         <i class="fas fa-trophy"></i>
                         Yeni Başarım Ekle
                     </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-users"></i> Kullanıcı Listesi</h2>
+                <div class="user-list" id="userList">
+                    <!-- Kullanıcılar buraya eklenecek -->
                 </div>
             </div>
         </div>
@@ -1441,7 +1530,7 @@
         // Global değişkenler
         let userData = {
             userId: null,
-            usdtBalance: 0,
+            usdtBalance: 0.0000,
             torreBalance: 0,
             adCount: 0,
             dailyAdCount: 0,
@@ -1464,25 +1553,35 @@
         };
         
         let systemData = {
-            coinPrice: 0.000005,
+            coinPrice: 0.000000,
             totalUsers: 0,
             totalAds: 0,
             totalWithdrawals: 0,
             totalTorre: 0,
+            totalBurned: 0,
+            burnLevel: 1,
+            burnProgress: 0,
             rewardRangeMin: 50,
             rewardRangeMax: 250,
             lastPriceUpdate: null,
             priceHistory: [],
             tasks: [],
-            achievements: []
+            achievements: [],
+            burnLevels: [
+                { level: 1, adsRequired: 1000, priceMultiplier: 1.0 },
+                { level: 2, adsRequired: 10000, priceMultiplier: 1.5 },
+                { level: 3, adsRequired: 100000, priceMultiplier: 2.0 },
+                { level: 4, adsRequired: 500000, priceMultiplier: 3.0 },
+                { level: 5, adsRequired: 1000000, priceMultiplier: 5.0 }
+            ]
         };
         
         let referralsData = {};
         let adminMode = false;
         let priceUpdateInterval;
         let autoSaveInterval;
-        let usdtPrice = 1.00;
-        let usdtChange = 0.00;
+        let usdtPrice = 1.0000;
+        let usdtChange = 0.0000;
         
         // Çekim seviyeleri
         const withdrawalLevels = [
@@ -1575,6 +1674,9 @@
                 // Görevleri ve başarıları oluştur
                 renderTasksAndAchievements();
                 
+                // Kullanıcı listesini oluştur
+                renderUserList();
+                
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
                 showStatus('Veri yükleme hatası, yeniden deneniyor...', 'error');
@@ -1606,7 +1708,37 @@
                 const data = await response.json();
                 
                 if (data.record) {
-                    systemData = { ...systemData, ...data.record };
+                    // Null değerleri kontrol et ve varsayılan değerlerle değiştir
+                    systemData = { 
+                        ...systemData, 
+                        ...data.record 
+                    };
+                    
+                    // Null değerleri kontrol et
+                    if (systemData.coinPrice === null || systemData.coinPrice === undefined) {
+                        systemData.coinPrice = 0.000000;
+                    }
+                    if (systemData.totalUsers === null || systemData.totalUsers === undefined) {
+                        systemData.totalUsers = 0;
+                    }
+                    if (systemData.totalAds === null || systemData.totalAds === undefined) {
+                        systemData.totalAds = 0;
+                    }
+                    if (systemData.totalWithdrawals === null || systemData.totalWithdrawals === undefined) {
+                        systemData.totalWithdrawals = 0;
+                    }
+                    if (systemData.totalTorre === null || systemData.totalTorre === undefined) {
+                        systemData.totalTorre = 0;
+                    }
+                    if (systemData.totalBurned === null || systemData.totalBurned === undefined) {
+                        systemData.totalBurned = 0;
+                    }
+                    if (systemData.burnLevel === null || systemData.burnLevel === undefined) {
+                        systemData.burnLevel = 1;
+                    }
+                    if (systemData.burnProgress === null || systemData.burnProgress === undefined) {
+                        systemData.burnProgress = 0;
+                    }
                 }
                 
                 // Varsayılan görevler ve başarılar
@@ -1623,6 +1755,16 @@
                         { id: 1, title: 'İlk Adım', description: 'İlk reklamını izle', reward: 10, type: 'achievement', completed: false },
                         { id: 2, title: 'Reklam Sever', description: 'Toplam 100 reklam izle', reward: 250, type: 'achievement', completed: false },
                         { id: 3, title: 'Takım Lideri', description: '5 referans kazan', reward: 1000, type: 'achievement', completed: false }
+                    ];
+                }
+                
+                if (!systemData.burnLevels || systemData.burnLevels.length === 0) {
+                    systemData.burnLevels = [
+                        { level: 1, adsRequired: 1000, priceMultiplier: 1.0 },
+                        { level: 2, adsRequired: 10000, priceMultiplier: 1.5 },
+                        { level: 3, adsRequired: 100000, priceMultiplier: 2.0 },
+                        { level: 4, adsRequired: 500000, priceMultiplier: 3.0 },
+                        { level: 5, adsRequired: 1000000, priceMultiplier: 5.0 }
                     ];
                 }
                 
@@ -1718,7 +1860,34 @@
         async function loadUserData() {
             // Kullanıcı verisi referralsData içinde saklanıyor
             if (referralsData[userData.userId]) {
-                userData = { ...userData, ...referralsData[userData.userId] };
+                const savedData = referralsData[userData.userId];
+                
+                // Null değerleri kontrol et ve varsayılan değerlerle değiştir
+                userData = { 
+                    ...userData, 
+                    ...savedData 
+                };
+                
+                // Null değerleri kontrol et
+                if (userData.usdtBalance === null || userData.usdtBalance === undefined) {
+                    userData.usdtBalance = 0.0000;
+                }
+                if (userData.torreBalance === null || userData.torreBalance === undefined) {
+                    userData.torreBalance = 0;
+                }
+                if (userData.adCount === null || userData.adCount === undefined) {
+                    userData.adCount = 0;
+                }
+                if (userData.dailyAdCount === null || userData.dailyAdCount === undefined) {
+                    userData.dailyAdCount = 0;
+                }
+                if (userData.referralCount === null || userData.referralCount === undefined) {
+                    userData.referralCount = 0;
+                }
+                if (userData.referralEarnings === null || userData.referralEarnings === undefined) {
+                    userData.referralEarnings = 0;
+                }
+                
             } else {
                 // Yeni kullanıcı, referralsData'ya ekle
                 referralsData[userData.userId] = userData;
@@ -1826,16 +1995,43 @@
             setInterval(convertBalancesToUsdt, 120000);
         }
         
-        // Bakiyeleri USDT'ye dönüştür
+        // Bakiyeleri USDT'ye dönüştür ve Torre Coin'leri yak
         function convertBalancesToUsdt() {
             if (userData.torreBalance > 0) {
                 const usdtValue = userData.torreBalance * systemData.coinPrice;
                 userData.usdtBalance += usdtValue;
+                
+                // Torre Coin'leri yak
+                systemData.totalBurned += userData.torreBalance;
                 userData.torreBalance = 0;
                 
-                showStatus(`Bakiyeniz otomatik olarak USDT'ye dönüştürüldü: ${usdtValue.toFixed(6)} USDT`, 'success');
+                // Yakım kademesini güncelle
+                updateBurnLevel();
+                
+                showStatus(`Bakiyeniz otomatik olarak USDT'ye dönüştürüldü: ${usdtValue.toFixed(6)} USDT. ${userData.torreBalance} TRC yakıldı!`, 'success');
                 updateUI();
                 saveReferralsData();
+                saveSystemData();
+            }
+        }
+        
+        // Yakım kademesini güncelle
+        function updateBurnLevel() {
+            const currentLevel = systemData.burnLevels.find(level => level.level === systemData.burnLevel);
+            if (!currentLevel) return;
+            
+            // Sonraki kademeyi bul
+            const nextLevel = systemData.burnLevels.find(level => level.level === systemData.burnLevel + 1);
+            if (!nextLevel) return; // En yüksek kademede
+            
+            // İlerlemeyi güncelle
+            systemData.burnProgress = systemData.totalAds;
+            
+            // Kademe atlama kontrolü
+            if (systemData.burnProgress >= nextLevel.adsRequired) {
+                systemData.burnLevel++;
+                systemData.coinPrice *= nextLevel.priceMultiplier;
+                showStatus(`Tebrikler! ${nextLevel.level}. kademeye ulaştınız! Torre Coin değeri ${nextLevel.priceMultiplier}x arttı!`, 'success');
             }
         }
         
@@ -1843,11 +2039,7 @@
         function updateCoinPrice() {
             // Piyasa koşullarına göre rastgele fiyat değişikliği
             const changePercent = (Math.random() - 0.5) * 0.1; // -5% ile +5% arası
-            systemData.coinPrice *= (1 + changePercent);
-            
-            // Fiyatı belirli aralıkta tut
-            if (systemData.coinPrice < 0.000001) systemData.coinPrice = 0.000001;
-            if (systemData.coinPrice > 0.00001) systemData.coinPrice = 0.00001;
+            systemData.coinPrice = Math.max(0.000000, systemData.coinPrice * (1 + changePercent));
             
             // Fiyat geçmişini güncelle
             updatePriceHistory();
@@ -1866,7 +2058,7 @@
             try {
                 // Gerçek USDT fiyatını almak için API (örnek)
                 // Bu örnekte sabit $1.00 kullanıyoruz
-                usdtPrice = 1.00;
+                usdtPrice = 1.0000;
                 
                 // Küçük değişiklikler simüle et
                 usdtChange = (Math.random() - 0.5) * 0.01; // -0.5% ile +0.5% arası
@@ -1896,11 +2088,15 @@
         // Fiyat görüntülerini güncelle
         function updatePriceDisplays() {
             // Torre Coin fiyatı
-            document.getElementById('coinPrice').textContent = `$${systemData.coinPrice.toFixed(6)}`;
-            document.getElementById('torrePrice').textContent = `$${systemData.coinPrice.toFixed(6)}`;
+            const coinPriceElement = document.getElementById('coinPrice');
+            const torrePriceElement = document.getElementById('torrePrice');
+            
+            if (coinPriceElement) coinPriceElement.textContent = `$${systemData.coinPrice.toFixed(6)}`;
+            if (torrePriceElement) torrePriceElement.textContent = `$${systemData.coinPrice.toFixed(6)}`;
             
             // USDT fiyatı
-            document.getElementById('usdtPrice').textContent = `$${usdtPrice.toFixed(2)}`;
+            const usdtPriceElement = document.getElementById('usdtPrice');
+            if (usdtPriceElement) usdtPriceElement.textContent = `$${usdtPrice.toFixed(4)}`;
             
             // Değişim yüzdeleri
             const torreChangeElement = document.getElementById('torreChange');
@@ -1908,14 +2104,19 @@
             
             // Basit değişim simülasyonu
             const torreChangePercent = (Math.random() - 0.5) * 0.2; // -10% ile +10% arası
-            torreChangeElement.textContent = `24s: ${(torreChangePercent * 100).toFixed(2)}%`;
-            torreChangeElement.className = torreChangePercent >= 0 ? 'chart-change positive' : 'chart-change negative';
+            if (torreChangeElement) {
+                torreChangeElement.textContent = `24s: ${(torreChangePercent * 100).toFixed(2)}%`;
+                torreChangeElement.className = torreChangePercent >= 0 ? 'chart-change positive' : 'chart-change negative';
+            }
             
-            usdtChangeElement.textContent = `24s: ${(usdtChange * 100).toFixed(2)}%`;
-            usdtChangeElement.className = usdtChange >= 0 ? 'chart-change positive' : 'chart-change negative';
+            if (usdtChangeElement) {
+                usdtChangeElement.textContent = `24s: ${(usdtChange * 100).toFixed(2)}%`;
+                usdtChangeElement.className = usdtChange >= 0 ? 'chart-change positive' : 'chart-change negative';
+            }
             
             // Takas oranı
-            document.getElementById('swapRate').textContent = `1 TRC = $${systemData.coinPrice.toFixed(6)}`;
+            const swapRateElement = document.getElementById('swapRate');
+            if (swapRateElement) swapRateElement.textContent = `1 TRC = $${systemData.coinPrice.toFixed(6)}`;
             
             // Takas hesaplamasını güncelle
             updateSwapCalculation();
@@ -1931,43 +2132,97 @@
         // Arayüzü güncelle
         function updateUI() {
             // Bakiyeler
-            document.getElementById('usdtBalanceDisplay').textContent = `USDT ${userData.usdtBalance.toFixed(2)}`;
-            document.getElementById('torreBalanceDisplay').textContent = `TRC ${userData.torreBalance}`;
+            const usdtBalanceDisplay = document.getElementById('usdtBalanceDisplay');
+            const torreBalanceDisplay = document.getElementById('torreBalanceDisplay');
+            const withdrawUsdtBalance = document.getElementById('withdrawUsdtBalance');
+            const withdrawTorreBalance = document.getElementById('withdrawTorreBalance');
             
-            document.getElementById('withdrawUsdtBalance').textContent = `USDT ${userData.usdtBalance.toFixed(2)}`;
-            document.getElementById('withdrawTorreBalance').textContent = `TRC ${userData.torreBalance}`;
+            if (usdtBalanceDisplay) usdtBalanceDisplay.textContent = `USDT ${userData.usdtBalance.toFixed(4)}`;
+            if (torreBalanceDisplay) torreBalanceDisplay.textContent = `TRC ${userData.torreBalance}`;
+            if (withdrawUsdtBalance) withdrawUsdtBalance.textContent = `USDT ${userData.usdtBalance.toFixed(4)}`;
+            if (withdrawTorreBalance) withdrawTorreBalance.textContent = `TRC ${userData.torreBalance}`;
             
             // Reklam istatistikleri
-            document.getElementById('adCountDisplay').textContent = userData.adCount;
-            document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / 100`;
+            const adCountDisplay = document.getElementById('adCountDisplay');
+            const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
+            
+            if (adCountDisplay) adCountDisplay.textContent = userData.adCount;
+            if (dailyAdCountDisplay) dailyAdCountDisplay.textContent = `${userData.dailyAdCount} / 100`;
             
             // Referans bilgileri
-            document.getElementById('referralCodeDisplay').textContent = `Referans Kodunuz: ${userData.referralCode}`;
-            document.getElementById('referralCountDisplay').textContent = userData.referralCount;
-            document.getElementById('referralEarningsDisplay').textContent = `${userData.referralEarnings} TRC`;
+            const referralCodeDisplay = document.getElementById('referralCodeDisplay');
+            const referralCountDisplay = document.getElementById('referralCountDisplay');
+            const referralEarningsDisplay = document.getElementById('referralEarningsDisplay');
+            
+            if (referralCodeDisplay) referralCodeDisplay.textContent = `Referans Kodunuz: ${userData.referralCode || 'Yükleniyor...'}`;
+            if (referralCountDisplay) referralCountDisplay.textContent = userData.referralCount || 0;
+            if (referralEarningsDisplay) referralEarningsDisplay.textContent = `${userData.referralEarnings || 0} TRC`;
             
             // Referans sayfası bilgileri
-            document.getElementById('referralCountPageDisplay').textContent = userData.referralCount;
-            document.getElementById('referralEarningsPageDisplay').textContent = `${userData.referralEarnings} TRC`;
-            document.getElementById('userReferralCode').textContent = userData.referralCode;
-            document.getElementById('userReferralLink').textContent = `https://t.me/torreads_bot?start=${userData.referralCode}`;
+            const referralCountPageDisplay = document.getElementById('referralCountPageDisplay');
+            const referralEarningsPageDisplay = document.getElementById('referralEarningsPageDisplay');
+            const userReferralCode = document.getElementById('userReferralCode');
+            const userReferralLink = document.getElementById('userReferralLink');
+            
+            if (referralCountPageDisplay) referralCountPageDisplay.textContent = userData.referralCount || 0;
+            if (referralEarningsPageDisplay) referralEarningsPageDisplay.textContent = `${userData.referralEarnings || 0} TRC`;
+            if (userReferralCode) userReferralCode.textContent = userData.referralCode || 'Yükleniyor...';
+            if (userReferralLink) userReferralLink.textContent = `https://t.me/torreads_bot?start=${userData.referralCode || ''}`;
+            
+            // Yakım istatistikleri
+            updateBurnStatistics();
             
             // Admin istatistikleri
             if (adminMode) {
-                document.getElementById('adminTotalUsers').textContent = systemData.totalUsers;
-                document.getElementById('adminTotalAds').textContent = systemData.totalAds;
-                document.getElementById('adminTotalWithdrawals').textContent = systemData.totalWithdrawals;
-                document.getElementById('adminTotalTorre').textContent = systemData.totalTorre;
+                const adminTotalUsers = document.getElementById('adminTotalUsers');
+                const adminTotalAds = document.getElementById('adminTotalAds');
+                const adminTotalWithdrawals = document.getElementById('adminTotalWithdrawals');
+                const adminTotalTorre = document.getElementById('adminTotalTorre');
+                const adminCoinPrice = document.getElementById('adminCoinPrice');
+                const adminRewardRangeMin = document.getElementById('adminRewardRangeMin');
+                const adminRewardRangeMax = document.getElementById('adminRewardRangeMax');
                 
-                document.getElementById('adminCoinPrice').value = systemData.coinPrice;
-                document.getElementById('adminRewardRangeMin').value = systemData.rewardRangeMin;
-                document.getElementById('adminRewardRangeMax').value = systemData.rewardRangeMax;
+                if (adminTotalUsers) adminTotalUsers.textContent = systemData.totalUsers || 0;
+                if (adminTotalAds) adminTotalAds.textContent = systemData.totalAds || 0;
+                if (adminTotalWithdrawals) adminTotalWithdrawals.textContent = systemData.totalWithdrawals || 0;
+                if (adminTotalTorre) adminTotalTorre.textContent = systemData.totalTorre || 0;
+                if (adminCoinPrice) adminCoinPrice.value = systemData.coinPrice || 0.000000;
+                if (adminRewardRangeMin) adminRewardRangeMin.value = systemData.rewardRangeMin || 50;
+                if (adminRewardRangeMax) adminRewardRangeMax.value = systemData.rewardRangeMax || 250;
+            }
+        }
+        
+        // Yakım istatistiklerini güncelle
+        function updateBurnStatistics() {
+            const totalBurnedDisplay = document.getElementById('totalBurnedDisplay');
+            const burnLevelDisplay = document.getElementById('burnLevelDisplay');
+            const nextLevelProgress = document.getElementById('nextLevelProgress');
+            const burnProgressBar = document.getElementById('burnProgressBar');
+            
+            if (totalBurnedDisplay) totalBurnedDisplay.textContent = systemData.totalBurned.toLocaleString();
+            if (burnLevelDisplay) burnLevelDisplay.textContent = `${systemData.burnLevel}. Kademe`;
+            
+            // Sonraki kademe ilerlemesi
+            const currentLevel = systemData.burnLevels.find(level => level.level === systemData.burnLevel);
+            const nextLevel = systemData.burnLevels.find(level => level.level === systemData.burnLevel + 1);
+            
+            if (nextLevel && nextLevelProgress && burnProgressBar) {
+                const progress = Math.min(systemData.burnProgress, nextLevel.adsRequired);
+                const progressPercent = (progress / nextLevel.adsRequired) * 100;
+                
+                nextLevelProgress.textContent = `${progress.toLocaleString()}/${nextLevel.adsRequired.toLocaleString()}`;
+                burnProgressBar.style.width = `${progressPercent}%`;
+            } else if (nextLevelProgress && burnProgressBar) {
+                nextLevelProgress.textContent = 'Maksimum Kademe';
+                burnProgressBar.style.width = '100%';
             }
         }
         
         // Çekim kutularını oluştur
         function renderWithdrawalBoxes() {
             const container = document.getElementById('withdrawalBoxes');
+            if (!container) return;
+            
             container.innerHTML = '';
             
             withdrawalLevels.forEach(level => {
@@ -2049,88 +2304,117 @@
             });
         }
         
+        // Kullanıcı listesini oluştur
+        function renderUserList() {
+            const container = document.getElementById('userList');
+            if (!container || !adminMode) return;
+            
+            container.innerHTML = '';
+            
+            Object.entries(referralsData).forEach(([userId, user]) => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${userId}</div>
+                        <div class="user-stats">
+                            ${user.adCount || 0} Reklam • ${user.referralCount || 0} Referans • ${(user.usdtBalance || 0).toFixed(4)} USDT
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(userItem);
+            });
+        }
+        
         // Görevleri ve başarıları oluştur
         function renderTasksAndAchievements() {
             const tasksContainer = document.getElementById('tasksList');
             const achievementsContainer = document.getElementById('achievementsList');
             
-            tasksContainer.innerHTML = '';
-            achievementsContainer.innerHTML = '';
+            if (tasksContainer) {
+                tasksContainer.innerHTML = '';
+                
+                // Görevleri oluştur
+                systemData.tasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    
+                    const isCompleted = userData.completedTasks.includes(task.id);
+                    const buttonText = isCompleted ? 'Tamamlandı' : 'Başla';
+                    const buttonDisabled = isCompleted;
+                    
+                    taskElement.innerHTML = `
+                        <div class="task-info">
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-description">${task.description}</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div class="task-reward">+${task.reward} TRC</div>
+                            <button class="task-btn" data-task-id="${task.id}" ${buttonDisabled ? 'disabled' : ''}>
+                                ${buttonText}
+                            </button>
+                        </div>
+                    `;
+                    
+                    tasksContainer.appendChild(taskElement);
+                    
+                    // Görev butonu event listener
+                    if (!buttonDisabled) {
+                        taskElement.querySelector('.task-btn').addEventListener('click', function() {
+                            startTask(task.id);
+                        });
+                    }
+                });
+            }
             
-            // Görevleri oluştur
-            systemData.tasks.forEach(task => {
-                const taskElement = document.createElement('div');
-                taskElement.className = 'task-item';
+            if (achievementsContainer) {
+                achievementsContainer.innerHTML = '';
                 
-                const isCompleted = userData.completedTasks.includes(task.id);
-                const buttonText = isCompleted ? 'Tamamlandı' : 'Başla';
-                const buttonDisabled = isCompleted;
-                
-                taskElement.innerHTML = `
-                    <div class="task-info">
-                        <div class="task-title">${task.title}</div>
-                        <div class="task-description">${task.description}</div>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div class="task-reward">+${task.reward} TRC</div>
-                        <button class="task-btn" data-task-id="${task.id}" ${buttonDisabled ? 'disabled' : ''}>
-                            ${buttonText}
-                        </button>
-                    </div>
-                `;
-                
-                tasksContainer.appendChild(taskElement);
-                
-                // Görev butonu event listener
-                if (!buttonDisabled) {
-                    taskElement.querySelector('.task-btn').addEventListener('click', function() {
-                        startTask(task.id);
-                    });
-                }
-            });
-            
-            // Başarıları oluştur
-            systemData.achievements.forEach(achievement => {
-                const achievementElement = document.createElement('div');
-                achievementElement.className = 'task-item';
-                
-                const isCompleted = userData.achievements.includes(achievement.id);
-                const buttonText = isCompleted ? 'Alındı' : 'Kazanılamadı';
-                const buttonDisabled = true;
-                
-                // Başarım gereksinimlerini kontrol et
-                let canClaim = false;
-                if (achievement.id === 1 && userData.adCount >= 1) canClaim = true;
-                if (achievement.id === 2 && userData.adCount >= 100) canClaim = true;
-                if (achievement.id === 3 && userData.referralCount >= 5) canClaim = true;
-                
-                if (canClaim && !isCompleted) {
-                    buttonText = 'Ödülü Al';
-                    buttonDisabled = false;
-                }
-                
-                achievementElement.innerHTML = `
-                    <div class="task-info">
-                        <div class="task-title">${achievement.title}</div>
-                        <div class="task-description">${achievement.description}</div>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div class="task-reward">+${achievement.reward} TRC</div>
-                        <button class="task-btn" data-achievement-id="${achievement.id}" ${buttonDisabled ? 'disabled' : ''}>
-                            ${buttonText}
-                        </button>
-                    </div>
-                `;
-                
-                achievementsContainer.appendChild(achievementElement);
-                
-                // Başarım butonu event listener
-                if (!buttonDisabled) {
-                    achievementElement.querySelector('.task-btn').addEventListener('click', function() {
-                        claimAchievement(achievement.id);
-                    });
-                }
-            });
+                // Başarıları oluştur
+                systemData.achievements.forEach(achievement => {
+                    const achievementElement = document.createElement('div');
+                    achievementElement.className = 'task-item';
+                    
+                    const isCompleted = userData.achievements.includes(achievement.id);
+                    const buttonText = isCompleted ? 'Alındı' : 'Kazanılamadı';
+                    const buttonDisabled = true;
+                    
+                    // Başarım gereksinimlerini kontrol et
+                    let canClaim = false;
+                    if (achievement.id === 1 && userData.adCount >= 1) canClaim = true;
+                    if (achievement.id === 2 && userData.adCount >= 100) canClaim = true;
+                    if (achievement.id === 3 && userData.referralCount >= 5) canClaim = true;
+                    
+                    if (canClaim && !isCompleted) {
+                        buttonText = 'Ödülü Al';
+                        buttonDisabled = false;
+                    }
+                    
+                    achievementElement.innerHTML = `
+                        <div class="task-info">
+                            <div class="task-title">${achievement.title}</div>
+                            <div class="task-description">${achievement.description}</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div class="task-reward">+${achievement.reward} TRC</div>
+                            <button class="task-btn" data-achievement-id="${achievement.id}" ${buttonDisabled ? 'disabled' : ''}>
+                                ${buttonText}
+                            </button>
+                        </div>
+                    `;
+                    
+                    achievementsContainer.appendChild(achievementElement);
+                    
+                    // Başarım butonu event listener
+                    if (!buttonDisabled) {
+                        achievementElement.querySelector('.task-btn').addEventListener('click', function() {
+                            claimAchievement(achievement.id);
+                        });
+                    }
+                });
+            }
         }
         
         // Event listener'ları kur
@@ -2199,7 +2483,10 @@
             });
             
             // Hedef görünümü göster
-            document.getElementById(viewId).style.display = 'block';
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.style.display = 'block';
+            }
             
             // Görünüm değiştiğinde UI'ı güncelle
             updateUI();
@@ -2209,14 +2496,16 @@
                 renderWithdrawalBoxes();
             } else if (viewId === 'tasks-view') {
                 renderTasksAndAchievements();
-            } else if (viewId === 'referral-view') {
-                // Referans sayfası özel işlemleri
+            } else if (viewId === 'admin-view') {
+                renderUserList();
             }
         }
         
         // Reklam izle
         async function watchAd() {
             const btn = document.getElementById('watchAdBtn');
+            if (!btn) return;
+            
             btn.classList.add('btn-loading');
             btn.disabled = true;
             
@@ -2273,6 +2562,10 @@
                     systemData.totalAds += 1;
                     systemData.totalTorre += reward;
                     
+                    // Yakım ilerlemesini güncelle
+                    systemData.burnProgress = systemData.totalAds;
+                    updateBurnLevel();
+                    
                     // Referans varsa, referans kazancını güncelle
                     if (userData.referredBy && referralsData[userData.referredBy]) {
                         const referralBonus = Math.floor(reward * 0.1);
@@ -2310,6 +2603,8 @@
         // Günlük bonus al
         async function claimDailyBonus() {
             const btn = document.getElementById('claimDailyBtn');
+            if (!btn) return;
+            
             btn.classList.add('btn-loading');
             btn.disabled = true;
             
@@ -2354,6 +2649,8 @@
         // Takas işlemi
         async function swapTokens() {
             const btn = document.getElementById('swapBtn');
+            if (!btn) return;
+            
             btn.classList.add('btn-loading');
             btn.disabled = true;
             
@@ -2376,14 +2673,21 @@
                 userData.torreBalance -= fromValue;
                 userData.usdtBalance += toValue;
                 
+                // Torre Coin'leri yak
+                systemData.totalBurned += fromValue;
+                
+                // Yakım kademesini güncelle
+                updateBurnLevel();
+                
                 // Verileri kaydet
                 await saveReferralsData();
+                await saveSystemData();
                 
                 // Arayüzü güncelle
                 updateUI();
                 renderWithdrawalBoxes();
                 
-                showStatus(`Başarılı! ${fromValue} TRC, ${toValue.toFixed(6)} USDT'ye takas edildi.`, 'success');
+                showStatus(`Başarılı! ${fromValue} TRC, ${toValue.toFixed(6)} USDT'ye takas edildi ve ${fromValue} TRC yakıldı!`, 'success');
                 
                 // Takas alanlarını sıfırla
                 document.getElementById('swapFrom').value = '1';
@@ -2486,6 +2790,8 @@
         // Çekim işlemi
         async function processWithdrawal(levelId, amount) {
             const btn = document.querySelector(`[data-level="${levelId}"] .withdrawal-btn`);
+            if (!btn) return;
+            
             btn.classList.add('btn-loading');
             btn.disabled = true;
             
@@ -2621,7 +2927,10 @@
             
             if (adminKey === 'torreadmin2024') {
                 adminMode = true;
-                document.getElementById('adminHeaderBtn').style.display = 'flex';
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'flex';
+                }
                 showStatus('Admin modu etkin!', 'info');
             }
         }
@@ -2637,7 +2946,7 @@
         function adminResetData() {
             if (confirm('Tüm test verilerini sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
                 // Sadece test verilerini sıfırla
-                userData.usdtBalance = 0;
+                userData.usdtBalance = 0.0000;
                 userData.torreBalance = 0;
                 userData.adCount = 0;
                 userData.dailyAdCount = 0;
@@ -2666,16 +2975,19 @@
         // Admin çıkış
         function adminLogout() {
             adminMode = false;
-            document.getElementById('adminHeaderBtn').style.display = 'none';
+            const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+            if (adminHeaderBtn) {
+                adminHeaderBtn.style.display = 'none';
+            }
             switchView('home-view');
             showStatus('Admin modundan çıkıldı!', 'info');
         }
         
         // Admin ayarları kaydet
         function adminSaveSettings() {
-            systemData.coinPrice = parseFloat(document.getElementById('adminCoinPrice').value);
-            systemData.rewardRangeMin = parseInt(document.getElementById('adminRewardRangeMin').value);
-            systemData.rewardRangeMax = parseInt(document.getElementById('adminRewardRangeMax').value);
+            systemData.coinPrice = parseFloat(document.getElementById('adminCoinPrice').value) || 0.000000;
+            systemData.rewardRangeMin = parseInt(document.getElementById('adminRewardRangeMin').value) || 50;
+            systemData.rewardRangeMax = parseInt(document.getElementById('adminRewardRangeMax').value) || 250;
             
             saveSystemData();
             updatePriceDisplays();
@@ -2746,6 +3058,8 @@
         // Durum mesajı göster
         function showStatus(message, type) {
             const statusElement = document.getElementById('statusMessage');
+            if (!statusElement) return;
+            
             statusElement.textContent = message;
             statusElement.className = `status-message ${type}`;
             statusElement.style.display = 'block';
