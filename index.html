@@ -1,0 +1,2586 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TorreAds - Reklam İzle, Torre Coin Kazan</title>
+    
+    <!-- GigaPub SDK -->
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --tg-theme-bg-color: #0f172a;
+            --tg-theme-text-color: #f8fafc;
+            --tg-theme-button-color: #3b82f6;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-hint-color: #94a3b8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --secondary-bg-color: #1e293b;
+            --border-color: #334155;
+            --accent-color: #8b5cf6;
+            --torre-color: #f59e0b;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-torre: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            --gradient-card: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.2);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px 15px 100px 15px;
+        }
+
+        .view {
+            display: none;
+            width: 100%;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        #home-view {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -468px 0; }
+            100% { background-position: 468px 0; }
+        }
+
+        @keyframes coinSpin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-torre);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            animation: float 3s ease-in-out infinite, coinSpin 10s linear infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 60%);
+            border-radius: 50%;
+        }
+
+        .logo i {
+            font-size: 36px;
+            color: #7c2d12;
+            z-index: 1;
+        }
+
+        .coin-stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .coin-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .coin-stat-value {
+            font-weight: bold;
+            color: var(--torre-color);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--tg-theme-hint-color);
+            font-size: 16px;
+        }
+
+        .admin-header-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--gradient-warning);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+        }
+
+        .admin-header-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--gradient-card);
+            padding: 25px;
+            border-radius: var(--radius);
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .card h2 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: var(--tg-theme-hint-color);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            color: var(--accent-color);
+        }
+
+        /* Balance Styles */
+        .balance-amount {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 10px;
+            text-align: center;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        .torre-balance {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Grid Styles */
+        .ad-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .ad-info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .ad-info-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .ad-info-item h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: var(--tg-theme-text-color);
+        }
+
+        .ad-info-item p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            margin: 0;
+        }
+
+        /* Button Styles */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .btn-success {
+            background: var(--gradient-success);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .btn-warning {
+            background: var(--gradient-warning);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .btn-torre {
+            background: var(--gradient-torre);
+            color: #7c2d12;
+        }
+
+        .btn:disabled {
+            background: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn:disabled::before {
+            display: none;
+        }
+
+        .ad-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* Loading Button */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status Message */
+        .status-message {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 480px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            display: none;
+            animation: slideInUp 0.3s ease-out;
+            z-index: 1000;
+            box-sizing: border-box;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.9);
+            border-left: 4px solid;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .success {
+            display: block;
+            border-left-color: var(--success-color);
+            color: #10b981;
+        }
+
+        .error {
+            display: block;
+            border-left-color: var(--danger-color);
+            color: #ef4444;
+        }
+
+        .info {
+            display: block;
+            border-left-color: var(--tg-theme-button-color);
+            color: #3b82f6;
+        }
+
+        /* Footer Navigation */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-bg-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border-color);
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--tg-theme-hint-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 12px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: -1;
+        }
+
+        .nav-btn.active {
+            color: white;
+        }
+
+        .nav-btn.active::before {
+            opacity: 1;
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: var(--tg-theme-text-color);
+            transform: translateY(-3px);
+        }
+
+        .nav-btn .icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .nav-btn.active .icon {
+            animation: bounce 0.5s;
+        }
+
+        .withdraw-nav-btn {
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+        }
+
+        .withdraw-nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Input Styles */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--tg-theme-text-color);
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Referral Styles */
+        .referral-input-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .referral-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .referral-input-group input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--tg-theme-text-color);
+        }
+
+        .referral-input-group button {
+            padding: 14px 20px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .referral-input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .referral-code-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px dashed var(--tg-theme-hint-color);
+            margin-top: 15px;
+            cursor: pointer;
+            color: var(--tg-theme-text-color);
+            transition: var(--transition);
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 2px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .referral-code-box:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        /* Swap Section */
+        .swap-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .swap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .swap-rate {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .swap-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .swap-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .swap-input input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--tg-theme-text-color);
+        }
+
+        .swap-currency {
+            min-width: 80px;
+            padding: 14px;
+            border-radius: 10px;
+            background: var(--gradient-torre);
+            color: #7c2d12;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .swap-arrow {
+            text-align: center;
+            font-size: 20px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        /* Withdrawal Box Styles */
+        .withdrawal-boxes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .withdrawal-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease-out;
+            position: relative;
+        }
+
+        .withdrawal-box:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .withdrawal-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .withdrawal-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .withdrawal-requirements {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .withdrawal-requirement {
+            text-align: center;
+        }
+
+        .withdrawal-requirement-value {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+        }
+
+        .withdrawal-box-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .withdrawal-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--tg-theme-button-color);
+        }
+
+        .withdrawal-status.available {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .withdrawal-status.used {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--tg-theme-hint-color);
+        }
+
+        .withdrawal-btn {
+            padding: 10px 18px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .withdrawal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .withdrawal-btn:disabled {
+            background: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Task Styles */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .task-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .task-title {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .task-description {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .task-reward {
+            font-weight: bold;
+            color: var(--success-color);
+            margin-right: 15px;
+        }
+
+        .task-btn {
+            padding: 10px 18px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .task-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Admin Styles */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .admin-stat-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .admin-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 5px;
+        }
+
+        .admin-stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            text-transform: uppercase;
+        }
+
+        .admin-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .admin-control-btn {
+            padding: 14px;
+            background: var(--gradient-warning);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .admin-control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .admin-control-btn.danger {
+            background: var(--gradient-secondary);
+        }
+
+        /* Chart Styles */
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color);
+        }
+
+        .chart-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .chart-change {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .chart-change.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .chart-change.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px 90px 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .balance-amount {
+                font-size: 36px;
+            }
+            
+            .btn {
+                padding: 16px;
+                font-size: 16px;
+            }
+            
+            .footer-nav {
+                padding: 10px 0;
+            }
+            
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* Shimmer Effect for Loading */
+        .shimmer {
+            background: #1e293b;
+            background-image: linear-gradient(to right, #1e293b 0%, #334155 20%, #1e293b 40%, #1e293b 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 200px;
+            animation: shimmer 1.5s infinite linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Ana Sayfa -->
+        <div id="home-view" class="view">
+            <div class="header">
+                <div class="logo-container">
+                    <div class="logo">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+                <div class="coin-stats">
+                    <div class="coin-stat">
+                        <div class="coin-stat-value" id="coinPrice">$0.000005</div>
+                        <div>Torre Fiyatı</div>
+                    </div>
+                    <div class="coin-stat">
+                        <div class="coin-stat-value" id="coinSupply">900B</div>
+                        <div>Toplam Arz</div>
+                    </div>
+                    <div class="coin-stat">
+                        <div class="coin-stat-value" id="burnedCoins">0</div>
+                        <div>Yakılan</div>
+                    </div>
+                </div>
+                <h1>TorreAds</h1>
+                <p>Reklam İzle, Torre Coin Kazan</p>
+                <button class="admin-header-btn" id="adminHeaderBtn" style="display: none;">
+                    <i class="fas fa-cog"></i>
+                    Admin
+                </button>
+            </div>
+            
+            <!-- USDT Grafik Bölümü -->
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> USDT Fiyatı</h2>
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Tether (USDT)</div>
+                        <div class="chart-price" id="usdtPrice">$1.00</div>
+                    </div>
+                    <div class="chart-change-container">
+                        <span class="chart-change" id="usdtChange">24s: 0.00%</span>
+                    </div>
+                    <div class="chart-placeholder" id="usdtChart">
+                        <i class="fas fa-chart-bar fa-2x" style="margin-bottom: 10px;"></i><br>
+                        USDT fiyat grafiği yükleniyor...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Torre Coin Grafik Bölümü -->
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> Torre Coin Fiyatı</h2>
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Torre Coin (TRC)</div>
+                        <div class="chart-price" id="torrePrice">$0.000005</div>
+                    </div>
+                    <div class="chart-change-container">
+                        <span class="chart-change" id="torreChange">24s: 0.00%</span>
+                    </div>
+                    <div class="chart-placeholder" id="torreChart">
+                        <i class="fas fa-chart-bar fa-2x" style="margin-bottom: 10px;"></i><br>
+                        Torre Coin fiyat grafiği yükleniyor...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bakiye Kartı -->
+            <div class="card">
+                <h2><i class="fas fa-wallet"></i> Mevcut Bakiyeler</h2>
+                <div class="balance-amount" id="usdtBalanceDisplay">USDT 0.00</div>
+                <div class="balance-amount torre-balance" id="torreBalanceDisplay">TRC 0</div>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item">
+                        <h3 id="adCountDisplay">0</h3>
+                        <p>Toplam İzlenen Reklam</p>
+                    </div>
+                    <div class="ad-info-item">
+                        <h3 id="dailyAdCountDisplay">0 / 100</h3>
+                        <p>Bugünkü Reklamlar</p>
+                    </div>
+                </div>
+                
+                <!-- Swap Bölümü -->
+                <div class="swap-section">
+                    <div class="swap-header">
+                        <h3><i class="fas fa-exchange-alt"></i> Torre Coin Takas</h3>
+                        <div class="swap-rate" id="swapRate">1 TRC = $0.000005</div>
+                    </div>
+                    <div class="swap-inputs">
+                        <div class="swap-input">
+                            <input type="number" id="swapFrom" placeholder="0" value="1">
+                            <div class="swap-currency">TRC</div>
+                        </div>
+                        <div class="swap-arrow">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="swap-input">
+                            <input type="number" id="swapTo" placeholder="0" readonly>
+                            <div class="swap-currency">USDT</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-torre" id="swapBtn" style="margin-top: 15px;">
+                        <i class="fas fa-exchange-alt"></i>
+                        Takas Yap
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Reklam Butonu -->
+            <div class="ad-buttons">
+                <button class="btn btn-primary" id="rewardedBtn">
+                    <i class="fas fa-play-circle"></i>
+                    Reklam İzle (+1 TRC)
+                </button>
+            </div>
+            
+            <!-- Çekim Butonu -->
+            <button class="btn btn-success" id="mainWithdrawBtn">
+                <i class="fas fa-money-bill-wave"></i>
+                Para Çekme Seçenekleri
+            </button>
+        </div>
+
+        <!-- Para Çekme View -->
+        <div id="withdraw-view" class="view">
+            <div class="header">
+                <h1>Para Çekme</h1>
+                <p>Kazancınızı talep edin</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-wallet"></i> Bakiyeniz</h2>
+                <div class="balance-amount" id="withdrawUsdtBalance">USDT 0.00</div>
+                <div class="balance-amount torre-balance" id="withdrawTorreBalance">TRC 0</div>
+                <p style="color: var(--tg-theme-hint-color); margin-top: 15px; text-align: center;">
+                    Aşağıdaki çekim seçeneklerinden birini seçin. Her seçenek günde bir kez kullanılabilir.
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-money-check"></i> Ödeme Detayları</h2>
+                <div class="input-group">
+                    <label for="paymentAddress"><i class="fas fa-address-card"></i> USDT Cüzdan Adresiniz (TRC20)</label>
+                    <input type="text" id="paymentAddress" placeholder="örn: T... (TRC20 Adresi)">
+                </div>
+            </div>
+            
+            <!-- Çekim Kutuları -->
+            <div class="card">
+                <h2><i class="fas fa-money-bill-wave"></i> Çekim Seçenekleri</h2>
+                <p style="color: var(--tg-theme-hint-color); margin-bottom: 15px; text-align: center;">
+                    Her çekim seçeneği günde bir kez kullanılabilir. 24 saat sonra yenilenir.
+                </p>
+                
+                <div class="withdrawal-boxes" id="withdrawalBoxes">
+                    <!-- Çekim kutuları buraya dinamik olarak eklenecek -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Referans View -->
+        <div id="referral-view" class="view">
+            <div class="header">
+                <h1>Referanslar</h1>
+                <p>Arkadaşlarını davet et ve daha fazla kazan!</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Referans İstatistikleriniz</h2>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item">
+                        <h3 id="referralCountDisplay">0</h3>
+                        <p>Toplam Referans</p>
+                    </div>
+                    <div class="ad-info-item">
+                        <h3 id="referralBonusDisplay">USDT 0.00</h3>
+                        <p>Referans Kazancı</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-user-plus"></i> Referans Kodunu Girin</h2>
+                <p>Eğer birisi sizi referans ettiyse, bonus almak için kodunu buraya girin!</p>
+                <div class="referral-input-container">
+                    <div class="referral-input-group">
+                        <input type="text" id="referralCodeInput" placeholder="Referans kodunu girin">
+                        <button id="submitReferralBtn">Gönder</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-qrcode"></i> Referans Kodunuz</h2>
+                <p>Bu kodu arkadaşlarınızla paylaşın. Katılan her onaylanmış arkadaş için 0.02 USDT kazanırsınız!</p>
+                <div class="referral-code-box" id="referralCodeBox" title="Kopyalamak için tıklayın">
+                    <span id="userReferralCode">Yükleniyor...</span>
+                </div>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px; text-align: center;">
+                    Kodu kopyalamak için üzerine tıklayın
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-link"></i> Referans Linkiniz</h2>
+                <p>Aşağıdaki linki arkadaşlarınızla paylaşarak daha hızlı kazanın!</p>
+                <div class="referral-code-box" id="referralLinkBox" title="Kopyalamak için tıklayın">
+                    <span id="userReferralLink">Yükleniyor...</span>
+                </div>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px; text-align: center;">
+                    Linki kopyalamak için üzerine tıklayın
+                </p>
+            </div>
+        </div>
+        
+        <!-- Görevler View -->
+        <div id="tasks-view" class="view">
+            <div class="header">
+                <h1>Görevler</h1>
+                <p>Görevleri tamamla ve daha fazla kazan!</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-tasks"></i> Mevcut Görevler</h2>
+                <p style="color: var(--tg-theme-hint-color); margin-bottom: 15px;">
+                    Aşağıdaki görevleri tamamlayarak ekstra USDT kazanabilirsiniz.
+                </p>
+                
+                <div class="task-list" id="taskList">
+                    <!-- Görevler buraya dinamik olarak eklenecek -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Panel View -->
+        <div id="admin-view" class="view">
+            <div class="header">
+                <h1>Admin Panel</h1>
+                <p>Sistem Yönetimi</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Sistem İstatistikleri</h2>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="adminTotalUsers">0</div>
+                        <div class="admin-stat-label">Toplam Kullanıcı</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="adminTotalAds">0</div>
+                        <div class="admin-stat-label">Toplam Reklam</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="adminTotalWithdrawals">0</div>
+                        <div class="admin-stat-label">Toplam Çekim</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="adminTotalEarnings">USDT 0.00</div>
+                        <div class="admin-stat-label">Toplam Kazanç</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-cog"></i> Sistem Kontrolleri</h2>
+                <div class="admin-controls">
+                    <button class="admin-control-btn" id="adminResetBtn">
+                        <i class="fas fa-redo"></i>
+                        Tüm Verileri Sıfırla
+                    </button>
+                    <button class="admin-control-btn" id="adminAddBalanceBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        Bakiye Ekle
+                    </button>
+                    <button class="admin-control-btn" id="adminAddTaskBtn">
+                        <i class="fas fa-tasks"></i>
+                        Yeni Görev Ekle
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-users"></i> Kullanıcı Yönetimi</h2>
+                <div class="admin-controls">
+                    <button class="admin-control-btn" id="adminViewUsersBtn">
+                        <i class="fas fa-user-friends"></i>
+                        Kullanıcıları Görüntüle
+                    </button>
+                    <button class="admin-control-btn danger" id="adminDeleteUserBtn">
+                        <i class="fas fa-user-times"></i>
+                        Kullanıcı Sil
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-coins"></i> Torre Coin Yönetimi</h2>
+                <div class="admin-controls">
+                    <button class="admin-control-btn" id="adminUpdateCoinPriceBtn">
+                        <i class="fas fa-chart-line"></i>
+                        Coin Fiyatını Güncelle
+                    </button>
+                    <button class="admin-control-btn" id="adminBurnCoinsBtn">
+                        <i class="fas fa-fire"></i>
+                        Coin Yak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Durum Mesajı -->
+    <div class="status-message" id="statusMessage"></div>
+    
+    <!-- Footer Navigation -->
+    <div class="footer-nav">
+        <button class="nav-btn active" data-view="home-view">
+            <div class="icon">
+                <i class="fas fa-home"></i>
+            </div>
+            Ana Sayfa
+        </button>
+        <button class="nav-btn" data-view="withdraw-view">
+            <div class="icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            Para Çek
+        </button>
+        <button class="nav-btn" data-view="referral-view">
+            <div class="icon">
+                <i class="fas fa-user-friends"></i>
+            </div>
+            Referans
+        </button>
+        <button class="nav-btn" data-view="tasks-view">
+            <div class="icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            Görevler
+        </button>
+    </div>
+
+    <script>
+        // JSONBin API Konfigürasyonu - YENİ BIN ID
+        const JSONBIN_API_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY.';
+        const JSONBIN_BIN_ID = '68df3a1aacd3cb34b94b7c0c'; // YENİ BIN ID
+        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+        const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+        
+        // Telegram WebApp başlatma
+        let tg;
+        try {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+        } catch (error) {
+            tg = {
+                initDataUnsafe: { user: { id: 'test_user_' + Date.now(), first_name: 'Test User' } }
+            };
+        }
+        
+        // Uygulama durumu
+        const appState = {
+            userId: '',
+            balance: 0.00,
+            torreBalance: 0,
+            adCount: 0,
+            dailyAdCount: 0,
+            referralCount: 0,
+            referralBonus: 0.00,
+            userReferralCode: '',
+            lastAdTime: 0,
+            lastWithdrawalTime: 0,
+            paymentAddress: '',
+            referredBy: '',
+            referralCodeUsed: false,
+            withdrawalLimits: {
+                level1: { lastUsed: 0 },
+                level2: { lastUsed: 0 },
+                level3: { lastUsed: 0 },
+                level4: { lastUsed: 0 }
+            },
+            adminMode: false
+        };
+
+        // Torre Coin Sistemi
+        const torreCoin = {
+            price: 0.000005,
+            totalSupply: 900000000000, // 900 Milyar
+            burnedSupply: 0,
+            priceHistory: [],
+            maxPrice: 0.001,
+            burnRate: 1 // Her reklamda 1 coin yakılır
+        };
+
+        // Yeni çekim seviyeleri
+        const withdrawalLevels = [
+            {
+                id: 'level1',
+                amount: 0.01,
+                adsRequired: 3,
+                title: 'Mini Çekim',
+                description: 'Hızlı ve kolay çekim'
+            },
+            {
+                id: 'level2',
+                amount: 0.03,
+                adsRequired: 6,
+                title: 'Standart Çekim',
+                description: 'Orta seviye çekim'
+            },
+            {
+                id: 'level3',
+                amount: 0.20,
+                adsRequired: 50,
+                title: 'Büyük Çekim',
+                description: 'Yüksek kazanç'
+            },
+            {
+                id: 'level4',
+                amount: 0.50,
+                adsRequired: 150,
+                title: 'Mega Çekim',
+                description: 'Maksimum kazanç'
+            }
+        ];
+
+        // Görevler
+        let tasks = [];
+
+        // JSONBin'den verileri yükle
+        async function loadAppData() {
+            try {
+                console.log('JSONBin verileri yükleniyor... Bin ID:', JSONBIN_BIN_ID);
+                
+                const response = await fetch(JSONBIN_URL, {
+                    headers: { 
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('JSONBin yanıtı:', data);
+                    
+                    if (data.record) {
+                        const savedData = data.record;
+                        
+                        // Kullanıcı verilerini yükle
+                        if (savedData.users && savedData.users[appState.userId]) {
+                            const userData = savedData.users[appState.userId];
+                            Object.assign(appState, userData);
+                            console.log('Kullanıcı verileri JSONBin\'den yüklendi:', appState.userId);
+                        } else {
+                            console.log('Yeni kullanıcı, varsayılan veriler kullanılıyor');
+                        }
+                        
+                        // Torre Coin verilerini yükle
+                        if (savedData.torreCoin) {
+                            Object.assign(torreCoin, savedData.torreCoin);
+                            console.log('Torre Coin verileri yüklendi:', torreCoin);
+                        }
+                        
+                        // Görevleri yükle
+                        if (savedData.tasks) {
+                            tasks = savedData.tasks;
+                            console.log('Görevler yüklendi:', tasks.length);
+                        }
+                        
+                        // Sistem loglarını göster
+                        if (savedData.systemLogs) {
+                            console.log('Sistem Logları (son 5):', savedData.systemLogs.slice(-5));
+                        }
+                        
+                        // Referans linki ile giriş kontrolü
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const startParam = urlParams.get('start');
+                        
+                        console.log('URL parametreleri:', { startParam, currentUser: appState.userId });
+                        
+                        if (startParam && startParam !== appState.userReferralCode && !appState.referredBy) {
+                            console.log('Referans linki tespit edildi:', startParam);
+                            await handleReferralLink(startParam, savedData);
+                        } else if (appState.referredBy) {
+                            console.log('Kullanıcı zaten referans kullanmış:', appState.referredBy);
+                        }
+                    } else {
+                        console.log('JSONBin\'de kayıtlı veri yok, ilk kez başlatılıyor');
+                        await initializeFirstTime();
+                    }
+                } else {
+                    console.error('JSONBin yükleme hatası:', response.status, response.statusText);
+                    // İlk kez başlat
+                    await initializeFirstTime();
+                }
+            } catch (error) {
+                console.error('JSONBin yükleme hatası:', error);
+                // İlk kez başlat
+                await initializeFirstTime();
+            }
+        }
+
+        // İlk kez başlatma
+        async function initializeFirstTime() {
+            console.log('İlk kez başlatılıyor...');
+            
+            // Varsayılan görevleri oluştur
+            tasks = [
+                {
+                    id: 1,
+                    title: 'Telegram Kanalımıza Katılın',
+                    description: 'Resmi Telegram kanalımıza katılın ve ödül kazanın',
+                    reward: 0.05,
+                    link: 'https://t.me/torreadschannel',
+                    completed: false
+                },
+                {
+                    id: 2,
+                    title: 'Telegram Grubumuza Katılın',
+                    description: 'Resmi Telegram grubumuza katılın ve ödül kazanın',
+                    reward: 0.08,
+                    link: 'https://t.me/torreadsgroup',
+                    completed: false
+                }
+            ];
+            
+            // JSONBin'e kaydet
+            await saveAppData();
+        }
+
+        // JSONBin'e verileri kaydet
+        async function saveAppData() {
+            try {
+                console.log('JSONBin verileri kaydediliyor...');
+                
+                // Mevcut verileri al veya yeni oluştur
+                let currentData = {
+                    users: {},
+                    torreCoin: torreCoin,
+                    tasks: tasks,
+                    systemLogs: [],
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                try {
+                    const response = await fetch(JSONBIN_URL, {
+                        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.record) {
+                            currentData = data.record;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Mevcut veriler alınamadı, yeni veri yapısı kullanılıyor');
+                }
+                
+                // Kullanıcı verilerini güncelle
+                currentData.users[appState.userId] = appState;
+                
+                // Torre Coin verilerini güncelle
+                currentData.torreCoin = torreCoin;
+                
+                // Görevleri güncelle
+                currentData.tasks = tasks;
+                
+                // Sistem logu ekle
+                if (!currentData.systemLogs) currentData.systemLogs = [];
+                currentData.systemLogs.push({
+                    timestamp: new Date().toISOString(),
+                    userId: appState.userId,
+                    action: 'user_data_updated',
+                    message: `${appState.userId} kullanıcı verileri güncellendi`,
+                    balance: appState.balance,
+                    torreBalance: appState.torreBalance
+                });
+                
+                // Son güncelleme zamanı
+                currentData.lastUpdated = new Date().toISOString();
+                
+                // JSONBin'e kaydet
+                const updateResponse = await fetch(JSONBIN_UPDATE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Versioning': 'false'
+                    },
+                    body: JSON.stringify(currentData)
+                });
+                
+                if (updateResponse.ok) {
+                    console.log('JSONBin verileri başarıyla kaydedildi');
+                    const responseData = await updateResponse.json();
+                    console.log('Kayıt başarılı, metadata:', responseData.metadata);
+                } else {
+                    console.error('JSONBin kaydetme hatası:', updateResponse.status, updateResponse.statusText);
+                    const errorText = await updateResponse.text();
+                    console.error('Hata detayı:', errorText);
+                }
+            } catch (error) {
+                console.error('JSONBin kaydetme hatası:', error);
+            }
+        }
+
+        // Referans linki ile giriş işlemi
+        async function handleReferralLink(referralCode, appData) {
+            try {
+                console.log('Referans işlemi başlatılıyor:', referralCode);
+                
+                // Referans kodunu kullanan kullanıcıyı bul
+                let referrer = null;
+                let referrerUserId = null;
+                
+                for (const userId in appData.users) {
+                    if (appData.users[userId].referralCode === referralCode) {
+                        referrer = appData.users[userId];
+                        referrerUserId = userId;
+                        console.log('Referans bulundu:', referrerUserId);
+                        break;
+                    }
+                }
+                
+                if (!referrer) {
+                    console.log('Geçersiz referans kodu:', referralCode);
+                    showStatus('Geçersiz referans kodu!', 'error');
+                    return;
+                }
+                
+                // Referansı kaydet
+                appState.referredBy = referrerUserId;
+                appState.balance += 0.02;
+                appState.referralBonus += 0.02;
+                appState.referralCodeUsed = true;
+                
+                // Referans veren kullanıcıyı güncelle
+                if (!referrer.referrals) referrer.referrals = [];
+                referrer.referrals.push({
+                    userId: appState.userId,
+                    date: new Date().toISOString()
+                });
+                referrer.referralCount += 1;
+                referrer.referralBonus += 0.02;
+                referrer.balance += 0.02;
+                
+                // Sistem logu ekle
+                if (appData.systemLogs) {
+                    appData.systemLogs.push({
+                        timestamp: new Date().toISOString(),
+                        userId: appState.userId,
+                        action: 'referral_joined',
+                        message: `${appState.userId} kullanıcısı ${referrerUserId} referansı ile katıldı`,
+                        bonus: 0.02
+                    });
+                }
+                
+                console.log('Referans başarıyla kaydedildi:', referrerUserId, '->', appState.userId);
+                showStatus(`Referans linki ile giriş yaptınız! 0.02 USDT bonus kazandınız.`, 'success');
+                
+                // Verileri kaydet
+                await saveAppData();
+                
+            } catch (error) {
+                console.error('Referans işlemi hatası:', error);
+                showStatus('Referans kaydedilirken bir hata oluştu.', 'error');
+            }
+        }
+
+        // DOM yüklendikten sonra çalışacak kod
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Kullanıcı ID'sini ayarla
+            const initData = tg.initDataUnsafe;
+            appState.userId = initData.user?.id?.toString() || 'test_user_' + Math.floor(Math.random() * 10000);
+            appState.userReferralCode = generateReferralCode();
+            
+            // Durum mesajı göster
+            showStatus('TorreAds\'e hoş geldiniz!', 'info');
+            
+            // JSONBin'den verileri yükle
+            await loadAppData();
+            
+            // UI olaylarını başlat
+            initializeUI();
+            
+            // Admin modunu kontrol et
+            checkAdminMode();
+            
+            // USDT fiyatını güncelle
+            updateUsdtPrice();
+            
+            // Torre Coin fiyatını güncelle
+            updateTorreCoinPrice();
+            
+            // Çekim kutularını oluştur
+            renderWithdrawalBoxes();
+            
+            // Görevleri oluştur
+            renderTasks();
+            
+            // Swap hesaplamasını güncelle
+            updateSwapCalculation();
+            
+            // UI'ı güncelle
+            updateUI();
+        });
+
+        // UI'ı güncelle
+        function updateUI() {
+            updateBalanceDisplay();
+            updateAdCountDisplay();
+            updateReferralDisplay();
+            updateTorreCoinDisplay();
+            updateWithdrawalButtons();
+        }
+
+        // UI olaylarını başlatma
+        function initializeUI() {
+            // Navigation butonları
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const viewId = this.getAttribute('data-view');
+                    switchView(viewId);
+                    
+                    // Aktif butonu güncelle
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Ana para çekme butonu
+            document.getElementById('mainWithdrawBtn').addEventListener('click', function() {
+                switchView('withdraw-view');
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-view="withdraw-view"]').classList.add('active');
+            });
+            
+            // Admin header butonu
+            document.getElementById('adminHeaderBtn').addEventListener('click', function() {
+                switchView('admin-view');
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            });
+            
+            // Reklam izleme butonu
+            document.getElementById('rewardedBtn').addEventListener('click', function() {
+                watchAd();
+            });
+            
+            // Referans kodunu gönderme butonu - DÜZELTİLDİ
+            document.getElementById('submitReferralBtn').addEventListener('click', function() {
+                submitReferralCode();
+            });
+            
+            // Referans kodunu kopyalama - DÜZELTİLDİ
+            document.getElementById('referralCodeBox').addEventListener('click', function() {
+                copyToClipboard(appState.userReferralCode);
+                showStatus('Referans kodu kopyalandı!', 'success');
+            });
+            
+            // Referans linkini kopyalama - DÜZELTİLDİ
+            document.getElementById('referralLinkBox').addEventListener('click', function() {
+                const referralLink = `https://t.me/torreads_bot?start=${appState.userReferralCode}`;
+                copyToClipboard(referralLink);
+                showStatus('Referans linki kopyalandı!', 'success');
+            });
+            
+            // Swap butonu
+            document.getElementById('swapBtn').addEventListener('click', function() {
+                swapTorreToUsdt();
+            });
+            
+            // Swap input değişiklikleri
+            document.getElementById('swapFrom').addEventListener('input', function() {
+                updateSwapCalculation();
+            });
+            
+            // Admin kontrolleri
+            document.getElementById('adminResetBtn').addEventListener('click', function() {
+                if (confirm('Tüm verileri sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                    resetAllData();
+                }
+            });
+            
+            document.getElementById('adminAddBalanceBtn').addEventListener('click', function() {
+                const amount = prompt('Eklemek istediğiniz miktarı girin (USDT):');
+                if (amount && !isNaN(parseFloat(amount))) {
+                    addBalance(parseFloat(amount));
+                }
+            });
+            
+            document.getElementById('adminAddTaskBtn').addEventListener('click', function() {
+                addNewTask();
+            });
+            
+            document.getElementById('adminUpdateCoinPriceBtn').addEventListener('click', function() {
+                updateCoinPriceManually();
+            });
+            
+            document.getElementById('adminBurnCoinsBtn').addEventListener('click', function() {
+                burnCoinsManually();
+            });
+            
+            // Cüzdan adresi girişi
+            document.getElementById('paymentAddress').addEventListener('input', function() {
+                appState.paymentAddress = this.value;
+                saveUserData();
+                updateWithdrawalButtons();
+            });
+        }
+
+        // View değiştirme
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.style.display = 'none';
+            });
+            document.getElementById(viewId).style.display = 'block';
+            
+            // Özel view işlemleri
+            if (viewId === 'withdraw-view') {
+                updateWithdrawalBoxes();
+            } else if (viewId === 'referral-view') {
+                updateReferralDisplay();
+            }
+        }
+
+        // Reklam izleme fonksiyonu
+        async function watchAd() {
+            const btn = document.getElementById('rewardedBtn');
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+            
+            // Günlük reklam limitini kontrol et
+            if (appState.dailyAdCount >= 100) {
+                showStatus('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin!', 'error');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                return;
+            }
+            
+            // Son reklam zamanını kontrol et (en az 30 saniye)
+            const now = Date.now();
+            if (now - appState.lastAdTime < 30000) {
+                const remainingTime = Math.ceil((30000 - (now - appState.lastAdTime)) / 1000);
+                showStatus(`Lütfen ${remainingTime} saniye bekleyin!`, 'error');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                return;
+            }
+            
+            try {
+                // Reklam gösterim simülasyonu
+                setTimeout(async () => {
+                    // Başarılı reklam izleme
+                    appState.torreBalance += 1;
+                    appState.adCount++;
+                    appState.dailyAdCount++;
+                    appState.lastAdTime = now;
+                    
+                    // Coin yakma işlemi
+                    burnCoins(1);
+                    
+                    // UI güncelleme
+                    updateUI();
+                    
+                    // Başarı mesajı
+                    showStatus(`Tebrikler! 1 TRC kazandınız!`, 'success');
+                    
+                    // Butonu sıfırla
+                    btn.classList.remove('btn-loading');
+                    btn.disabled = false;
+                    
+                    // Verileri kaydet
+                    await saveAppData();
+                    
+                }, 3000);
+            } catch (error) {
+                console.error('Reklam gösteriminde hata:', error);
+                showStatus('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Torre Coin yakma işlemi
+        function burnCoins(amount) {
+            torreCoin.burnedSupply += amount;
+            torreCoin.totalSupply -= amount;
+            
+            // Fiyat artışı hesapla (yakılan coin başına)
+            const priceIncrease = (amount / torreCoin.totalSupply) * 0.000001;
+            torreCoin.price = Math.min(torreCoin.price + priceIncrease, torreCoin.maxPrice);
+            
+            // Fiyat geçmişine ekle
+            torreCoin.priceHistory.push({
+                timestamp: Date.now(),
+                price: torreCoin.price,
+                burned: amount
+            });
+            
+            // UI güncelleme
+            updateTorreCoinDisplay();
+            updateSwapCalculation();
+            
+            console.log(`${amount} TRC yakıldı. Yeni fiyat: $${torreCoin.price}`);
+        }
+
+        // Bakiye görüntüsünü güncelle
+        function updateBalanceDisplay() {
+            document.getElementById('usdtBalanceDisplay').textContent = `USDT ${appState.balance.toFixed(3)}`;
+            document.getElementById('torreBalanceDisplay').textContent = `TRC ${appState.torreBalance}`;
+            document.getElementById('withdrawUsdtBalance').textContent = `USDT ${appState.balance.toFixed(3)}`;
+            document.getElementById('withdrawTorreBalance').textContent = `TRC ${appState.torreBalance}`;
+        }
+
+        // Torre Coin görüntüsünü güncelle
+        function updateTorreCoinDisplay() {
+            document.getElementById('coinPrice').textContent = `$${torreCoin.price.toFixed(6)}`;
+            document.getElementById('coinSupply').textContent = `${(torreCoin.totalSupply / 1000000000).toFixed(0)}B`;
+            document.getElementById('burnedCoins').textContent = torreCoin.burnedSupply.toLocaleString();
+            document.getElementById('torrePrice').textContent = `$${torreCoin.price.toFixed(6)}`;
+            document.getElementById('swapRate').textContent = `1 TRC = $${torreCoin.price.toFixed(6)}`;
+        }
+
+        // Reklam sayısını güncelle
+        function updateAdCountDisplay() {
+            document.getElementById('adCountDisplay').textContent = appState.adCount;
+            document.getElementById('dailyAdCountDisplay').textContent = `${appState.dailyAdCount} / 100`;
+        }
+
+        // Referans bilgilerini güncelle
+        function updateReferralDisplay() {
+            document.getElementById('referralCountDisplay').textContent = appState.referralCount;
+            document.getElementById('referralBonusDisplay').textContent = `USDT ${appState.referralBonus.toFixed(2)}`;
+            document.getElementById('userReferralCode').textContent = appState.userReferralCode;
+            document.getElementById('userReferralLink').textContent = `https://t.me/torreads_bot?start=${appState.userReferralCode}`;
+        }
+
+        // Swap hesaplamasını güncelle
+        function updateSwapCalculation() {
+            const fromAmount = parseFloat(document.getElementById('swapFrom').value) || 0;
+            const toAmount = fromAmount * torreCoin.price;
+            document.getElementById('swapTo').value = toAmount.toFixed(6);
+        }
+
+        // Torre Coin'den USDT'ye takas
+        async function swapTorreToUsdt() {
+            const fromAmount = parseFloat(document.getElementById('swapFrom').value) || 0;
+            
+            if (fromAmount <= 0) {
+                showStatus('Lütfen geçerli bir miktar girin!', 'error');
+                return;
+            }
+            
+            if (fromAmount > appState.torreBalance) {
+                showStatus('Yetersiz TRC bakiyesi!', 'error');
+                return;
+            }
+            
+            const usdtAmount = fromAmount * torreCoin.price;
+            
+            if (confirm(`${fromAmount} TRC'yi ${usdtAmount.toFixed(6)} USDT'ye takas etmek istediğinizden emin misiniz?`)) {
+                appState.torreBalance -= fromAmount;
+                appState.balance += usdtAmount;
+                
+                // Coin yakma işlemi (takas bonusu)
+                burnCoins(fromAmount * 0.1); // %10 yakma
+                
+                // UI güncelleme
+                updateUI();
+                
+                showStatus(`Başarıyla ${usdtAmount.toFixed(6)} USDT takas edildi!`, 'success');
+                
+                // Verileri kaydet
+                await saveAppData();
+            }
+        }
+
+        // Çekim butonlarını güncelle
+        function updateWithdrawalButtons() {
+            const boxes = document.querySelectorAll('.withdrawal-box');
+            boxes.forEach(box => {
+                const levelId = box.getAttribute('data-level');
+                const level = withdrawalLevels.find(l => l.id === levelId);
+                const btn = box.querySelector('.withdrawal-btn');
+                const status = box.querySelector('.withdrawal-status');
+                
+                if (!level) return;
+                
+                // Bakiye ve reklam kontrolü
+                const hasEnoughBalance = appState.balance >= level.amount;
+                const hasEnoughAds = appState.adCount >= level.adsRequired;
+                const hasPaymentAddress = appState.paymentAddress && appState.paymentAddress.trim().length > 0;
+                
+                // Zaman kontrolü (24 saat)
+                const now = Date.now();
+                const lastUsed = appState.withdrawalLimits[levelId].lastUsed || 0;
+                const canWithdraw = (now - lastUsed) >= 24 * 60 * 60 * 1000;
+                
+                if (hasEnoughBalance && hasEnoughAds && hasPaymentAddress && canWithdraw) {
+                    btn.disabled = false;
+                    status.textContent = 'Kullanılabilir';
+                    status.className = 'withdrawal-status available';
+                } else {
+                    btn.disabled = true;
+                    
+                    if (!canWithdraw) {
+                        status.textContent = '24 Saat Bekleyin';
+                        status.className = 'withdrawal-status used';
+                    } else if (!hasEnoughBalance) {
+                        status.textContent = 'Yetersiz Bakiye';
+                        status.className = 'withdrawal-status';
+                    } else if (!hasEnoughAds) {
+                        status.textContent = 'Yetersiz Reklam';
+                        status.className = 'withdrawal-status';
+                    } else if (!hasPaymentAddress) {
+                        status.textContent = 'Cüzdan Gerekli';
+                        status.className = 'withdrawal-status';
+                    }
+                }
+            });
+        }
+
+        // Çekim kutularını oluştur
+        function renderWithdrawalBoxes() {
+            const container = document.getElementById('withdrawalBoxes');
+            container.innerHTML = '';
+            
+            withdrawalLevels.forEach(level => {
+                const box = document.createElement('div');
+                box.className = 'withdrawal-box';
+                box.setAttribute('data-level', level.id);
+                
+                box.innerHTML = `
+                    <div class="withdrawal-box-header">
+                        <div>
+                            <div class="withdrawal-amount">USDT ${level.amount.toFixed(2)}</div>
+                            <div style="font-size: 14px; color: var(--tg-theme-hint-color);">${level.title}</div>
+                        </div>
+                        <div class="withdrawal-status">Kullanılabilir</div>
+                    </div>
+                    <div class="withdrawal-requirements">
+                        <div class="withdrawal-requirement">
+                            <div class="withdrawal-requirement-value">${level.adsRequired}</div>
+                            <div>Reklam Gerekli</div>
+                        </div>
+                        <div class="withdrawal-requirement">
+                            <div class="withdrawal-requirement-value">USDT ${level.amount.toFixed(2)}</div>
+                            <div>Bakiye Gerekli</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 14px; color: var(--tg-theme-hint-color); text-align: center; margin: 10px 0;">
+                        ${level.description}
+                    </p>
+                    <div class="withdrawal-box-footer">
+                        <button class="withdrawal-btn" data-level="${level.id}">Çekim Yap</button>
+                    </div>
+                `;
+                
+                container.appendChild(box);
+                
+                // Çekim butonu event listener
+                box.querySelector('.withdrawal-btn').addEventListener('click', function() {
+                    processWithdrawal(level.id);
+                });
+            });
+            
+            updateWithdrawalButtons();
+        }
+
+        // Çekim işlemi
+        async function processWithdrawal(levelId) {
+            const level = withdrawalLevels.find(l => l.id === levelId);
+            if (!level) return;
+            
+            // Kontroller
+            if (appState.balance < level.amount) {
+                showStatus('Yetersiz bakiye!', 'error');
+                return;
+            }
+            
+            if (appState.adCount < level.adsRequired) {
+                showStatus(`Bu çekim için en az ${level.adsRequired} reklam izlemiş olmanız gerekiyor!`, 'error');
+                return;
+            }
+            
+            if (!appState.paymentAddress || appState.paymentAddress.trim().length === 0) {
+                showStatus('Lütfen USDT cüzdan adresinizi girin!', 'error');
+                return;
+            }
+            
+            // Zaman kontrolü
+            const now = Date.now();
+            const lastUsed = appState.withdrawalLimits[levelId].lastUsed || 0;
+            if (now - lastUsed < 24 * 60 * 60 * 1000) {
+                const remainingTime = 24 * 60 * 60 * 1000 - (now - lastUsed);
+                const hours = Math.floor(remainingTime / (60 * 60 * 1000));
+                const minutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
+                showStatus(`Bu çekim seçeneği için ${hours} saat ${minutes} dakika beklemelisiniz!`, 'error');
+                return;
+            }
+            
+            // Çekim onayı
+            if (confirm(`USDT ${level.amount.toFixed(2)} çekmek istediğinizden emin misiniz?`)) {
+                // Çekim işlemi
+                appState.balance -= level.amount;
+                appState.withdrawalLimits[levelId].lastUsed = now;
+                
+                // UI güncelleme
+                updateUI();
+                
+                // Başarı mesajı
+                showStatus(`USDT ${level.amount.toFixed(2)} çekim talebiniz alındı! 24-48 saat içinde işleme alınacaktır.`, 'success');
+                
+                // Verileri kaydet
+                await saveAppData();
+            }
+        }
+
+        // Görevleri oluştur
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            container.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">
+                        Henüz görev yok. Görevler yakında eklenecek!
+                    </div>
+                `;
+                return;
+            }
+            
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                
+                taskElement.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div class="task-reward">+${task.reward.toFixed(2)} USDT</div>
+                        <button class="task-btn" data-task-id="${task.id}" ${task.completed ? 'disabled' : ''}>
+                            ${task.completed ? 'Tamamlandı' : 'Başla'}
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(taskElement);
+                
+                // Görev butonu event listener
+                if (!task.completed) {
+                    taskElement.querySelector('.task-btn').addEventListener('click', function() {
+                        startTask(task.id);
+                    });
+                }
+            });
+        }
+
+        // Görev başlatma
+        function startTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            // Görev tipine göre işlem
+            if (task.link && task.link !== '#') {
+                // Linki yeni sekmede aç
+                window.open(task.link, '_blank');
+                
+                // Görevi tamamla (basit doğrulama)
+                setTimeout(() => {
+                    if (confirm('Görevi tamamladınız mı?')) {
+                        completeTask(taskId);
+                    }
+                }, 2000);
+            } else {
+                // Diğer görev tipleri
+                completeTask(taskId);
+            }
+        }
+
+        // Görevi tamamlama
+        async function completeTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || task.completed) return;
+            
+            // Ödülü ver
+            appState.balance += task.reward;
+            task.completed = true;
+            
+            // UI güncelleme
+            updateUI();
+            
+            // Başarı mesajı
+            showStatus(`Tebrikler! ${task.reward.toFixed(2)} USDT kazandınız!`, 'success');
+            
+            // Verileri kaydet
+            await saveAppData();
+        }
+
+        // Yeni görev ekleme (Admin)
+        async function addNewTask() {
+            const title = prompt('Görev başlığını girin:');
+            if (!title) return;
+            
+            const description = prompt('Görev açıklamasını girin:');
+            if (!description) return;
+            
+            const reward = parseFloat(prompt('Ödül miktarını girin (USDT):'));
+            if (isNaN(reward) || reward <= 0) {
+                showStatus('Geçersiz ödül miktarı!', 'error');
+                return;
+            }
+            
+            const link = prompt('Linki girin (boş bırakabilirsiniz):') || '#';
+            
+            // Yeni görev oluştur
+            const newTask = {
+                id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
+                title,
+                description,
+                reward,
+                link,
+                completed: false
+            };
+            
+            tasks.push(newTask);
+            renderTasks();
+            await saveAppData();
+            
+            showStatus('Yeni görev başarıyla eklendi!', 'success');
+        }
+
+        // Referans kodu gönderme - DÜZELTİLDİ
+        async function submitReferralCode() {
+            if (appState.referredBy) {
+                showStatus('Zaten bir referans kodu kullandınız!', 'error');
+                return;
+            }
+            
+            const codeInput = document.getElementById('referralCodeInput');
+            const code = codeInput.value.trim().toUpperCase();
+            
+            if (!code) {
+                showStatus('Lütfen bir referans kodu girin!', 'error');
+                return;
+            }
+            
+            if (code === appState.userReferralCode) {
+                showStatus('Kendi referans kodunuzu kullanamazsınız!', 'error');
+                return;
+            }
+            
+            // JSONBin'de referans kodunu ara
+            try {
+                const response = await fetch(JSONBIN_URL, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.record && data.record.users) {
+                        let referrerFound = false;
+                        
+                        for (const userId in data.record.users) {
+                            const user = data.record.users[userId];
+                            if (user.referralCode === code) {
+                                // Referans bonusu ver
+                                appState.balance += 0.02;
+                                appState.referralBonus += 0.02;
+                                appState.referredBy = userId;
+                                
+                                // Referans veren kullanıcıyı güncelle
+                                if (!user.referrals) user.referrals = [];
+                                user.referrals.push({
+                                    userId: appState.userId,
+                                    date: new Date().toISOString()
+                                });
+                                user.referralCount += 1;
+                                user.referralBonus += 0.02;
+                                user.balance += 0.02;
+                                
+                                // UI güncelleme
+                                updateUI();
+                                codeInput.value = '';
+                                
+                                // Başarı mesajı
+                                showStatus('Referans kodu başarıyla kullanıldı! 0.02 USDT bonus kazandınız!', 'success');
+                                
+                                // Verileri kaydet
+                                await saveAppData();
+                                
+                                referrerFound = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!referrerFound) {
+                            showStatus('Geçersiz referans kodu!', 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Referans kodu doğrulama hatası:', error);
+                showStatus('Referans kodu doğrulanırken bir hata oluştu.', 'error');
+            }
+        }
+
+        // USDT fiyatını güncelle
+        function updateUsdtPrice() {
+            // USDT genellikle 1 USD civarında kalır
+            const basePrice = 1.00;
+            const randomChange = (Math.random() - 0.5) * 0.001; // -0.05% ile +0.05% arası
+            const currentPrice = basePrice + randomChange;
+            const changePercent = (randomChange / basePrice) * 100;
+            
+            const priceElement = document.getElementById('usdtPrice');
+            const changeElement = document.getElementById('usdtChange');
+            
+            priceElement.textContent = `$${currentPrice.toFixed(4)}`;
+            
+            if (changePercent >= 0) {
+                changeElement.textContent = `24s: +${changePercent.toFixed(2)}%`;
+                changeElement.className = 'chart-change positive';
+            } else {
+                changeElement.textContent = `24s: ${changePercent.toFixed(2)}%`;
+                changeElement.className = 'chart-change negative';
+            }
+            
+            // Her 30 saniyede bir güncelle
+            setTimeout(updateUsdtPrice, 30000);
+        }
+
+        // Torre Coin fiyatını güncelle
+        function updateTorreCoinPrice() {
+            // Fiyat değişimi simülasyonu
+            const changePercent = (Math.random() - 0.5) * 0.1; // -5% ile +5% arası
+            torreCoin.price = Math.max(0.000001, Math.min(torreCoin.price * (1 + changePercent), torreCoin.maxPrice));
+            
+            // UI güncelleme
+            updateTorreCoinDisplay();
+            
+            // Fiyat geçmişine ekle
+            torreCoin.priceHistory.push({
+                timestamp: Date.now(),
+                price: torreCoin.price,
+                change: changePercent
+            });
+            
+            // Her 30 saniyede bir güncelle
+            setTimeout(updateTorreCoinPrice, 30000);
+        }
+
+        // Admin modunu kontrol et
+        function checkAdminMode() {
+            // Basit bir admin kontrolü
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminParam = urlParams.get('admin');
+            
+            if (adminParam === 'true' || tg.initDataUnsafe.user?.id === 123456789) {
+                appState.adminMode = true;
+                document.getElementById('adminHeaderBtn').style.display = 'flex';
+            }
+        }
+
+        // Tüm verileri sıfırla (Admin)
+        async function resetAllData() {
+            appState.balance = 0.00;
+            appState.torreBalance = 0;
+            appState.adCount = 0;
+            appState.dailyAdCount = 0;
+            appState.referralCount = 0;
+            appState.referralBonus = 0.00;
+            appState.lastAdTime = 0;
+            appState.lastWithdrawalTime = 0;
+            appState.paymentAddress = '';
+            appState.referredBy = '';
+            appState.referralCodeUsed = false;
+            
+            // Çekim limitlerini sıfırla
+            for (const level in appState.withdrawalLimits) {
+                appState.withdrawalLimits[level].lastUsed = 0;
+            }
+            
+            // Görevleri sıfırla
+            tasks.forEach(task => {
+                task.completed = false;
+            });
+            
+            // Torre Coin'i sıfırla
+            torreCoin.price = 0.000005;
+            torreCoin.burnedSupply = 0;
+            torreCoin.totalSupply = 900000000000;
+            torreCoin.priceHistory = [];
+            
+            // UI güncelleme
+            updateUI();
+            renderTasks();
+            
+            // Verileri kaydet
+            await saveAppData();
+            
+            showStatus('Tüm veriler sıfırlandı!', 'success');
+        }
+
+        // Bakiye ekle (Admin)
+        async function addBalance(amount) {
+            appState.balance += amount;
+            
+            // UI güncelleme
+            updateUI();
+            
+            // Verileri kaydet
+            await saveAppData();
+            
+            showStatus(`${amount.toFixed(2)} USDT başarıyla eklendi!`, 'success');
+        }
+
+        // Coin fiyatını manuel güncelle (Admin)
+        async function updateCoinPriceManually() {
+            const newPrice = parseFloat(prompt('Yeni Torre Coin fiyatını girin ($):', torreCoin.price));
+            
+            if (!isNaN(newPrice) && newPrice > 0 && newPrice <= torreCoin.maxPrice) {
+                torreCoin.price = newPrice;
+                updateTorreCoinDisplay();
+                await saveAppData();
+                showStatus('Torre Coin fiyatı güncellendi!', 'success');
+            } else {
+                showStatus('Geçersiz fiyat!', 'error');
+            }
+        }
+
+        // Coin yakma işlemi (Admin)
+        async function burnCoinsManually() {
+            const amount = parseInt(prompt('Yakmak istediğiniz Torre Coin miktarını girin:'));
+            
+            if (!isNaN(amount) && amount > 0) {
+                burnCoins(amount);
+                await saveAppData();
+                showStatus(`${amount} TRC yakıldı!`, 'success');
+            } else {
+                showStatus('Geçersiz miktar!', 'error');
+            }
+        }
+
+        // Kullanıcı verilerini kaydet
+        async function saveUserData() {
+            await saveAppData();
+        }
+
+        // Referans kodu oluştur
+        function generateReferralCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Panoya kopyala
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            } else {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Durum mesajı göster
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status-message ${type}`;
+            statusElement.style.display = 'block';
+            
+            // 3 saniye sonra gizle
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Günlük verileri sıfırla (24 saatte bir)
+        function resetDailyData() {
+            const now = new Date();
+            const lastReset = localStorage.getItem('torreAdsLastReset');
+            const lastResetDate = lastReset ? new Date(parseInt(lastReset)) : new Date(0);
+            
+            // Son sıfırlama bugün değilse, günlük verileri sıfırla
+            if (lastResetDate.toDateString() !== now.toDateString()) {
+                appState.dailyAdCount = 0;
+                localStorage.setItem('torreAdsLastReset', now.getTime().toString());
+                saveUserData();
+                updateAdCountDisplay();
+            }
+        }
+
+        // Sayfa yüklendiğinde günlük verileri kontrol et
+        resetDailyData();
+    </script>
+</body>
+</html>
