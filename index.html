@@ -734,10 +734,19 @@
             font-size: 14px;
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
         .chart-placeholder:hover {
             background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* TRX Chart Canvas */
+        #trxChartCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
         }
 
         /* Admin Styles */
@@ -804,6 +813,12 @@
         }
 
         /* Admin User List */
+        .admin-user-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
         .admin-user-item {
             background: rgba(59, 130, 246, 0.05);
             padding: 15px;
@@ -813,6 +828,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: var(--transition);
+        }
+
+        .admin-user-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
         }
 
         .admin-user-info {
@@ -858,12 +879,24 @@
         }
 
         /* Withdraw Requests */
+        .withdraw-requests-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
         .withdraw-request-item {
             background: rgba(59, 130, 246, 0.05);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .withdraw-request-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
         }
 
         .withdraw-request-info {
@@ -880,6 +913,22 @@
             font-size: 12px;
             color: var(--tg-theme-hint-color);
             margin-bottom: 3px;
+        }
+
+        .withdraw-request-address {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: var(--transition);
+            word-break: break-all;
+        }
+
+        .withdraw-request-address:hover {
+            background: rgba(59, 130, 246, 0.2);
         }
 
         .withdraw-request-date {
@@ -913,6 +962,29 @@
 
         .withdraw-action-btn:hover {
             transform: translateY(-2px);
+        }
+
+        /* Scrollbar Styles */
+        .admin-user-list::-webkit-scrollbar,
+        .withdraw-requests-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-user-list::-webkit-scrollbar-track,
+        .withdraw-requests-list::-webkit-scrollbar-track {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 3px;
+        }
+
+        .admin-user-list::-webkit-scrollbar-thumb,
+        .withdraw-requests-list::-webkit-scrollbar-thumb {
+            background: var(--gradient-primary);
+            border-radius: 3px;
+        }
+
+        .admin-user-list::-webkit-scrollbar-thumb:hover,
+        .withdraw-requests-list::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
         }
 
         /* Responsive Design */
@@ -975,8 +1047,7 @@
                         <span class="chart-change" id="tronChange">24s: 0.00%</span>
                     </div>
                     <div class="chart-placeholder" id="tronChart">
-                        <i class="fas fa-chart-bar fa-2x" style="margin-bottom: 10px;"></i><br>
-                        TRON fiyat grafiği yükleniyor...
+                        <canvas id="trxChartCanvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -1031,7 +1102,10 @@
                 <h2><i class="fas fa-money-check"></i> Ödeme Detayları</h2>
                 <div class="input-group">
                     <label for="paymentAddress"><i class="fas fa-address-card"></i> TRON Cüzdan Adresiniz</label>
-                    <input type="text" id="paymentAddress" placeholder="örn: T... (TRON Adresi)">
+                    <input type="text" id="paymentAddress" placeholder="T... (TRON Adresi)">
+                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
+                        TRON (TRC20) adresinizi girin. T ile başlamalıdır.
+                    </p>
                 </div>
                 <button class="btn btn-success" id="finalWithdrawBtn" disabled>
                     <i class="fas fa-paper-plane"></i>
@@ -1372,6 +1446,8 @@
 
         // TRON fiyat bilgisi
         let tronPriceUSD = 0.12; // Varsayılan değer
+        let tronPriceHistory = [];
+        let chart = null;
 
         const views = document.querySelectorAll('.view');
         const navButtons = document.querySelectorAll('.nav-btn');
@@ -1494,8 +1570,15 @@
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
                 const data = await response.json();
                 if (data.tron) {
+                    const oldPrice = tronPriceUSD;
                     tronPriceUSD = data.tron.usd;
                     const change24h = data.tron.usd_24h_change;
+                    
+                    // Fiyat geçmişini güncelle
+                    tronPriceHistory.push(tronPriceUSD);
+                    if (tronPriceHistory.length > 20) {
+                        tronPriceHistory.shift();
+                    }
                     
                     // Fiyat ve değişimi güncelle
                     document.getElementById('tronPrice').textContent = `$${tronPriceUSD.toFixed(4)}`;
@@ -1510,15 +1593,103 @@
                     } else {
                         changeElement.className = 'chart-change';
                     }
+                    
+                    // Grafiği çiz
+                    drawChart();
                 }
             } catch (error) {
                 console.error('TRON fiyat verisi alınamadı:', error);
+                // Varsayılan grafik verisi oluştur
+                if (tronPriceHistory.length === 0) {
+                    for (let i = 0; i < 20; i++) {
+                        tronPriceHistory.push(0.12 + (Math.random() - 0.5) * 0.01);
+                    }
+                    drawChart();
+                }
             }
+        }
+        
+        // TRON grafiğini çiz
+        function drawChart() {
+            const canvas = document.getElementById('trxChartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas boyutunu ayarla
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Temizle
+            ctx.clearRect(0, 0, width, height);
+            
+            if (tronPriceHistory.length < 2) return;
+            
+            // Min ve max değerleri bul
+            const minPrice = Math.min(...tronPriceHistory);
+            const maxPrice = Math.max(...tronPriceHistory);
+            const range = maxPrice - minPrice || 1;
+            
+            // Grafik çiz
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            // Mavi gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+            ctx.strokeStyle = '#3b82f6';
+            
+            const pointWidth = (width - padding * 2) / (tronPriceHistory.length - 1);
+            
+            for (let i = 0; i < tronPriceHistory.length; i++) {
+                const x = padding + i * pointWidth;
+                const y = height - padding - ((tronPriceHistory[i] - minPrice) / range) * (height - padding * 2);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Alanı doldur
+            ctx.lineTo(padding + (tronPriceHistory.length - 1) * pointWidth, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Son fiyat noktası
+            const lastX = padding + (tronPriceHistory.length - 1) * pointWidth;
+            const lastY = height - padding - ((tronPriceHistory[tronPriceHistory.length - 1] - minPrice) / range) * (height - padding * 2);
+            
+            ctx.beginPath();
+            ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#3b82f6';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
         
         // USD'yi TRX'ye çevir
         function usdToTrx(usdAmount) {
             return usdAmount / tronPriceUSD;
+        }
+        
+        // TRON adresi doğrulama
+        function isValidTronAddress(address) {
+            if (!address) return false;
+            // TRON adresi T ile başlar ve 34 karakter uzunluğundadır
+            const tronRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+            return tronRegex.test(address.trim());
         }
         
         async function loadAppDataFromJSONBin() {
@@ -1740,7 +1911,7 @@
                 withdrawBtn.disabled = false;
                 withdrawBtn.innerHTML = `<i class="fas fa-money-bill-wave"></i> Para Çek (${userData.balance.toFixed(3)} TRX)`;
                 
-                if (userData.paymentAddress) {
+                if (userData.paymentAddress && isValidTronAddress(userData.paymentAddress)) {
                     finalWithdrawBtn.disabled = false;
                 } else {
                     finalWithdrawBtn.disabled = true;
@@ -1857,6 +2028,11 @@
                 return;
             }
             
+            if (!isValidTronAddress(paymentAddress)) {
+                showStatusMessage('Geçersiz TRON adresi. Lütfen T ile başlayan geçerli bir TRON adresi girin.', 'error');
+                return;
+            }
+            
             if (userData.balance < appData.minWithdraw) {
                 showStatusMessage(`Çekim yapmak için en az ${appData.minWithdraw} TRX'ye ihtiyacınız var.`, 'error');
                 return;
@@ -1963,7 +2139,7 @@
         }
         
         function shareReferral() {
-            const message = `Sende bugün TorreAds🎉' a katıl ve reklam izleyerek TRON kazanmaya başla!\nReferans kodum: ${userData.referralCode}\nKodu girersen 0.02$ değerinde TRON alırsın.\n@TorreAds_Bot`;
+            const message = `Sende bugün TorreAds🎉' a katıl ve reklam izleyerek TRON kazanmaya başla!\nReferans kodum: ${userData.referralCode}\nKodu girersen 0.02$ değerinde TRON alırsın.\nhttps://t.me/TorreAds_bot`;
             
             if (navigator.share) {
                 navigator.share({
@@ -2127,7 +2303,10 @@
                     requestItem.innerHTML = `
                         <div class="withdraw-request-info">
                             <div class="withdraw-request-user">${request.userName} (${request.userId})</div>
-                            <div class="withdraw-request-details">Miktar: TRX ${request.amount.toFixed(3)} | Adres: ${request.address}</div>
+                            <div class="withdraw-request-details">Miktar: TRX ${request.amount.toFixed(3)} | Adres: </div>
+                            <div class="withdraw-request-address" onclick="copyToClipboard('${request.address}'); showStatusMessage('TRON adresi kopyalandı!', 'success')">
+                                ${request.address}
+                            </div>
                             <div class="withdraw-request-date">Tarih: ${new Date(request.date).toLocaleDateString('tr-TR')}</div>
                         </div>
                         <div class="withdraw-request-actions">
@@ -2462,6 +2641,9 @@
                 }
             }
         }
+        
+        // Pencere boyutu değiştiğinde grafiği yeniden çiz
+        window.addEventListener('resize', drawChart);
         
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
