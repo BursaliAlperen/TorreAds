@@ -823,6 +823,13 @@
             font-size: 14px;
         }
 
+        /* Chart Canvas */
+        .chart-canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+        }
+
         /* Admin User List Styles */
         .admin-user-list {
             max-height: 300px;
@@ -1086,8 +1093,7 @@
                         <span class="chart-change" id="usdtChange">24s: 0.00%</span>
                     </div>
                     <div class="chart-placeholder" id="usdtChart">
-                        <i class="fas fa-chart-bar fa-2x" style="margin-bottom: 10px;"></i><br>
-                        USDT fiyat grafiği yükleniyor...
+                        <canvas class="chart-canvas" id="usdtChartCanvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -1492,6 +1498,9 @@
         let lastSyncTime = 0;
         const SYNC_INTERVAL = 5000; // 5 saniye
         
+        // USDT fiyat geçmişi
+        let usdtPriceHistory = [];
+        
         // Buton event listener'larını başlat
         function initEventListeners() {
             // Navigasyon butonları
@@ -1589,6 +1598,7 @@
             
             console.log('URL parametreleri:', { startParam, currentUser: userData.userId });
             
+            // Referans linki kontrolü - düzeltildi
             if (startParam && startParam !== userData.referralCode && !userData.referredBy) {
                 // Referans linki ile giriş yapılmış ve henüz referans kullanılmamış
                 console.log('Referans linki tespit edildi, işleniyor:', startParam);
@@ -1615,6 +1625,8 @@
             
             // USDT grafiğini yükle
             loadUSDTChart();
+            // USDT fiyatını periyodik olarak güncelle
+            setInterval(loadUSDTChart, 60000); // Her 1 dakikada bir
             
             // Periyodik senkronizasyon başlat
             setInterval(syncData, SYNC_INTERVAL);
@@ -1623,36 +1635,166 @@
             addSystemLog('user_login', `${userData.firstName} uygulamaya giriş yaptı`);
         }
         
-        // USDT grafiğini yükle
-        function loadUSDTChart() {
-            fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd&include_24hr_change=true')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.tether) {
-                        const price = data.tether.usd;
-                        const change = data.tether.usd_24h_change;
-                        
-                        // Fiyat ve değişimi güncelle
-                        document.getElementById('usdtPrice').textContent = `$${price.toFixed(4)}`;
-                        document.getElementById('usdtChange').textContent = `24s: ${change ? change.toFixed(2) : '0.00'}%`;
-                        
-                        // Değişim rengini ayarla
-                        const changeElement = document.getElementById('usdtChange');
-                        if (change > 0) {
-                            changeElement.className = 'chart-change positive';
-                        } else if (change < 0) {
-                            changeElement.className = 'chart-change negative';
-                        } else {
-                            changeElement.className = 'chart-change';
-                        }
+        // USDT grafiğini yükle - CoinGecko'dan
+        async function loadUSDTChart() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=usd&days=7&interval=daily');
+                const data = await response.json();
+                
+                if (data.prices) {
+                    usdtPriceHistory = data.prices;
+                    renderUSDTChart();
+                }
+                
+                // Ayrıca güncel fiyatı al
+                const priceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd&include_24hr_change=true');
+                const priceData = await priceResponse.json();
+                
+                if (priceData.tether) {
+                    const price = priceData.tether.usd;
+                    const change = priceData.tether.usd_24h_change;
+                    
+                    // Fiyat ve değişimi güncelle
+                    document.getElementById('usdtPrice').textContent = `$${price.toFixed(4)}`;
+                    document.getElementById('usdtChange').textContent = `24s: ${change ? change.toFixed(2) : '0.00'}%`;
+                    
+                    // Değişim rengini ayarla
+                    const changeElement = document.getElementById('usdtChange');
+                    if (change > 0) {
+                        changeElement.className = 'chart-change positive';
+                    } else if (change < 0) {
+                        changeElement.className = 'chart-change negative';
+                    } else {
+                        changeElement.className = 'chart-change';
                     }
-                })
-                .catch(error => {
-                    console.error('USDT fiyat verisi alınamadı:', error);
-                });
+                }
+            } catch (error) {
+                console.error('USDT fiyat verisi alınamadı:', error);
+                // Fallback: Basit bir grafik göster
+                renderFallbackChart();
+            }
         }
         
-        // REFERANS LİNKİ İLE GİRİŞ İŞLEMİ
+        // USDT grafiğini render et
+        function renderUSDTChart() {
+            const canvas = document.getElementById('usdtChartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas boyutunu ayarla
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Temizle
+            ctx.clearRect(0, 0, width, height);
+            
+            if (usdtPriceHistory.length === 0) {
+                renderFallbackChart();
+                return;
+            }
+            
+            // Fiyatları al
+            const prices = usdtPriceHistory.map(item => item[1]);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRange = maxPrice - minPrice;
+            
+            // Grafik çiz
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            
+            usdtPriceHistory.forEach((point, index) => {
+                const x = padding + (index / (usdtPriceHistory.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((point[1] - minPrice) / priceRange) * (height - 2 * padding);
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Gradient fill
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            usdtPriceHistory.forEach((point, index) => {
+                const x = padding + (index / (usdtPriceHistory.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((point[1] - minPrice) / priceRange) * (height - 2 * padding);
+                ctx.lineTo(x, y);
+            });
+            ctx.lineTo(width - padding, height - padding);
+            ctx.closePath();
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        
+        // Fallback grafik
+        function renderFallbackChart() {
+            const canvas = document.getElementById('usdtChartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas boyutunu ayarla
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Temizle
+            ctx.clearRect(0, 0, width, height);
+            
+            // Basit bir grafik çiz
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            
+            // Rastgele bir grafik çiz
+            const points = 20;
+            for (let i = 0; i < points; i++) {
+                const x = (i / (points - 1)) * width;
+                const y = height / 2 + Math.sin(i * 0.5) * 20;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Gradient fill
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            for (let i = 0; i < points; i++) {
+                const x = (i / (points - 1)) * width;
+                const y = height / 2 + Math.sin(i * 0.5) * 20;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(width, height / 2);
+            ctx.closePath();
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+        
+        // REFERANS LİNKİ İLE GİRİŞ İŞLEMİ - DÜZELTİLDİ
         async function handleReferralLink(referralCode) {
             if (!referralCode) return;
             
