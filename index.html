@@ -1055,6 +1055,46 @@
                 font-size: 11px;
             }
         }
+
+        /* Referans Kaynağı Bilgisi */
+        .referral-source-info {
+            background: var(--gradient-success);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Top Referansçılar */
+        .top-referrer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .top-referrer-rank {
+            font-weight: bold;
+            color: var(--tg-theme-text-color);
+            min-width: 30px;
+        }
+
+        .top-referrer-name {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .top-referrer-count {
+            font-weight: bold;
+            color: var(--success-color);
+        }
     </style>
 </head>
 <body>
@@ -1109,6 +1149,8 @@
                         <p>Bugünkü Reklamlar</p>
                     </div>
                 </div>
+                <!-- Referans Kaynağı Bilgisi -->
+                <div id="referralSourceInfo"></div>
             </div>
             
             <!-- Reklam Butonu -->
@@ -1287,6 +1329,34 @@
                         <div class="admin-stat-label">Toplam Bakiye</div>
                     </div>
                 </div>
+                
+                <!-- Referans İstatistikleri -->
+                <div class="admin-stats-grid" style="margin-top: 20px;">
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="totalReferrals">0</div>
+                        <div class="admin-stat-label">Toplam Referans</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="referralBonusPaid">TRX 0.00</div>
+                        <div class="admin-stat-label">Referans Bonusu</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="referralUsers">0</div>
+                        <div class="admin-stat-label">Referanslı Kullanıcı</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-value" id="activeReferrers">0</div>
+                        <div class="admin-stat-label">Aktif Referansçı</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Referansçılar -->
+            <div class="card">
+                <h2><i class="fas fa-trophy"></i> Top Referansçılar</h2>
+                <div id="topReferrersList">
+                    <!-- Top referansçılar buraya eklenecek -->
+                </div>
             </div>
             
             <!-- Kullanıcı Yönetimi -->
@@ -1317,6 +1387,7 @@
                 <div class="admin-controls">
                     <button class="admin-control-btn" id="resetAdsBtn">Günlük Reklamları Sıfırla</button>
                     <button class="admin-control-btn" id="updateRewardsBtn">Ödülleri Güncelle</button>
+                    <button class="admin-control-btn" id="updateReferralSettingsBtn">Referans Ayarlarını Güncelle</button>
                     <button class="admin-control-btn danger" id="clearDataBtn">Tüm Verileri Temizle</button>
                 </div>
             </div>
@@ -1375,6 +1446,60 @@
         
         const ADMIN_USER_IDS = ['8401848644', '7904032877'];
         
+        // SABİT VARSayılan veri yapısı - DEĞİŞMEZ DEĞERLER
+        const DEFAULT_APP_DATA = {
+            // Sistem Ayarları - SABİT
+            adRewardUSD: 0.001,
+            minWithdraw: 5,
+            referralRewardUSD: 0.02,
+            dailyAdLimit: 200, // SABİT 200
+            appVersion: '2.0.0',
+            
+            // Çekimler
+            withdrawRequests: [],
+            completedWithdrawals: [],
+            
+            // Kullanıcılar
+            users: {},
+            userStats: {
+                totalUsers: 0,
+                activeUsers: 0,
+                totalEarnings: 0,
+                totalWithdrawals: 0,
+                totalReferrals: 0,
+                referralUsers: 0
+            },
+            
+            // Referans İstatistikleri
+            referralStats: {
+                totalReferralSignups: 0,
+                totalReferralBonusPaid: 0,
+                dailyReferrals: {},
+                topReferrers: []
+            },
+            
+            // Sistem Logları
+            systemLogs: [],
+            errorLogs: [],
+            
+            // Ödül Geçmişi
+            rewardHistory: [],
+            
+            // Admin Ayarları - SABİT
+            adminSettings: {
+                maintenanceMode: false,
+                newUserBonus: 0,
+                welcomeMessage: 'Hoş geldiniz!',
+                adCooldown: 2.5,
+                enableReferralBonus: true,
+                referralBonusAmount: 0.02,
+                minReferralPayout: 0.1
+            },
+            
+            lastUpdated: Date.now(),
+            createdDate: new Date().toISOString()
+        };
+
         // TAM VERİTABANI YAPISI
         let userData = {
             userId: '',
@@ -1395,51 +1520,16 @@
             lastActive: '',
             totalEarnings: 0,
             isActive: true,
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            referralSource: 'direct',
+            referralLinkUsed: '',
+            isReferralVerified: false
         };
         
-        let appData = {
-            // Sistem Ayarları
-            adRewardUSD: 0.001, // 0.001$ ödeme
-            minWithdraw: 5, // 5 TRX minimum çekim
-            referralRewardUSD: 0.02, // 0.02$ referans ödülü
-            dailyAdLimit: 200, // 200 reklam günlük limit
-            appVersion: '2.0.0',
-            
-            // Çekimler
-            withdrawRequests: [],
-            completedWithdrawals: [],
-            
-            // Kullanıcılar
-            users: {},
-            userStats: {
-                totalUsers: 0,
-                activeUsers: 0,
-                totalEarnings: 0,
-                totalWithdrawals: 0
-            },
-            
-            // Sistem Logları
-            systemLogs: [],
-            errorLogs: [],
-            
-            // Ödül Geçmişi
-            rewardHistory: [],
-            
-            // Admin Ayarları
-            adminSettings: {
-                maintenanceMode: false,
-                newUserBonus: 0,
-                welcomeMessage: 'Hoş geldiniz!',
-                adCooldown: 2.5 // 2.5 saniye bekleme
-            },
-            
-            lastUpdated: Date.now(),
-            createdDate: new Date().toISOString()
-        };
+        let appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
 
         // TRON fiyat bilgisi
-        let tronPriceUSD = 0.12; // Varsayılan değer
+        let tronPriceUSD = 0.12;
         let tronPriceHistory = [];
         let chart = null;
 
@@ -1448,10 +1538,203 @@
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
         
+        // Geliştirilmiş veri yükleme fonksiyonu
+        async function loadAppDataFromJSONBin() {
+            try {
+                console.log('🔧 JSONBin verileri yükleniyor...');
+                
+                const response = await fetch(JSONBIN_URL, {
+                    method: 'GET',
+                    headers: { 
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Meta': 'false'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ JSONBin verileri alındı');
+                    
+                    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                        // Mevcut verileri güncelle, eksik alanları varsayılan değerlerle doldur
+                        appData = deepMerge(DEFAULT_APP_DATA, data);
+                        console.log('🔄 Veriler birleştirildi - dailyAdLimit:', appData.dailyAdLimit);
+                    } else {
+                        console.log('⚠️ JSONBin boş, varsayılan veriler kullanılıyor');
+                        appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+                    }
+                    
+                    // Veri bütünlüğünü kontrol et ve onar
+                    validateAndRepairData();
+                    console.log('✅ Veri bütünlüğü kontrol edildi');
+                    
+                } else if (response.status === 404) {
+                    console.log('❌ JSONBin bulunamadı, varsayılan veriler oluşturuluyor');
+                    appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+                    await saveAppDataToJSONBin();
+                } else {
+                    console.error('❌ JSONBin yükleme hatası:', response.status);
+                    appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+                }
+            } catch (error) {
+                console.error('❌ JSONBin yükleme hatası:', error);
+                appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+            }
+        }
+
+        // Derin birleştirme fonksiyonu - YENİ
+        function deepMerge(target, source) {
+            const result = { ...target };
+            
+            for (const key in source) {
+                if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                    result[key] = deepMerge(result[key] || {}, source[key]);
+                } else {
+                    // Önemli ayarları koru (sabit değerler)
+                    if (key === 'dailyAdLimit') {
+                        console.log(`⚠️ dailyAdLimit korunuyor: ${source[key]} -> ${DEFAULT_APP_DATA.dailyAdLimit}`);
+                        result[key] = DEFAULT_APP_DATA.dailyAdLimit;
+                    } else if (key === 'adRewardUSD') {
+                        result[key] = DEFAULT_APP_DATA.adRewardUSD;
+                    } else if (key === 'minWithdraw') {
+                        result[key] = DEFAULT_APP_DATA.minWithdraw;
+                    } else if (key === 'referralRewardUSD') {
+                        result[key] = DEFAULT_APP_DATA.referralRewardUSD;
+                    } else {
+                        result[key] = source[key];
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        // Veri bütünlüğü kontrolü - GELİŞTİRİLMİŞ
+        function validateAndRepairData() {
+            console.log('🔧 Veri bütünlüğü kontrol ediliyor...');
+            
+            // Temel yapıları kontrol et
+            if (!appData.users) appData.users = {};
+            if (!appData.userStats) appData.userStats = { ...DEFAULT_APP_DATA.userStats };
+            if (!appData.referralStats) appData.referralStats = { ...DEFAULT_APP_DATA.referralStats };
+            if (!appData.adminSettings) appData.adminSettings = { ...DEFAULT_APP_DATA.adminSettings };
+            if (!appData.withdrawRequests) appData.withdrawRequests = [];
+            if (!appData.completedWithdrawals) appData.completedWithdrawals = [];
+            
+            // SABİT değerleri koru
+            appData.dailyAdLimit = DEFAULT_APP_DATA.dailyAdLimit;
+            appData.adRewardUSD = DEFAULT_APP_DATA.adRewardUSD;
+            appData.minWithdraw = DEFAULT_APP_DATA.minWithdraw;
+            appData.referralRewardUSD = DEFAULT_APP_DATA.referralRewardUSD;
+            
+            // Kullanıcı verilerini kontrol et ve onar
+            let totalReferrals = 0;
+            let referralUsers = 0;
+            let totalEarnings = 0;
+            let totalWithdrawals = 0;
+            let totalAds = 0;
+            
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                
+                // Temel alanları kontrol et
+                if (!user.userId) user.userId = userId;
+                if (typeof user.balance !== 'number') user.balance = 0;
+                if (typeof user.adCount !== 'number') user.adCount = 0;
+                if (typeof user.dailyAdCount !== 'number') user.dailyAdCount = 0;
+                if (typeof user.referralBonus !== 'number') user.referralBonus = 0;
+                if (typeof user.totalEarnings !== 'number') user.totalEarnings = user.balance + user.referralBonus;
+                if (!user.referrals) user.referrals = [];
+                if (!user.withdrawHistory) user.withdrawHistory = [];
+                if (!user.joinDate) user.joinDate = new Date().toISOString();
+                if (!user.lastActive) user.lastActive = new Date().toISOString();
+                if (typeof user.isActive !== 'boolean') user.isActive = true;
+                if (!user.referralSource) user.referralSource = 'direct';
+                if (typeof user.isReferralVerified !== 'boolean') user.isReferralVerified = false;
+                
+                // Referans kodu yoksa oluştur
+                if (!user.referralCode) {
+                    user.referralCode = generateReferralCode();
+                }
+                
+                // Günlük reklam kontrolü
+                const today = new Date().toDateString();
+                if (user.lastAdDate !== today) {
+                    user.dailyAdCount = 0;
+                    user.lastAdDate = today;
+                }
+                
+                // İstatistikleri hesapla
+                totalReferrals += user.referrals.length;
+                if (user.referredBy) referralUsers++;
+                totalEarnings += user.totalEarnings || 0;
+                totalWithdrawals += user.withdrawHistory.length;
+                totalAds += user.adCount || 0;
+                
+                // Güncelleme zamanını ayarla
+                user.lastUpdated = Date.now();
+            }
+            
+            // Global istatistikleri güncelle
+            appData.userStats.totalUsers = Object.keys(appData.users).length;
+            appData.userStats.activeUsers = Object.keys(appData.users).length;
+            appData.userStats.totalEarnings = totalEarnings;
+            appData.userStats.totalWithdrawals = totalWithdrawals;
+            appData.userStats.totalReferrals = totalReferrals;
+            appData.userStats.referralUsers = referralUsers;
+            
+            // Top referrers'ı güncelle
+            updateTopReferrers();
+            
+            console.log('✅ Veri bütünlüğü kontrolü tamamlandı');
+        }
+
+        // Geliştirilmiş kaydetme fonksiyonu
+        async function saveAppDataToJSONBin() {
+            // Önce veri bütünlüğünü kontrol et
+            validateAndRepairData();
+            
+            // Son güncelleme zamanını ayarla
+            appData.lastUpdated = Date.now();
+            
+            try {
+                console.log('💾 JSONBin verileri kaydediliyor...');
+                
+                const response = await fetch(JSONBIN_UPDATE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Versioning': 'false'
+                    },
+                    body: JSON.stringify(appData)
+                });
+                
+                if (response.ok) {
+                    console.log('✅ JSONBin verileri başarıyla kaydedildi');
+                    return true;
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ JSONBin kaydetme hatası:', response.status, errorText);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ JSONBin kaydetme hatası:', error);
+                return false;
+            }
+        }
+
         // Referans kodunu URL parametrelerinden kontrol et
         function getReferralCodeFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('ref') || '';
+            const ref = urlParams.get('ref') || '';
+            const source = urlParams.get('source') || 'direct';
+            
+            return {
+                code: ref,
+                source: source,
+                timestamp: Date.now()
+            };
         }
         
         // Buton event listener'larını başlat
@@ -1522,6 +1805,7 @@
             document.getElementById('searchUserBtn').addEventListener('click', searchUser);
             document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
             document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
+            document.getElementById('updateReferralSettingsBtn').addEventListener('click', updateReferralSettings);
             document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
             
             // Ödeme adresi değişikliğini dinle
@@ -1537,7 +1821,10 @@
             });
         }
         
+        // Uygulama başlatma - GÜNCELLENMİŞ
         async function initApp() {
+            console.log('🚀 Uygulama başlatılıyor...');
+            
             const initData = tg.initDataUnsafe;
             userData.userId = initData.user?.id?.toString() || 'test_user_' + Math.floor(Math.random() * 10000);
             userData.firstName = initData.user?.first_name || 'Kullanıcı';
@@ -1546,52 +1833,67 @@
             userData.joinDate = new Date().toISOString();
             userData.lastActive = new Date().toISOString();
             
+            // Önce JSONBin'den verileri yükle
+            await loadAppDataFromJSONBin();
+            console.log('📊 Sistem ayarları yüklendi - dailyAdLimit:', appData.dailyAdLimit);
+            
             // TRON fiyatını yükle
             await loadTronPrice();
             
-            // JSONBin'den verileri yükle
-            await loadAppDataFromJSONBin();
-            
-            // Referans kodunu URL'den kontrol et
-            const referralCodeFromURL = getReferralCodeFromURL();
+            // Referans bilgilerini URL'den al
+            const referralInfo = getReferralCodeFromURL();
             
             // Kullanıcı verisini kontrol et
             if (appData.users[userData.userId]) {
+                console.log('👤 Mevcut kullanıcı bulundu:', userData.userId);
                 // Kullanıcı zaten varsa, verileri yükle
                 userData = { ...userData, ...appData.users[userData.userId] };
                 userData.lastActive = new Date().toISOString();
-                console.log('Mevcut kullanıcı yüklendi:', userData.userId);
+                
+                // Günlük reklam kontrolü - GÜNCELLENMİŞ
+                const today = new Date().toDateString();
+                if (userData.lastAdDate !== today) {
+                    console.log('🔄 Günlük reklamlar sıfırlanıyor');
+                    userData.dailyAdCount = 0;
+                    userData.lastAdDate = today;
+                    await saveUserData();
+                }
                 
                 // URL'den referans kodu varsa ve kullanıcı daha önce referans kullanmadıysa
-                if (referralCodeFromURL && !userData.referredBy) {
-                    await applyReferralCode(referralCodeFromURL);
+                if (referralInfo.code && !userData.referredBy && !userData.referralLinkUsed) {
+                    await applyReferralFromLink(referralInfo);
                 } else {
                     showStatusMessage(appData.adminSettings.welcomeMessage, 'success');
                 }
             } else {
-                // Yeni kullanıcı oluştur
+                console.log('👤 Yeni kullanıcı oluşturuluyor:', userData.userId);
+                // YENİ KULLANICI
                 userData.referralCode = generateReferralCode();
                 userData.balance = appData.adminSettings.newUserBonus || 0;
+                
+                // Referans bilgilerini ayarla
+                if (referralInfo.code) {
+                    userData.referralSource = 'referral_link';
+                    userData.referralLinkUsed = referralInfo.code;
+                }
+                
                 appData.users[userData.userId] = userData;
                 appData.userStats.totalUsers++;
-                console.log('Yeni kullanıcı oluşturuldu:', userData.userId);
+                
+                // Günlük reklamları başlat
+                userData.dailyAdCount = 0;
+                userData.lastAdDate = new Date().toDateString();
+                
+                console.log('✅ Yeni kullanıcı oluşturuldu, dailyAdCount:', userData.dailyAdCount);
                 
                 // URL'den referans kodu varsa uygula
-                if (referralCodeFromURL) {
-                    await applyReferralCode(referralCodeFromURL);
+                if (referralInfo.code) {
+                    await applyReferralFromLink(referralInfo);
                 } else {
                     showStatusMessage(appData.adminSettings.welcomeMessage, 'success');
                 }
                 
                 await saveAppDataToJSONBin();
-            }
-            
-            // Günlük reklam kontrolü
-            const today = new Date().toDateString();
-            if (userData.lastAdDate !== today) {
-                userData.dailyAdCount = 0;
-                userData.lastAdDate = today;
-                await saveUserData();
             }
             
             if (ADMIN_USER_IDS.includes(userData.userId.toString())) {
@@ -1601,76 +1903,181 @@
             updateUI();
             initEventListeners();
             
-            // Periyodik senkronizasyon başlat (5 saniyede bir)
-            setInterval(syncData, 5000);
+            console.log('🎉 Uygulama başlatma tamamlandı');
+            console.log('📊 Son durum - dailyAdCount:', userData.dailyAdCount, 'dailyAdLimit:', appData.dailyAdLimit);
+            
+            // Periyodik senkronizasyon başlat (10 saniyede bir)
+            setInterval(syncData, 10000);
         }
-        
-        // Referans kodunu uygula
-        async function applyReferralCode(referralCode) {
-            if (!referralCode) return false;
+
+        // Referans linkinden gelen kullanıcıyı işle
+        async function applyReferralFromLink(referralInfo) {
+            if (!referralInfo.code) return false;
             
+            // Kullanıcı zaten bir referans kodu kullandı mı?
             if (userData.referredBy) {
-                console.log('Kullanıcı zaten bir referans kodu kullandı');
+                console.log('Kullanıcı zaten bir referans kodu kullandı:', userData.referredBy);
                 return false;
             }
             
-            if (referralCode === userData.referralCode) {
+            // Kendi referans kodunu kullanma kontrolü
+            if (referralInfo.code === userData.referralCode) {
                 console.log('Kullanıcı kendi referans kodunu kullanamaz');
+                showStatusMessage('Kendi referans kodunuzu kullanamazsınız!', 'error');
                 return false;
             }
+            
+            console.log('Referans kodu aranıyor:', referralInfo.code);
             
             // JSONBin'de referans kodunu ara
             let referrerFound = false;
+            let referrerUser = null;
             
             for (const userId in appData.users) {
                 const user = appData.users[userId];
-                if (user.referralCode === referralCode) {
-                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.02$ ver
-                    const usdReward = appData.referralRewardUSD;
-                    const trxReward = usdToTrx(usdReward);
-                    
-                    // 1. Referans olan kullanıcıya bonus ver
-                    userData.referredBy = user.userId;
-                    userData.balance += trxReward;
-                    userData.referralBonus += trxReward;
-                    userData.totalEarnings += trxReward;
-                    
-                    // 2. Referans veren kullanıcıya da bonus ver
-                    if (!user.referrals) user.referrals = [];
-                    
-                    // Yeni referansı ekle
-                    user.referrals.push({
-                        userId: userData.userId,
-                        userName: userData.firstName,
-                        date: new Date().toISOString(),
-                        bonusEarned: trxReward
-                    });
-                    
-                    // Referans veren kullanıcıya da bonus ver
-                    user.referralBonus += trxReward;
-                    user.balance += trxReward;
-                    user.totalEarnings += trxReward;
-                    user.lastUpdated = Date.now();
-                    
-                    // JSONBin'e kaydet
-                    appData.users[userData.userId] = userData;
-                    appData.users[userId] = user;
-                    
-                    await saveAppDataToJSONBin();
-                    
+                if (user.referralCode === referralInfo.code) {
+                    referrerUser = user;
                     referrerFound = true;
-                    
-                    // Özel referans giriş mesajı
-                    showStatusMessage(`Referans linki ile giriş yaptınız! ${trxReward.toFixed(4)} TRX ödülünüz hesabınıza eklendi.`, 'success');
-                    
                     break;
                 }
             }
             
-            return referrerFound;
+            if (referrerFound && referrerUser) {
+                console.log('Referans bulundu:', referrerUser.userId);
+                
+                if (appData.adminSettings.enableReferralBonus) {
+                    const usdReward = appData.adminSettings.referralBonusAmount;
+                    const trxReward = usdToTrx(usdReward);
+                    
+                    // 1. REFERANS OLAN KULLANICIYA BONUS VER (Yeni gelen kullanıcı)
+                    userData.referredBy = referrerUser.userId;
+                    userData.referralSource = 'referral_link';
+                    userData.referralLinkUsed = referralInfo.code;
+                    userData.isReferralVerified = true;
+                    
+                    // Yeni kullanıcıya hoş geldin bonusu
+                    userData.balance += trxReward;
+                    userData.referralBonus += trxReward;
+                    userData.totalEarnings += trxReward;
+                    
+                    // 2. REFERANS VEREN KULLANICIYA BONUS VER
+                    if (!referrerUser.referrals) referrerUser.referrals = [];
+                    
+                    // Yeni referansı ekle
+                    const newReferral = {
+                        userId: userData.userId,
+                        userName: userData.firstName,
+                        userUsername: userData.username,
+                        date: new Date().toISOString(),
+                        bonusEarned: trxReward,
+                        status: 'active',
+                        source: 'referral_link'
+                    };
+                    
+                    referrerUser.referrals.push(newReferral);
+                    
+                    // Referans veren kullanıcıya da bonus ver
+                    referrerUser.referralBonus += trxReward;
+                    referrerUser.balance += trxReward;
+                    referrerUser.totalEarnings += trxReward;
+                    referrerUser.lastUpdated = Date.now();
+                    
+                    // JSONBin'e kaydet
+                    appData.users[userData.userId] = userData;
+                    appData.users[referrerUser.userId] = referrerUser;
+                    
+                    // İstatistikleri güncelle
+                    appData.userStats.totalReferrals++;
+                    appData.userStats.referralUsers++;
+                    appData.referralStats.totalReferralSignups++;
+                    appData.referralStats.totalReferralBonusPaid += trxReward;
+                    
+                    // Günlük referans istatistiklerini güncelle
+                    const today = new Date().toDateString();
+                    if (!appData.referralStats.dailyReferrals[today]) {
+                        appData.referralStats.dailyReferrals[today] = 0;
+                    }
+                    appData.referralStats.dailyReferrals[today]++;
+                    
+                    // Top referrers'ı güncelle
+                    updateTopReferrers();
+                    
+                    await saveAppDataToJSONBin();
+                    
+                    // Başarı mesajı
+                    showStatusMessage(
+                        `🎉 Referans linki ile kayıt oldunuz! ${trxReward.toFixed(4)} TRX hoş geldin bonusu hesabınıza eklendi.`, 
+                        'success'
+                    );
+                    
+                    return true;
+                } else {
+                    showStatusMessage('Referans bonusu şu anda aktif değil.', 'info');
+                    return false;
+                }
+            } else {
+                console.log('Referans kodu bulunamadı:', referralInfo.code);
+                showStatusMessage('Geçersiz referans kodu. Link doğru mu?', 'error');
+                return false;
+            }
         }
         
-        // TRON fiyatını yükle - Geliştirilmiş versiyon
+        // Manuel referans kodu gönderme
+        async function submitReferralCode() {
+            const referralCodeInput = document.getElementById('referralCodeInput');
+            const referralCode = referralCodeInput.value.trim().toUpperCase();
+            
+            if (!referralCode) {
+                showStatusMessage('Lütfen bir referans kodu girin.', 'error');
+                return;
+            }
+            
+            if (userData.referredBy) {
+                showStatusMessage('Zaten bir referans kodu kullandınız!', 'error');
+                return;
+            }
+            
+            if (referralCode === userData.referralCode) {
+                showStatusMessage('Kendi referans kodunuzu kullanamazsınız!', 'error');
+                return;
+            }
+            
+            const success = await applyReferralFromLink({
+                code: referralCode,
+                source: 'manual_input',
+                timestamp: Date.now()
+            });
+            
+            if (success) {
+                referralCodeInput.value = '';
+                updateUI();
+            }
+        }
+        
+        // Top referrers listesini güncelle
+        function updateTopReferrers() {
+            const referrers = [];
+            
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                if (user.referrals && user.referrals.length > 0) {
+                    referrers.push({
+                        userId: user.userId,
+                        userName: user.firstName,
+                        referralCount: user.referrals.length,
+                        totalBonus: user.referralBonus || 0
+                    });
+                }
+            }
+            
+            // Referans sayısına göre sırala
+            referrers.sort((a, b) => b.referralCount - a.referralCount);
+            
+            // İlk 10'u al
+            appData.referralStats.topReferrers = referrers.slice(0, 10);
+        }
+        
+        // TRON fiyatını yükle
         async function loadTronPrice() {
             try {
                 console.log('TRON fiyatı yükleniyor...');
@@ -1688,7 +2095,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('TRON fiyat verisi:', data);
                 
                 if (data.tron) {
                     const oldPrice = tronPriceUSD;
@@ -1718,7 +2124,6 @@
                     // Grafiği çiz
                     drawChart();
                     
-                    console.log('TRON fiyatı başarıyla güncellendi:', tronPriceUSD);
                 } else {
                     throw new Error('TRON fiyat verisi bulunamadı');
                 }
@@ -1825,150 +2230,35 @@
             return tronRegex.test(address.trim());
         }
         
-        async function loadAppDataFromJSONBin() {
-            try {
-                console.log('JSONBin verileri yükleniyor...');
-                
-                const response = await fetch(JSONBIN_URL, {
-                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.record) {
-                        appData = { ...appData, ...data.record };
-                        console.log('JSONBin verileri başarıyla yüklendi');
-                        
-                        // Eksik alanları kontrol et ve varsayılan değerlerle doldur
-                        initializeMissingData();
-                    }
-                } else {
-                    console.error('JSONBin yükleme hatası:', response.status);
-                    // Varsayılan verileri oluştur
-                    initializeDefaultData();
-                    await saveAppDataToJSONBin();
-                }
-            } catch (error) {
-                console.error('JSONBin yükleme hatası:', error);
-                // Varsayılan verileri oluştur
-                initializeDefaultData();
-            }
-        }
-        
-        function initializeMissingData() {
-            // Eksik alanları kontrol et ve varsayılan değerlerle doldur
-            if (!appData.userStats) {
-                appData.userStats = {
-                    totalUsers: Object.keys(appData.users).length,
-                    activeUsers: Object.keys(appData.users).length,
-                    totalEarnings: 0,
-                    totalWithdrawals: 0
-                };
-            }
-            
-            if (!appData.systemLogs) appData.systemLogs = [];
-            if (!appData.errorLogs) appData.errorLogs = [];
-            if (!appData.rewardHistory) appData.rewardHistory = [];
-            if (!appData.adminSettings) {
-                appData.adminSettings = {
-                    maintenanceMode: false,
-                    newUserBonus: 0,
-                    welcomeMessage: 'Hoş geldiniz!',
-                    adCooldown: 2.5
-                };
-            }
-            
-            // Kullanıcı verilerini kontrol et
-            for (const userId in appData.users) {
-                const user = appData.users[userId];
-                if (!user.totalEarnings) user.totalEarnings = user.balance + user.referralBonus;
-                if (!user.joinDate) user.joinDate = new Date().toISOString();
-                if (!user.lastActive) user.lastActive = new Date().toISOString();
-                if (!user.isActive) user.isActive = true;
-            }
-        }
-        
-        function initializeDefaultData() {
-            // Varsayılan admin ayarları
-            appData.adminSettings = {
-                maintenanceMode: false,
-                newUserBonus: 0,
-                welcomeMessage: 'Hoş geldiniz! TorreAds ile TRON kazanmaya başlayın.',
-                adCooldown: 2.5
-            };
-            
-            // Varsayılan istatistikler
-            appData.userStats = {
-                totalUsers: 0,
-                activeUsers: 0,
-                totalEarnings: 0,
-                totalWithdrawals: 0
-            };
-            
-            // Diğer koleksiyonlar
-            appData.systemLogs = [];
-            appData.errorLogs = [];
-            appData.rewardHistory = [];
-            appData.completedWithdrawals = [];
-        }
-        
-        async function saveAppDataToJSONBin() {
-            appData.lastUpdated = Date.now();
-            
-            try {
-                console.log('JSONBin verileri kaydediliyor...');
-                
-                const response = await fetch(JSONBIN_UPDATE_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY,
-                        'X-Bin-Versioning': 'false'
-                    },
-                    body: JSON.stringify(appData)
-                });
-                
-                if (response.ok) {
-                    console.log('JSONBin verileri başarıyla kaydedildi');
-                } else {
-                    const errorText = await response.text();
-                    console.error('JSONBin kaydetme hatası:', response.status, errorText);
-                }
-            } catch (error) {
-                console.error('JSONBin kaydetme hatası:', error);
-            }
-        }
-        
-        async function saveUserData() {
-            // Kullanıcı verisini güncelle
-            userData.lastUpdated = Date.now();
-            userData.lastActive = new Date().toISOString();
-            appData.users[userData.userId] = userData;
-            
-            // JSONBin'e kaydet
-            await saveAppDataToJSONBin();
-        }
-        
+        // Geliştirilmiş senkronizasyon
         async function syncData() {
             try {
+                console.log('🔄 Veri senkronizasyonu başlatılıyor...');
+                
+                // Önce yerel verileri kaydet
+                await saveUserData();
+                
+                // Sonra uzaktan verileri yükle
                 await loadAppDataFromJSONBin();
                 
-                // Kullanıcı verilerini güncelle
+                // Kullanıcı verilerini güncelle (sadece gerekirse)
                 if (appData.users[userData.userId]) {
                     const remoteData = appData.users[userData.userId];
                     
-                    // Yerel veriler daha güncelse, uzaktakini güncelle
-                    if (userData.lastUpdated > remoteData.lastUpdated) {
-                        appData.users[userData.userId] = userData;
-                        await saveAppDataToJSONBin();
-                    } else if (remoteData.lastUpdated > userData.lastUpdated) {
-                        // Uzaktaki veriler daha güncelse, yereli güncelle
-                        userData = remoteData;
+                    // Sadece kritik verilerde uzaktan güncellemeyi kabul et
+                    if (remoteData.lastUpdated > userData.lastUpdated + 5000) { // 5 saniye fark
+                        console.log('🔄 Uzaktan veriler daha güncel, yerel veriler güncelleniyor');
+                        const currentDailyAdCount = userData.dailyAdCount;
+                        userData = { ...userData, ...remoteData };
+                        // Günlük reklam sayısını koru (yerel değer öncelikli)
+                        userData.dailyAdCount = currentDailyAdCount;
                         updateUI();
                     }
                 }
+                
+                console.log('✅ Senkronizasyon tamamlandı');
             } catch (error) {
-                console.error('Senkronizasyon hatası:', error);
+                console.error('❌ Senkronizasyon hatası:', error);
             }
         }
         
@@ -1981,7 +2271,28 @@
             return result;
         }
         
+        // Geliştirilmiş kullanıcı verisi kaydetme
+        async function saveUserData() {
+            // Kullanıcı verisini güncelle
+            userData.lastUpdated = Date.now();
+            userData.lastActive = new Date().toISOString();
+            appData.users[userData.userId] = userData;
+            
+            // JSONBin'e kaydet
+            const success = await saveAppDataToJSONBin();
+            
+            if (!success) {
+                console.warn('⚠️ JSONBin kaydedilemedi, veriler yerelde tutuluyor');
+            }
+            
+            return success;
+        }
+        
+        // UI Güncelleme - GÜNCELLENMİŞ
         function updateUI() {
+            console.log('🎨 UI güncelleniyor - dailyAdCount:', userData.dailyAdCount, 'limit:', appData.dailyAdLimit);
+            
+            // Bakiye ve istatistikler
             document.getElementById('balanceDisplay').textContent = `TRX ${userData.balance.toFixed(3)}`;
             document.getElementById('withdrawBalanceDisplay').textContent = `TRX ${userData.balance.toFixed(3)}`;
             document.getElementById('adCountDisplay').textContent = userData.adCount;
@@ -1989,6 +2300,9 @@
             document.getElementById('referralCountDisplay').textContent = userData.referrals ? userData.referrals.length : 0;
             document.getElementById('referralBonusDisplay').textContent = `TRX ${userData.referralBonus.toFixed(3)}`;
             document.getElementById('userReferralCode').textContent = userData.referralCode;
+            
+            // Referans kaynağını göster
+            updateReferralSourceInfo();
             
             updateWithdrawButton();
             updateRewardedAdButton();
@@ -2002,21 +2316,44 @@
             if (ADMIN_USER_IDS.includes(userData.userId.toString())) {
                 updateAdminPanel();
             }
+            
+            console.log('✅ UI güncelleme tamamlandı');
+        }
+
+        // Referans kaynağı bilgisini güncelle
+        function updateReferralSourceInfo() {
+            const referralSourceInfo = document.getElementById('referralSourceInfo');
+            
+            if (userData.referredBy) {
+                const referrer = appData.users[userData.referredBy];
+                if (referrer) {
+                    referralSourceInfo.innerHTML = 
+                        `<div class="referral-source-info">
+                            <i class="fas fa-user-check"></i> ${referrer.firstName} tarafından referans edildiniz!
+                        </div>`;
+                }
+            } else {
+                referralSourceInfo.innerHTML = '';
+            }
         }
         
-        // Reklam butonunu güncelle
+        // Reklam butonunu güncelle - GÜNCELLENMİŞ
         function updateRewardedAdButton() {
             const rewardedBtn = document.getElementById('rewardedBtn');
             const trxReward = usdToTrx(appData.adRewardUSD);
+            
+            console.log('🔘 Reklam butonu güncelleniyor - dailyAdCount:', userData.dailyAdCount, 'limit:', appData.dailyAdLimit);
             
             if (userData.dailyAdCount >= appData.dailyAdLimit) {
                 rewardedBtn.disabled = true;
                 rewardedBtn.textContent = 'Günlük Limit Doldu';
                 rewardedBtn.classList.remove('btn-loading');
+                console.log('⛔ Reklam butonu: Limit doldu');
             } else {
                 rewardedBtn.disabled = false;
                 rewardedBtn.innerHTML = `<i class="fas fa-play-circle"></i> Reklam İzle (+${trxReward.toFixed(4)} TRX)`;
                 rewardedBtn.classList.remove('btn-loading');
+                console.log('✅ Reklam butonu: Aktif');
             }
         }
         
@@ -2050,8 +2387,11 @@
             }
         }
         
+        // Reklam işleme - GÜNCELLENMİŞ
         function showAd() {
             const adBtn = document.getElementById('rewardedBtn');
+            
+            console.log('🎬 Reklam başlatılıyor - dailyAdCount:', userData.dailyAdCount, 'limit:', appData.dailyAdLimit);
             
             // Limit kontrolü
             if (userData.dailyAdCount >= appData.dailyAdLimit) {
@@ -2064,35 +2404,31 @@
             adBtn.classList.add('btn-loading');
             adBtn.innerHTML = 'Reklam Yükleniyor...';
             
-            console.log('Reklam butonuna tıklandı, reklam gösteriliyor...');
+            console.log('⏳ Reklam yükleniyor...');
             
             // GigaPub SDK kontrolü
             if (typeof window.showGiga !== 'undefined') {
-                console.log('GigaPub SDK bulundu, reklam gösteriliyor...');
+                console.log('📱 GigaPub SDK bulundu, reklam gösteriliyor...');
                 
-                // GigaPub SDK doğrudan kullanımı
                 window.showGiga("main")
                     .then(() => {
-                        console.log('Reklam başarıyla izlendi, ödül veriliyor...');
-                        // Reklam başarıyla izlendi
+                        console.log('✅ Reklam başarıyla izlendi, ödül veriliyor...');
                         handleAdCompleted();
                     })
                     .catch((error) => {
-                        console.error('Reklam hatası:', error);
+                        console.error('❌ Reklam hatası:', error);
                         showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                         
-                        // Butonu tekrar aktif et
                         setTimeout(() => {
                             updateRewardedAdButton();
                         }, 2000);
                     });
             } else {
-                // Fallback: Reklam gösterilemezse test modu
-                console.log('GigaPub SDK bulunamadı, test modu aktif');
+                console.log('🧪 GigaPub SDK bulunamadı, test modu aktif');
                 showStatusMessage('Test reklamı gösteriliyor...', 'info');
                 
                 setTimeout(() => {
-                    console.log('Test reklamı tamamlandı, ödül veriliyor...');
+                    console.log('✅ Test reklamı tamamlandı, ödül veriliyor...');
                     handleAdCompleted();
                 }, 3000);
             }
@@ -2102,7 +2438,7 @@
             const usdReward = appData.adRewardUSD;
             const trxReward = usdToTrx(usdReward);
             
-            console.log('Reklam tamamlandı, kullanıcıya ödül veriliyor:', trxReward, 'TRX');
+            console.log('💰 Ödül veriliyor:', trxReward, 'TRX - Mevcut dailyAdCount:', userData.dailyAdCount);
             
             // Kullanıcı verilerini güncelle
             userData.balance += trxReward;
@@ -2115,9 +2451,11 @@
             // Sistem istatistiklerini güncelle
             appData.userStats.totalEarnings += trxReward;
             
+            console.log('📊 Güncellenen dailyAdCount:', userData.dailyAdCount);
+            
             // Verileri kaydet
             saveUserData().then(() => {
-                console.log('Kullanıcı verileri kaydedildi');
+                console.log('💾 Kullanıcı verileri kaydedildi');
                 
                 // UI'ı güncelle
                 updateUI();
@@ -2130,9 +2468,8 @@
                     updateRewardedAdButton();
                 }, 2500);
                 
-                console.log('Reklam işlemi tamamlandı, buton sıfırlanıyor');
             }).catch(error => {
-                console.error('Veri kaydetme hatası:', error);
+                console.error('❌ Veri kaydetme hatası:', error);
                 showStatusMessage('Ödül kaydedilirken bir hata oluştu.', 'error');
             });
         }
@@ -2182,25 +2519,6 @@
             document.querySelector('.nav-btn[data-view="home-view"]').classList.add('active');
         }
         
-        async function submitReferralCode() {
-            const referralCodeInput = document.getElementById('referralCodeInput');
-            const referralCode = referralCodeInput.value.trim().toUpperCase();
-            
-            if (!referralCode) {
-                showStatusMessage('Lütfen bir referans kodu girin.', 'error');
-                return;
-            }
-            
-            const success = await applyReferralCode(referralCode);
-            
-            if (success) {
-                referralCodeInput.value = '';
-                updateUI();
-            } else {
-                showStatusMessage('Geçersiz referans kodu. Lütfen tekrar deneyin.', 'error');
-            }
-        }
-        
         function copyToClipboard(text) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text);
@@ -2229,17 +2547,35 @@
             referralHistory.innerHTML = '';
             
             if (!userData.referrals || userData.referrals.length === 0) {
-                referralHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz referansınız yok.</p>';
+                referralHistory.innerHTML = `
+                    <div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">
+                        <i class="fas fa-user-friends" style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;"></i>
+                        <p>Henüz referansınız yok.</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Arkadaşlarınızı davet ederek ekstra kazanın!</p>
+                    </div>
+                `;
                 return;
             }
             
-            userData.referrals.forEach(ref => {
+            userData.referrals.forEach((ref, index) => {
                 const historyItem = document.createElement('div');
                 historyItem.className = 'referral-history-item';
                 historyItem.innerHTML = `
-                    <div class="referral-history-user">${ref.userName || 'Kullanıcı'} (${ref.userId})</div>
-                    <div class="referral-history-date">${new Date(ref.date).toLocaleDateString('tr-TR')}</div>
-                    <div class="referral-history-bonus">+${ref.bonusEarned.toFixed(4)} TRX</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div class="referral-history-user">
+                                <i class="fas fa-user"></i> ${ref.userName || 'Kullanıcı'} 
+                                ${ref.userUsername ? `(@${ref.userUsername})` : ''}
+                            </div>
+                            <div class="referral-history-date">
+                                <i class="far fa-calendar"></i> ${new Date(ref.date).toLocaleDateString('tr-TR')}
+                            </div>
+                            <div style="font-size: 11px; color: var(--success-color); margin-top: 5px;">
+                                <i class="fas fa-gift"></i> ${ref.source === 'referral_link' ? 'Link ile' : 'Manuel'} kayıt
+                            </div>
+                        </div>
+                        <div class="referral-history-bonus">+${ref.bonusEarned.toFixed(4)} TRX</div>
+                    </div>
                 `;
                 referralHistory.appendChild(historyItem);
             });
@@ -2251,21 +2587,54 @@
             let totalAds = 0;
             let totalWithdrawals = 0;
             let totalBalance = 0;
+            let totalReferrals = 0;
+            let referralUsers = 0;
             
             for (const userId in appData.users) {
                 const user = appData.users[userId];
                 totalAds += user.adCount || 0;
                 totalBalance += user.balance || 0;
                 totalWithdrawals += user.withdrawHistory ? user.withdrawHistory.length : 0;
+                totalReferrals += user.referrals ? user.referrals.length : 0;
+                if (user.referredBy) referralUsers++;
             }
             
             document.getElementById('totalUsers').textContent = totalUsers;
             document.getElementById('totalAds').textContent = totalAds;
             document.getElementById('totalWithdrawals').textContent = totalWithdrawals;
             document.getElementById('totalBalance').textContent = `TRX ${totalBalance.toFixed(2)}`;
+            document.getElementById('totalReferrals').textContent = appData.referralStats.totalReferralSignups;
+            document.getElementById('referralBonusPaid').textContent = `TRX ${appData.referralStats.totalReferralBonusPaid.toFixed(2)}`;
+            document.getElementById('referralUsers').textContent = referralUsers;
+            document.getElementById('activeReferrers').textContent = appData.referralStats.topReferrers.length;
+            
+            // Top referansçıları güncelle
+            updateTopReferrersInAdmin();
             
             updateAdminUserList();
             updateWithdrawalRequests();
+        }
+        
+        // Admin panelinde top referansçıları güncelle
+        function updateTopReferrersInAdmin() {
+            const topReferrersList = document.getElementById('topReferrersList');
+            topReferrersList.innerHTML = '';
+            
+            if (appData.referralStats.topReferrers.length === 0) {
+                topReferrersList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz top referansçı yok.</div>';
+                return;
+            }
+            
+            appData.referralStats.topReferrers.forEach((referrer, index) => {
+                const referrerItem = document.createElement('div');
+                referrerItem.className = 'top-referrer-item';
+                referrerItem.innerHTML = `
+                    <div class="top-referrer-rank">${index + 1}.</div>
+                    <div class="top-referrer-name">${referrer.userName} (${referrer.userId})</div>
+                    <div class="top-referrer-count">${referrer.referralCount} kişi</div>
+                `;
+                topReferrersList.appendChild(referrerItem);
+            });
         }
         
         function updateAdminUserList() {
@@ -2286,7 +2655,7 @@
                     <div class="admin-user-info">
                         <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
                         <div class="admin-user-balance">Bakiye: TRX ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
-                        <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
+                        <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')} | Kaynak: ${user.referralSource}</div>
                     </div>
                     <div class="admin-user-actions">
                         <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
@@ -2374,7 +2743,10 @@
                         lastActive: new Date().toISOString(),
                         totalEarnings: 0,
                         isActive: true,
-                        lastUpdated: Date.now()
+                        lastUpdated: Date.now(),
+                        referralSource: appData.users[userId].referralSource,
+                        referralLinkUsed: appData.users[userId].referralLinkUsed,
+                        isReferralVerified: appData.users[userId].isReferralVerified
                     };
                     
                     appData.users[userId] = newUserData;
@@ -2461,7 +2833,7 @@
                         <div class="admin-user-info">
                             <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
                             <div class="admin-user-balance">Bakiye: TRX ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
-                            <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
+                            <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')} | Kaynak: ${user.referralSource}</div>
                         </div>
                         <div class="admin-user-actions">
                             <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
@@ -2509,34 +2881,27 @@
             showStatusMessage('Ödüller güncellendi.', 'success');
         }
         
+        // Referans ayarlarını güncelle
+        async function updateReferralSettings() {
+            const enableReferralBonus = confirm('Referans bonusunu aktif etmek istiyor musunuz?');
+            const newReferralBonus = parseFloat(prompt('Yeni referans bonusu ($):', appData.adminSettings.referralBonusAmount));
+            const newMinReferralPayout = parseFloat(prompt('Yeni minimum referans ödeme miktarı (TRX):', appData.adminSettings.minReferralPayout));
+            
+            appData.adminSettings.enableReferralBonus = enableReferralBonus;
+            if (!isNaN(newReferralBonus) && newReferralBonus > 0) appData.adminSettings.referralBonusAmount = newReferralBonus;
+            if (!isNaN(newMinReferralPayout) && newMinReferralPayout > 0) appData.adminSettings.minReferralPayout = newMinReferralPayout;
+            
+            await saveAppDataToJSONBin();
+            showStatusMessage('Referans ayarları güncellendi.', 'success');
+        }
+        
         async function clearAllData() {
             if (confirm('TÜM verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
                 if (confirm('BU İŞLEM GERİ ALINAMAZ! Emin misiniz?')) {
                     // Sadece temel yapıyı koru, verileri temizle
                     const currentUser = appData.users[userData.userId];
                     
-                    appData = {
-                        adRewardUSD: 0.001,
-                        minWithdraw: 5,
-                        referralRewardUSD: 0.02,
-                        dailyAdLimit: 200,
-                        appVersion: '2.0.0',
-                        withdrawRequests: [],
-                        completedWithdrawals: [],
-                        users: {},
-                        userStats: {
-                            totalUsers: 1,
-                            activeUsers: 1,
-                            totalEarnings: 0,
-                            totalWithdrawals: 0
-                        },
-                        systemLogs: [],
-                        errorLogs: [],
-                        rewardHistory: [],
-                        adminSettings: appData.adminSettings,
-                        lastUpdated: Date.now(),
-                        createdDate: new Date().toISOString()
-                    };
+                    appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
                     
                     // Mevcut kullanıcıyı geri yükle
                     if (currentUser) {
@@ -2559,7 +2924,10 @@
                             lastActive: new Date().toISOString(),
                             totalEarnings: 0,
                             isActive: true,
-                            lastUpdated: Date.now()
+                            lastUpdated: Date.now(),
+                            referralSource: 'direct',
+                            referralLinkUsed: '',
+                            isReferralVerified: false
                         };
                         
                         appData.users[userData.userId] = cleanUser;
@@ -2575,6 +2943,16 @@
             }
         }
         
+        // Hata ayıklama için global erişim
+        window.debugData = function() {
+            console.log('🐛 DEBUG VERİLERİ:');
+            console.log('userData:', userData);
+            console.log('appData.dailyAdLimit:', appData.dailyAdLimit);
+            console.log('DEFAULT_APP_DATA.dailyAdLimit:', DEFAULT_APP_DATA.dailyAdLimit);
+            console.log('appData.adRewardUSD:', appData.adRewardUSD);
+            console.log('appData.minWithdraw:', appData.minWithdraw);
+        };
+
         // Pencere boyutu değiştiğinde grafiği yeniden çiz
         window.addEventListener('resize', drawChart);
         
