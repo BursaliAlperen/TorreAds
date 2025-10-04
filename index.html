@@ -1105,7 +1105,7 @@
                         <p>Toplam İzlenen Reklam</p>
                     </div>
                     <div class="ad-info-item">
-                        <h3 id="dailyAdCountDisplay">0 / 100</h3>
+                        <h3 id="dailyAdCountDisplay">0 / 200</h3>
                         <p>Bugünkü Reklamlar</p>
                     </div>
                 </div>
@@ -1122,11 +1122,11 @@
             <!-- Çekim Butonu -->
             <button class="btn btn-success" id="mainWithdrawBtn" disabled>
                 <i class="fas fa-money-bill-wave"></i>
-                Çekim Yapmak İçin 2.5 TRX'ye Ulaş
+                Çekim Yapmak İçin 5 TRX'ye Ulaş
             </button>
 
             <!-- Sosyal Medya Butonları -->
-            <div class="card">
+            <div class="card" style="margin-top: 30px;">
                 <h2><i class="fas fa-users"></i> Topluluğa Katılın</h2>
                 <div class="social-buttons">
                     <button class="social-btn telegram" id="telegramChannelBtn">
@@ -1152,7 +1152,7 @@
                 <h2><i class="fas fa-wallet"></i> Bakiyeniz</h2>
                 <div class="balance-amount" id="withdrawBalanceDisplay">TRX 0.00</div>
                 <p style="color: var(--tg-theme-hint-color); margin-top: 15px; text-align: center;">
-                    Minimum çekim miktarı 2.5 TRX'dir.
+                    Minimum çekim miktarı 5 TRX'dir.
                 </p>
             </div>
             
@@ -1249,12 +1249,12 @@
                     
                     <div class="about-section">
                         <h3>Nasıl Çalışır?</h3>
-                        <p>1. Reklam izleyerek TRON kazanın<br>2. Arkadaşlarınızı davet ederek ekstra kazanın<br>3. Bakiyeniz 2.5 TRX'ye ulaştığında çekim yapın</p>
+                        <p>1. Reklam izleyerek TRON kazanın<br>2. Arkadaşlarınızı davet ederek ekstra kazanın<br>3. Bakiyeniz 5 TRX'ye ulaştığında çekim yapın</p>
                     </div>
                     
                     <div class="about-section">
                         <h3>İletişim</h3>
-                        <p>Herhangi bir sorunuz veya öneriniz varsa, lütfen destek ekibimizle iletişime geçin.</p>
+                        <p>Herhangi bir sorunuz veya öneriniz varsa, lütfen destek ekibimizle iletişime geçin: @TorreAdsSupport</p>
                     </div>
                 </div>
             </div>
@@ -1401,9 +1401,9 @@
         let appData = {
             // Sistem Ayarları
             adRewardUSD: 0.001, // 0.001$ ödeme
-            minWithdraw: 2.5, // 2.5 TRX minimum çekim
+            minWithdraw: 5, // 5 TRX minimum çekim
             referralRewardUSD: 0.02, // 0.02$ referans ödülü
-            dailyAdLimit: 100,
+            dailyAdLimit: 200, // 200 reklam günlük limit
             appVersion: '2.0.0',
             
             // Çekimler
@@ -2517,9 +2517,9 @@
                     
                     appData = {
                         adRewardUSD: 0.001,
-                        minWithdraw: 2.5,
+                        minWithdraw: 5,
                         referralRewardUSD: 0.02,
-                        dailyAdLimit: 100,
+                        dailyAdLimit: 200,
                         appVersion: '2.0.0',
                         withdrawRequests: [],
                         completedWithdrawals: [],
