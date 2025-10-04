@@ -1154,7 +1154,7 @@
                 </button>
             </div>
             
-            <!-- Çekim Butonu -->
+            <!-- Çekim Butonu - DÜZELTİLMİŞ -->
             <button class="btn btn-success" id="mainWithdrawBtn" disabled>
                 <i class="fas fa-money-bill-wave"></i>
                 Çekim Yapmak İçin 2.5 TRX'ye Ulaş
@@ -1185,6 +1185,7 @@
                         TRON (TRC20) adresinizi girin. T ile başlamalıdır.
                     </p>
                 </div>
+                <!-- DÜZELTİLMİŞ ÇEKİM BUTONU -->
                 <button class="btn btn-success" id="finalWithdrawBtn" disabled>
                     <i class="fas fa-paper-plane"></i>
                     Para Çek
@@ -1225,7 +1226,7 @@
             <div class="card">
                 <h2><i class="fas fa-gift"></i> Referans Bonusu</h2>
                 <p style="color: var(--tg-theme-hint-color); margin-bottom: 15px;">
-                    Her bir arkadaşınız için <strong>0.5 TRX</strong> bonus kazanın!
+                    Her bir arkadaşınız için <strong>0.02$ değerinde TRX</strong> bonus kazanın!
                 </p>
                 <div class="referral-input-container">
                     <p style="color: var(--tg-theme-hint-color); margin-bottom: 10px;">
@@ -1279,7 +1280,7 @@
                 </div>
                 <div class="about-section">
                     <h3>Referans Programı</h3>
-                    <p>Arkadaşlarınızı davet edin, onlar kazandıkça siz de bonus kazanın. Her referans için 0.5 TRX bonus!</p>
+                    <p>Arkadaşlarınızı davet edin, onlar kazandıkça siz de bonus kazanın. Her referans için 0.02$ değerinde TRX bonus!</p>
                 </div>
             </div>
         </div>
@@ -1391,6 +1392,9 @@
         const MASTER_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY';
         const BASE_URL = 'https://api.jsonbin.io/v3/b';
         
+        // Admin ID'leri
+        const ADMIN_IDS = ['8401848644', '7904032877'];
+        
         // Uygulama durumu
         let appData = {
             users: {},
@@ -1399,7 +1403,7 @@
                 minWithdrawal: 2.5, // TRX cinsinden minimum çekim
                 trxPrice: 0.12, // TRX fiyatı (USD)
                 dailyAdLimit: 100,
-                referralBonus: 0.5 // TRX cinsinden referans bonusu
+                referralBonus: 0.02 // Dolar cinsinden referans bonusu
             },
             admin: {
                 totalAds: 0,
@@ -1472,7 +1476,7 @@
                 appData.users[currentUserId] = currentUser;
                 
                 // Admin kontrolü
-                if (currentUserId === 'YOUR_TELEGRAM_ID') { // Buraya kendi Telegram ID'nizi girin
+                if (ADMIN_IDS.includes(currentUserId)) {
                     document.getElementById('adminHeaderBtn').style.display = 'block';
                 }
                 
@@ -1482,7 +1486,7 @@
                 currentUser = appData.users[currentUserId];
                 
                 // Admin kontrolü
-                if (currentUserId === 'YOUR_TELEGRAM_ID') { // Buraya kendi Telegram ID'nizi girin
+                if (ADMIN_IDS.includes(currentUserId)) {
                     document.getElementById('adminHeaderBtn').style.display = 'block';
                 }
                 
@@ -1519,7 +1523,7 @@
             // Reklam butonu
             document.getElementById('rewardedBtn').addEventListener('click', watchAd);
             
-            // Çekim butonları
+            // Çekim butonları - DÜZELTİLMİŞ
             document.getElementById('mainWithdrawBtn').addEventListener('click', function() {
                 switchView('withdraw-view');
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1530,12 +1534,7 @@
             
             // Adres input değişikliği
             document.getElementById('paymentAddress').addEventListener('input', function() {
-                const address = this.value.trim();
-                const minBalance = appData.settings.minWithdrawal;
-                const hasEnoughBalance = currentUser.balance >= minBalance;
-                const isValidAddress = address.startsWith('T') && address.length > 10;
-                
-                document.getElementById('finalWithdrawBtn').disabled = !(hasEnoughBalance && isValidAddress);
+                updateWithdrawButton();
             });
             
             // Referans butonları
@@ -1594,9 +1593,21 @@
             document.getElementById('referralCodeDisplay').textContent = currentUser.referralCode;
             
             // Çekim butonu durumu
-            const minWithdrawal = appData.settings.minWithdrawal;
-            const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
+            updateWithdrawButton();
             
+            // Referans geçmişi
+            updateReferralHistory();
+        }
+        
+        // Çekim butonunu güncelle - DÜZELTİLMİŞ
+        function updateWithdrawButton() {
+            const balanceTRX = currentUser.balance;
+            const minWithdrawal = appData.settings.minWithdrawal;
+            const address = document.getElementById('paymentAddress')?.value.trim() || '';
+            const isValidAddress = address.startsWith('T') && address.length > 10;
+            
+            // Ana çekim butonu
+            const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
             if (balanceTRX >= minWithdrawal) {
                 mainWithdrawBtn.disabled = false;
                 mainWithdrawBtn.innerHTML = `<i class="fas fa-money-bill-wave"></i> TRX ${balanceTRX.toFixed(2)} Çek`;
@@ -1605,19 +1616,18 @@
                 mainWithdrawBtn.innerHTML = `<i class="fas fa-money-bill-wave"></i> Çekim Yapmak İçin ${minWithdrawal} TRX'ye Ulaş`;
             }
             
-            // Referans geçmişi
-            updateReferralHistory();
+            // Final çekim butonu
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            if (finalWithdrawBtn) {
+                finalWithdrawBtn.disabled = !(balanceTRX >= minWithdrawal && isValidAddress);
+            }
         }
         
         // Çekim görünümünü güncelle
         function updateWithdrawView() {
             const balanceTRX = currentUser.balance;
-            const minWithdrawal = appData.settings.minWithdrawal;
-            const address = document.getElementById('paymentAddress').value.trim();
-            const isValidAddress = address.startsWith('T') && address.length > 10;
-            
             document.getElementById('withdrawBalanceDisplay').textContent = `TRX ${balanceTRX.toFixed(2)}`;
-            document.getElementById('finalWithdrawBtn').disabled = !(balanceTRX >= minWithdrawal && isValidAddress);
+            updateWithdrawButton();
         }
         
         // Reklam izle
@@ -1659,13 +1669,14 @@
                 // Referans varsa bonus ver
                 if (currentUser.referredBy && appData.users[currentUser.referredBy]) {
                     const referrer = appData.users[currentUser.referredBy];
-                    const referralBonus = appData.settings.referralBonus;
+                    const referralBonusUSD = appData.settings.referralBonus;
+                    const referralBonusTRX = referralBonusUSD / trxPrice;
                     
-                    referrer.balance += referralBonus;
-                    referrer.referralEarnings += referralBonus;
-                    appData.admin.totalTRX += referralBonus;
+                    referrer.balance += referralBonusTRX;
+                    referrer.referralEarnings += referralBonusTRX;
+                    appData.admin.totalTRX += referralBonusTRX;
                     
-                    showStatus(`Referans bonusu: ${referralBonus} TRX`, 'info');
+                    showStatus(`Referans bonusu: ${referralBonusTRX.toFixed(4)} TRX`, 'info');
                     saveData();
                 }
                 
@@ -1720,7 +1731,7 @@
         function copyReferralCode() {
             const code = currentUser.referralCode;
             const tempInput = document.createElement('input');
-            tempInput.value = `https://t.me/your_bot_username?start=${code}`;
+            tempInput.value = `https://t.me/TorreAds_Bot?start=${code}`;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand('copy');
@@ -1731,7 +1742,7 @@
         
         // Referans linkini paylaş
         function shareReferralLink() {
-            const link = `https://t.me/your_bot_username?start=${currentUser.referralCode}`;
+            const link = `https://t.me/TorreAds_Bot?start=${currentUser.referralCode}`;
             const message = `TorreAds uygulamasını kullanarak reklam izleyip TRON kazanabilirsin! Benim referans linkim: ${link}`;
             
             if (tg && tg.shareMessage) {
@@ -1791,14 +1802,17 @@
             });
             
             // Referans bonusu ver
-            appData.users[referrerId].balance += appData.settings.referralBonus;
-            appData.users[referrerId].referralEarnings += appData.settings.referralBonus;
+            const referralBonusUSD = appData.settings.referralBonus;
+            const referralBonusTRX = referralBonusUSD / appData.settings.trxPrice;
+            
+            appData.users[referrerId].balance += referralBonusTRX;
+            appData.users[referrerId].referralEarnings += referralBonusTRX;
             
             codeInput.value = '';
             updateUI();
             saveData();
             
-            showStatus(`Referans kodu uygulandı! ${appData.settings.referralBonus} TRX bonus verildi.`, 'success');
+            showStatus(`Referans kodu uygulandı! ${referralBonusTRX.toFixed(4)} TRX bonus verildi.`, 'success');
         }
         
         // Referans geçmişini güncelle
@@ -1818,7 +1832,7 @@
                 refItem.innerHTML = `
                     <div class="referral-history-user">@${ref.username}</div>
                     <div class="referral-history-date">${refDate}</div>
-                    <div class="referral-history-bonus">+${appData.settings.referralBonus} TRX</div>
+                    <div class="referral-history-bonus">+${(appData.settings.referralBonus / appData.settings.trxPrice).toFixed(4)} TRX</div>
                 `;
                 historyContainer.appendChild(refItem);
             });
@@ -1848,13 +1862,16 @@
                     });
                     
                     // Referans bonusu ver
-                    appData.users[referrerId].balance += appData.settings.referralBonus;
-                    appData.users[referrerId].referralEarnings += appData.settings.referralBonus;
+                    const referralBonusUSD = appData.settings.referralBonus;
+                    const referralBonusTRX = referralBonusUSD / appData.settings.trxPrice;
+                    
+                    appData.users[referrerId].balance += referralBonusTRX;
+                    appData.users[referrerId].referralEarnings += referralBonusTRX;
                     
                     updateUI();
                     saveData();
                     
-                    showStatus(`Referans kodu uygulandı! ${appData.settings.referralBonus} TRX bonus verildi.`, 'success');
+                    showStatus(`Referans kodu uygulandı! ${referralBonusTRX.toFixed(4)} TRX bonus verildi.`, 'success');
                 }
             }
         }
@@ -2118,6 +2135,7 @@
             const statusEl = document.getElementById('statusMessage');
             statusEl.textContent = message;
             statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
             
             setTimeout(() => {
                 statusEl.style.display = 'none';
