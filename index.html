@@ -16,6 +16,95 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Mevcut CSS kodları aynı kalacak, sadece yeni stiller eklenecek */
+        
+        /* Referans Geçmişi Stilleri */
+        .referral-history {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .referral-history-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .referral-history-item:last-child {
+            border-bottom: none;
+        }
+
+        .referral-history-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .referral-history-info {
+            flex: 1;
+        }
+
+        .referral-history-name {
+            font-weight: 600;
+            color: var(--tg-theme-text-color);
+            margin-bottom: 4px;
+        }
+
+        .referral-history-details {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .referral-history-date {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .referral-history-bonus {
+            font-weight: 600;
+            color: var(--success-color);
+            font-size: 14px;
+        }
+
+        .no-referrals {
+            text-align: center;
+            padding: 30px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .no-referrals i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Scrollbar for referral history */
+        .referral-history::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .referral-history::-webkit-scrollbar-track {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 3px;
+        }
+
+        .referral-history::-webkit-scrollbar-thumb {
+            background: var(--gradient-primary);
+            border-radius: 3px;
+        }
+
+        .referral-history::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+
+        /* Mevcut CSS kodları burada devam ediyor... */
         :root {
             --tg-theme-bg-color: #ffffff;
             --tg-theme-text-color: #1e293b;
@@ -961,6 +1050,41 @@
             background: var(--accent-color);
         }
 
+        /* About Section Styles */
+        .about-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .about-section h3 {
+            color: var(--tg-theme-text-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .about-section p {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .about-section ul {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            line-height: 1.5;
+            padding-left: 20px;
+        }
+
+        .about-section li {
+            margin-bottom: 5px;
+        }
+
         /* Responsive Design */
         @media (max-width: 480px) {
             .container {
@@ -1136,6 +1260,99 @@
                     Referansımı Paylaş
                 </button>
             </div>
+
+            <!-- Yeni: Referans Geçmişi -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Referans Geçmişiniz</h2>
+                <p>Davet ettiğiniz kullanıcılar ve kazandığınız bonuslar</p>
+                <div class="referral-history" id="referralHistory">
+                    <!-- Referans geçmişi buraya eklenecek -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Görevler View -->
+        <div id="tasks-view" class="view">
+            <div class="header">
+                <h1>Görevler</h1>
+                <p>Ek görevlerle daha fazla kazanın</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-tasks"></i> Mevcut Görevler</h2>
+                <div class="task-list" id="tasksList">
+                    <!-- Görevler buraya dinamik olarak eklenecek -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-chart-pie"></i> Görev İstatistikleriniz</h2>
+                <div class="ad-info-grid">
+                    <div class="ad-info-item">
+                        <h3 id="completedTasksCount">0</h3>
+                        <p>Tamamlanan Görevler</p>
+                    </div>
+                    <div class="ad-info-item">
+                        <h3 id="tasksEarnings">TRX 0.00</h3>
+                        <p>Görev Kazancı</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hakkında View -->
+        <div id="about-view" class="view">
+            <div class="header">
+                <h1>Hakkımızda</h1>
+                <p>TorreAds hakkında bilgiler</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-info-circle"></i> Uygulama Hakkında</h2>
+                <div class="about-section">
+                    <h3><i class="fas fa-question-circle"></i> TorreAds Nedir?</h3>
+                    <p>TorreAds, Telegram kullanıcılarının reklam izleyerek ve görevleri tamamlayarak TRON (TRX) kazanabileceği güvenilir bir platformdur.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3><i class="fas fa-cogs"></i> Nasıl Çalışır?</h3>
+                    <ul>
+                        <li>Reklam izleyerek TRON kazanın</li>
+                        <li>Arkadaşlarınızı davet ederek ekstra kazanın</li>
+                        <li>Görevleri tamamlayarak kazancınızı artırın</li>
+                        <li>Bakiyeniz 2.5 TRX'ye ulaştığında çekim yapın</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3><i class="fas fa-gem"></i> Avantajlarımız</h3>
+                    <ul>
+                        <li>Günlük 100 reklam izleme limiti</li>
+                        <li>Düşük minimum çekim: 2.5 TRX</li>
+                        <li>Hızlı ve güvenli ödemeler</li>
+                        <li>7/24 aktif destek</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3><i class="fas fa-headset"></i> Destek</h3>
+                    <p>Herhangi bir sorunuz veya öneriniz varsa, lütfen destek ekibimizle iletişime geçin:</p>
+                    <p><strong>Telegram:</strong> @TorreAdsSupport</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-shield-alt"></i> Gizlilik & Güvenlik</h2>
+                <div class="about-section">
+                    <h3><i class="fas fa-lock"></i> Gizlilik Politikası</h3>
+                    <p>Kullanıcı verileriniz güvende! Kişisel bilgileriniz asla üçüncü şahıslarla paylaşılmaz.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3><i class="fas fa-check-circle"></i> Güvenlik</h3>
+                    <p>Tüm işlemler şifrelenmiş bağlantılar üzerinden gerçekleştirilir. TRON cüzdan adresleriniz güvende tutulur.</p>
+                </div>
+            </div>
         </div>
         
         <!-- Admin View -->
@@ -1235,6 +1452,14 @@
             <div class="icon"><i class="fas fa-users"></i></div>
             Referans
         </button>
+        <button class="nav-btn" data-view="tasks-view">
+            <div class="icon"><i class="fas fa-tasks"></i></div>
+            Görevler
+        </button>
+        <button class="nav-btn" data-view="about-view">
+            <div class="icon"><i class="fas fa-info-circle"></i></div>
+            Hakkında
+        </button>
     </div>
     
     <!-- Status Message -->
@@ -1299,9 +1524,35 @@
         const taskReward = document.getElementById('taskReward');
         const addTaskBtn = document.getElementById('addTaskBtn');
         const adminTasksList = document.getElementById('adminTasksList');
+        const tasksList = document.getElementById('tasksList');
+        const completedTasksCount = document.getElementById('completedTasksCount');
+        const tasksEarnings = document.getElementById('tasksEarnings');
+        const referralHistory = document.getElementById('referralHistory');
         
-        // TRON fiyat bilgisi
-        let tronPriceUSD = 0.12;
+        // TRON fiyat bilgisi - Varsayılan değer kaldırıldı
+        let tronPriceUSD = 0;
+        
+        // Referans kodunu URL parametrelerinden al
+        function getReferralCodeFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('ref') || urlParams.get('referral');
+        }
+        
+        // Telegram start parametresinden referans kodunu al
+        function getReferralCodeFromStartParam() {
+            try {
+                if (tg.initData) {
+                    const initData = new URLSearchParams(tg.initData);
+                    const startParam = initData.get('start');
+                    if (startParam && startParam.startsWith('ref')) {
+                        return startParam.replace('ref', '');
+                    }
+                }
+            } catch (error) {
+                console.log('Start param alınamadı:', error);
+            }
+            return null;
+        }
         
         // Kullanıcı verileri
         let userData = {
@@ -1316,6 +1567,7 @@
             referralBonus: 0,
             withdrawRequests: [],
             tasksCompleted: [],
+            tasksEarnings: 0,
             paymentAddress: "",
             firstName: tg.initDataUnsafe?.user?.first_name || 'Kullanıcı',
             username: tg.initDataUnsafe?.user?.username || '',
@@ -1350,7 +1602,12 @@
                 userData = { ...userData, ...systemData.users[userId] };
                 userData.lastActive = new Date().toISOString();
             } else {
-                // Yeni kullanıcı
+                // Yeni kullanıcı - Referans kodunu kontrol et
+                const referralCode = getReferralCodeFromURL() || getReferralCodeFromStartParam();
+                if (referralCode && !userData.referredBy) {
+                    await processReferralCode(referralCode);
+                }
+                
                 systemData.users[userId] = userData;
                 systemData.totalUsers = Object.keys(systemData.users).length;
             }
@@ -1362,9 +1619,9 @@
                 userData.lastAdDate = today;
             }
             
-            // TRON fiyatını güncelle
+            // TRON fiyatını güncelle - İlk yüklemede hemen çağır
             await updateTronPrice();
-            setInterval(updateTronPrice, 2000); // Her 2 saniyede bir güncelle
+            setInterval(updateTronPrice, 10000); // Her 10 saniyede bir güncelle
             
             // JSONBin otomatik kaydetme
             setInterval(saveAppDataToJSONBin, 5000); // 5 saniyede bir kaydet
@@ -1423,19 +1680,66 @@
             showStatus("TorreAds'a hoş geldiniz! Reklam izleyerek TRON kazanmaya başlayın.", "success");
         });
         
-        // TRON fiyatını CoinGecko'dan al
+        // Referans kodunu işle
+        async function processReferralCode(referralCode) {
+            if (!referralCode) return false;
+            
+            let referrerFound = false;
+            for (const uid in systemData.users) {
+                if (systemData.users[uid].referralCode === referralCode && uid !== userId) {
+                    referrerFound = true;
+                    
+                    // Bonus ver
+                    const usdReward = 0.02;
+                    const trxReward = tronPriceUSD > 0 ? (usdReward / tronPriceUSD) : 0.1; // Varsayılan değer
+                    
+                    // Mevcut kullanıcıya bonus
+                    userData.referredBy = uid;
+                    userData.balance += trxReward;
+                    userData.referralBonus += trxReward;
+                    
+                    // Referans veren kullanıcıya bonus
+                    systemData.users[uid].referrals.push({
+                        userId: userId,
+                        userName: userData.firstName,
+                        date: new Date().toISOString(),
+                        bonusEarned: trxReward
+                    });
+                    systemData.users[uid].balance += trxReward;
+                    systemData.users[uid].referralBonus += trxReward;
+                    
+                    systemData.totalReferrals++;
+                    
+                    // Başarı mesajı göster
+                    showStatus(`Referans kodunuz otomatik olarak uygulandı! ${trxReward.toFixed(4)} TRX bonus kazandınız.`, "success");
+                    break;
+                }
+            }
+            
+            return referrerFound;
+        }
+        
+        // TRON fiyatını CoinGecko'dan al - Geliştirilmiş versiyon
         async function updateTronPrice() {
             try {
+                // CoinGecko API'sinden TRON fiyatını al
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
+                
+                if (!response.ok) {
+                    throw new Error('API yanıt vermedi');
+                }
+                
                 const data = await response.json();
                 
-                if (data.tron) {
+                if (data.tron && data.tron.usd) {
                     tronPriceUSD = data.tron.usd;
                     const change24h = data.tron.usd_24h_change;
                     
+                    // Fiyatı güncelle
                     tronPrice.textContent = `$${tronPriceUSD.toFixed(4)}`;
                     tronChange.textContent = `24s: ${change24h ? change24h.toFixed(2) : '0.00'}%`;
                     
+                    // Değişim rengini ayarla
                     if (change24h > 0) {
                         tronChange.className = 'chart-change positive';
                     } else if (change24h < 0) {
@@ -1443,28 +1747,73 @@
                     } else {
                         tronChange.className = 'chart-change';
                     }
+                    
+                    console.log('TRON fiyatı güncellendi:', tronPriceUSD);
+                    
+                    // Reklam butonunu güncelle
+                    updateRewardButton();
+                    
+                } else {
+                    throw new Error('Geçersiz veri formatı');
                 }
             } catch (error) {
                 console.error('TRON fiyat verisi alınamadı:', error);
-                // Fallback: Rastgele fiyat simülasyonu
-                const basePrice = 0.125;
-                const change = (Math.random() - 0.5) * 0.01;
-                const currentPrice = basePrice + change;
-                const changePercent = (change / basePrice) * 100;
                 
-                tronPrice.textContent = `$${currentPrice.toFixed(4)}`;
-                tronChange.textContent = `24s: ${changePercent.toFixed(2)}%`;
+                // Fallback: Alternatif API denemesi
+                try {
+                    const fallbackResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TRXUSDT');
+                    if (fallbackResponse.ok) {
+                        const binanceData = await fallbackResponse.json();
+                        if (binanceData.price) {
+                            tronPriceUSD = parseFloat(binanceData.price);
+                            tronPrice.textContent = `$${tronPriceUSD.toFixed(4)}`;
+                            tronChange.textContent = '24s: --%';
+                            tronChange.className = 'chart-change';
+                            console.log('Binance fiyatı kullanıldı:', tronPriceUSD);
+                            updateRewardButton();
+                            return;
+                        }
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback API de başarısız:', fallbackError);
+                }
                 
-                if (changePercent >= 0) {
-                    tronChange.className = 'chart-change positive';
+                // Tüm API'ler başarısız olursa hata mesajı göster
+                tronPrice.textContent = '$--.--';
+                tronChange.textContent = '24s: --%';
+                tronChange.className = 'chart-change';
+                
+                // Hata durumunda varsayılan değer kullanma - kullanıcıyı bilgilendir
+                if (tronPriceUSD === 0) {
+                    showStatus("TRON fiyatı yükleniyor...", "info");
+                }
+            }
+        }
+        
+        // Reklam butonunu güncelle
+        function updateRewardButton() {
+            if (userData.dailyAdCount >= 100) {
+                rewardedBtn.disabled = true;
+                rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Günlük Limit Doldu';
+            } else {
+                rewardedBtn.disabled = false;
+                if (tronPriceUSD > 0) {
+                    const trxReward = (0.002 / tronPriceUSD).toFixed(4);
+                    rewardedBtn.innerHTML = `<i class="fas fa-play-circle"></i> Reklam İzle (+${trxReward} TRX)`;
                 } else {
-                    tronChange.className = 'chart-change negative';
+                    rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Reklam İzle (+0.002$)';
                 }
             }
         }
         
         // Ödüllü reklam göster
         function showRewardedAd() {
+            // TRON fiyatı yüklenmemişse uyarı ver
+            if (tronPriceUSD === 0) {
+                showStatus("TRON fiyatı yükleniyor, lütfen bekleyin...", "error");
+                return;
+            }
+            
             // Butonu yükleniyor durumuna getir
             rewardedBtn.classList.add('btn-loading');
             rewardedBtn.disabled = true;
@@ -1497,6 +1846,14 @@
             // Günlük limit kontrolü
             if (userData.dailyAdCount >= 100) {
                 showStatus("Bugünkü reklam limitinize ulaştınız. Yarın tekrar deneyin!", "error");
+                rewardedBtn.classList.remove('btn-loading');
+                rewardedBtn.disabled = false;
+                return;
+            }
+            
+            // TRON fiyatı kontrolü
+            if (tronPriceUSD === 0) {
+                showStatus("TRON fiyatı yüklenemedi. Lütfen tekrar deneyin.", "error");
                 rewardedBtn.classList.remove('btn-loading');
                 rewardedBtn.disabled = false;
                 return;
@@ -1608,38 +1965,15 @@
                 return;
             }
             
-            // Referans kodunu ara
-            let referrerFound = false;
-            for (const uid in systemData.users) {
-                if (systemData.users[uid].referralCode === code && uid !== userId) {
-                    referrerFound = true;
-                    
-                    // Bonus ver
-                    const usdReward = 0.02;
-                    const trxReward = usdReward / tronPriceUSD;
-                    
-                    // Mevcut kullanıcıya bonus
-                    userData.referredBy = uid;
-                    userData.balance += trxReward;
-                    userData.referralBonus += trxReward;
-                    
-                    // Referans veren kullanıcıya bonus
-                    systemData.users[uid].referrals.push({
-                        userId: userId,
-                        userName: userData.firstName,
-                        date: new Date().toISOString()
-                    });
-                    systemData.users[uid].balance += trxReward;
-                    systemData.users[uid].referralBonus += trxReward;
-                    
-                    systemData.totalReferrals++;
-                    break;
-                }
+            // TRON fiyatı kontrolü
+            if (tronPriceUSD === 0) {
+                showStatus("TRON fiyatı yükleniyor, lütfen bekleyin...", "error");
+                return;
             }
             
-            if (referrerFound) {
-                const trxReward = (0.02 / tronPriceUSD).toFixed(4);
-                showStatus(`Referans kodunuz başarıyla kaydedildi! ${trxReward} TRX bonus kazandınız.`, "success");
+            const success = await processReferralCode(code);
+            
+            if (success) {
                 referralCodeInput.value = "";
                 updateUI();
                 await saveUserData();
@@ -1668,7 +2002,7 @@
         // Referans paylaş
         function shareReferral() {
             const code = userData.referralCode;
-            const shareText = `Sende bugün TorreAds🎉' a katıl ve reklam izleyerek TRON kazanmaya başla!\nReferans kodum: ${code}\nKodu girersen 0.02$ değerinde TRON alırsın.\nhttps://t.me/TorreAds_bot`;
+            const shareText = `Sende bugün TorreAds🎉' a katıl ve reklam izleyerek TRON kazanmaya başla!\nReferans kodum: ${code}\nKodu girersen 0.02$ değerinde TRON alırsın.\nhttps://t.me/TorreAds_bot?start=ref${code}`;
             
             if (navigator.share) {
                 navigator.share({
@@ -1717,6 +2051,7 @@
             taskReward.value = '0.1';
             
             updateAdminTasksList();
+            updateTasksList();
             showStatus("Görev başarıyla eklendi!", "success");
         }
         
@@ -1725,8 +2060,36 @@
             if (confirm("Bu görevi silmek istediğinizden emin misiniz?")) {
                 systemData.manualTasks = systemData.manualTasks.filter(task => task.id !== taskId);
                 updateAdminTasksList();
+                updateTasksList();
                 showStatus("Görev silindi!", "success");
             }
+        }
+        
+        // Görev tamamla
+        function completeTask(taskId) {
+            const task = systemData.manualTasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            if (userData.tasksCompleted.includes(taskId)) {
+                showStatus("Bu görevi zaten tamamladınız.", "error");
+                return;
+            }
+            
+            // Görevi tamamla
+            userData.tasksCompleted.push(taskId);
+            userData.tasksEarnings += task.reward;
+            userData.balance += task.reward;
+            
+            // Görev tamamlanma sayısını güncelle
+            if (!task.completedBy.includes(userId)) {
+                task.completedBy.push(userId);
+            }
+            
+            updateUI();
+            updateTasksList();
+            saveUserData();
+            
+            showStatus(`Tebrikler! ${task.reward} TRX kazandınız.`, "success");
         }
         
         // View göster
@@ -1743,6 +2106,49 @@
             if (viewId === 'admin-view' && isAdmin) {
                 loadAdminData();
             }
+            
+            // Görevler view ise görev listesini güncelle
+            if (viewId === 'tasks-view') {
+                updateTasksList();
+            }
+            
+            // Referans view ise referans geçmişini güncelle
+            if (viewId === 'referral-view') {
+                updateReferralHistory();
+            }
+        }
+        
+        // Referans geçmişini güncelle
+        function updateReferralHistory() {
+            referralHistory.innerHTML = '';
+            
+            if (userData.referrals.length === 0) {
+                referralHistory.innerHTML = `
+                    <div class="no-referrals">
+                        <i class="fas fa-users"></i>
+                        <p>Henüz hiç referansınız yok</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Arkadaşlarınızı davet ederek bonus kazanmaya başlayın!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            userData.referrals.forEach((referral, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'referral-history-item';
+                historyItem.innerHTML = `
+                    <div class="referral-history-info">
+                        <div class="referral-history-name">${referral.userName || 'Kullanıcı'}</div>
+                        <div class="referral-history-details">
+                            <span>ID: ${referral.userId}</span>
+                            <span>Bonus: ${referral.bonusEarned ? referral.bonusEarned.toFixed(4) + ' TRX' : '0.02$'}</span>
+                        </div>
+                        <div class="referral-history-date">${new Date(referral.date).toLocaleDateString('tr-TR')}</div>
+                    </div>
+                    <div class="referral-history-bonus">+${referral.bonusEarned ? referral.bonusEarned.toFixed(4) : '0.02'} TRX</div>
+                `;
+                referralHistory.appendChild(historyItem);
+            });
         }
         
         // Admin verilerini yükle
@@ -1812,6 +2218,37 @@
             });
         }
         
+        // Kullanıcı görev listesini güncelle
+        function updateTasksList() {
+            tasksList.innerHTML = '';
+            
+            if (systemData.manualTasks.length === 0) {
+                tasksList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz görev yok. Görevler yakında eklenecek!</div>';
+                return;
+            }
+            
+            systemData.manualTasks.forEach(task => {
+                const isCompleted = userData.tasksCompleted.includes(task.id);
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                    </div>
+                    <div class="task-reward">${task.reward} TRX</div>
+                    <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="completeTask('${task.id}')">
+                        ${isCompleted ? 'Tamamlandı' : 'Başla'}
+                    </button>
+                `;
+                tasksList.appendChild(taskElement);
+            });
+            
+            // Görev istatistiklerini güncelle
+            completedTasksCount.textContent = userData.tasksCompleted.length;
+            tasksEarnings.textContent = `TRX ${userData.tasksEarnings.toFixed(4)}`;
+        }
+        
         // Admin çekim talepleri listesini güncelle
         function updateWithdrawRequestsList() {
             withdrawRequestsList.innerHTML = '';
@@ -1867,6 +2304,7 @@
                         dailyAdCount: 0,
                         referralBonus: 0,
                         tasksCompleted: [],
+                        tasksEarnings: 0,
                         withdrawRequests: []
                     };
                     
@@ -1901,6 +2339,7 @@
         };
         
         window.deleteTask = deleteTask;
+        window.completeTask = completeTask;
         
         // Tüm verileri sıfırla
         async function resetAllData() {
@@ -1928,6 +2367,7 @@
                         dailyAdCount: 0,
                         referralBonus: 0,
                         tasksCompleted: [],
+                        tasksEarnings: 0,
                         withdrawRequests: []
                     };
                     userData = systemData.users[userId];
@@ -1935,6 +2375,8 @@
                 
                 updateUI();
                 loadAdminData();
+                updateTasksList();
+                updateReferralHistory();
                 showStatus("Tüm veriler sıfırlandı.", "success");
             }
         }
@@ -1976,15 +2418,15 @@
             }
             validateWithdrawForm();
             
-            // Reklam butonu
-            if (userData.dailyAdCount >= 100) {
-                rewardedBtn.disabled = true;
-                rewardedBtn.innerHTML = '<i class="fas fa-play-circle"></i> Günlük Limit Doldu';
-            } else {
-                rewardedBtn.disabled = false;
-                const trxReward = (0.002 / tronPriceUSD).toFixed(4);
-                rewardedBtn.innerHTML = `<i class="fas fa-play-circle"></i> Reklam İzle (+${trxReward} TRX)`;
-            }
+            // Reklam butonunu güncelle
+            updateRewardButton();
+            
+            // Görev istatistikleri
+            completedTasksCount.textContent = userData.tasksCompleted.length;
+            tasksEarnings.textContent = `TRX ${userData.tasksEarnings.toFixed(4)}`;
+            
+            // Referans geçmişini güncelle
+            updateReferralHistory();
         }
         
         // Durum mesajı göster
