@@ -509,7 +509,7 @@
             font-weight: 500;
         }
 
-        .input-group input, .input-group textarea {
+        .input-group input, .input-group textarea, .input-group select {
             width: 100%;
             padding: 16px;
             border-radius: 12px;
@@ -521,7 +521,7 @@
             transition: var(--transition);
         }
 
-        .input-group input:focus, .input-group textarea:focus {
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
             outline: none;
             border-color: var(--tg-theme-button-color);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -748,6 +748,13 @@
 
         .chart-placeholder:hover {
             background: rgba(59, 130, 246, 0.1);
+        }
+
+        .chart-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
         }
 
         /* TRX Chart Canvas */
@@ -1010,6 +1017,22 @@
             font-weight: bold;
         }
 
+        /* About Styles */
+        .about-section {
+            margin-bottom: 20px;
+        }
+
+        .about-section h3 {
+            color: var(--tg-theme-text-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .about-section p {
+            color: var(--tg-theme-hint-color);
+            line-height: 1.6;
+        }
+
         /* Scrollbar Styles */
         .admin-user-list::-webkit-scrollbar,
         .withdraw-requests-list::-webkit-scrollbar,
@@ -1098,6 +1121,9 @@
                     </div>
                     <div class="chart-placeholder" id="tronChart">
                         <canvas id="trxChartCanvas"></canvas>
+                    </div>
+                    <div class="chart-info">
+                        Daha fazla bilgi için CoinGecko'yu ziyaret edin
                     </div>
                 </div>
             </div>
@@ -1198,7 +1224,7 @@
             
             <div class="card">
                 <h2><i class="fas fa-qrcode"></i> Referans Kodunuz</h2>
-                <p>Bu kodu arkadaşlarınızla paylaşın. Katılan her onaylanmış arkadaş için 0.02$ değerinde TRX kazanırsınız!</p>
+                <p>Bu kodu arkadaşlarınızla paylaşın. Katılan her onaylanmış arkadaş için 0.5 TRX kazanırsınız!</p>
                 <div class="referral-code-box" id="referralCodeBox" title="Kopyalamak için tıklayın">
                     <span id="userReferralCode">Yükleniyor...</span>
                 </div>
@@ -1252,6 +1278,34 @@
                 </div>
             </div>
         </div>
+
+        <!-- Hakkında View -->
+        <div id="about-view" class="view">
+            <div class="header">
+                <h1>Hakkında</h1>
+                <p>TorreAds hakkında bilgiler</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-info-circle"></i> Uygulama Bilgileri</h2>
+                <div class="about-content">
+                    <div class="about-section">
+                        <h3>TorreAds Nedir?</h3>
+                        <p>TorreAds, Telegram kullanıcılarının reklam izleyerek ve görevleri tamamlayarak TRON kazanabileceği bir platformdur.</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>Nasıl Çalışır?</h3>
+                        <p>1. Reklam izleyerek TRON kazanın<br>2. Arkadaşlarınızı davet ederek ekstra kazanın<br>3. Görevleri tamamlayarak kazancınızı artırın<br>4. Bakiyeniz 2.5 TRX'ye ulaştığında çekim yapın</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>İletişim</h3>
+                        <p>Herhangi bir sorunuz veya öneriniz varsa, lütfen destek ekibimizle iletişime geçin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Admin View -->
         <div id="admin-view" class="view">
@@ -1293,6 +1347,52 @@
                 
                 <div class="admin-user-list" id="adminUserList">
                     <!-- Kullanıcılar buraya eklenecek -->
+                </div>
+            </div>
+            
+            <!-- Görev Yönetimi -->
+            <div class="card">
+                <h2><i class="fas fa-tasks"></i> Görev Yönetimi</h2>
+                
+                <div class="input-group">
+                    <label for="taskType">Görev Türü</label>
+                    <select id="taskType">
+                        <option value="achievement">Başarım</option>
+                        <option value="referral">Referans Görevi</option>
+                        <option value="ad">Reklam Görevi</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="adminTaskTitle">Görev Başlığı</label>
+                    <input type="text" id="adminTaskTitle" placeholder="Görev başlığını girin">
+                </div>
+                
+                <div class="input-group">
+                    <label for="adminTaskDescription">Görev Açıklaması</label>
+                    <textarea id="adminTaskDescription" placeholder="Görev açıklamasını girin" rows="3"></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="adminTaskTarget">Hedef Sayı</label>
+                    <input type="number" id="adminTaskTarget" placeholder="Hedef sayıyı girin" min="1">
+                </div>
+                
+                <div class="input-group">
+                    <label for="adminTaskReward">Ödül (TRX)</label>
+                    <input type="number" id="adminTaskReward" step="0.01" min="0.01" max="0.5" placeholder="Maksimum 0.5 TRX">
+                </div>
+                
+                <div class="input-group">
+                    <label for="adminTaskLink">Link (Opsiyonel)</label>
+                    <input type="text" id="adminTaskLink" placeholder="https://example.com">
+                </div>
+                
+                <button class="btn btn-primary" id="adminAddTaskBtn">Görev Ekle</button>
+                
+                <h3 style="margin-top: 20px;">Mevcut Görevler</h3>
+                <div class="task-list" id="adminTasksList">
+                    <!-- Görevler buraya eklenecek -->
                 </div>
             </div>
             
@@ -1344,6 +1444,12 @@
                 <i class="fas fa-tasks"></i>
             </div>
             Görevler
+        </button>
+        <button class="nav-btn" data-view="about-view">
+            <div class="icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            Hakkında
         </button>
     </div>
 
@@ -1397,14 +1503,14 @@
             // Sistem Ayarları
             adRewardUSD: 0.002, // 0.002$ ödeme
             minWithdraw: 2.5, // 2.5 TRX minimum çekim
-            referralRewardUSD: 0.02, // 0.02$ referans ödülü (hem referans olana hem de referans verene)
+            referralRewardTRX: 0.5, // 0.5 TRX referans ödülü
             dailyAdLimit: 100,
             appVersion: '2.0.0',
             
             // Görevler
-            dailyTasks: [],
             achievements: [],
             referralTasks: [],
+            adTasks: [],
             
             // Çekimler
             withdrawRequests: [],
@@ -1498,6 +1604,7 @@
             document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
             document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
             document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+            document.getElementById('adminAddTaskBtn').addEventListener('click', adminAddTask);
             
             // Ödeme adresi değişikliğini dinle
             document.getElementById('paymentAddress').addEventListener('input', () => {
@@ -1597,9 +1704,8 @@
             for (const userId in appData.users) {
                 const user = appData.users[userId];
                 if (user.referralCode === referralCode) {
-                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.02$ ver
-                    const usdReward = appData.referralRewardUSD;
-                    const trxReward = usdToTrx(usdReward);
+                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.5 TRX ver
+                    const trxReward = appData.referralRewardTRX;
                     
                     // 1. Referans olan kullanıcıya bonus ver
                     userData.referredBy = user.userId;
@@ -1631,7 +1737,7 @@
                     await saveAppDataToJSONBin();
                     
                     referrerFound = true;
-                    showStatusMessage(`Referans kodunuz başarıyla uygulandı! ${trxReward.toFixed(4)} TRX bonus kazandınız.`, 'success');
+                    showStatusMessage(`Referans kodunuz başarıyla uygulandı! ${trxReward} TRX bonus kazandınız.`, 'success');
                     break;
                 }
             }
@@ -1706,8 +1812,6 @@
                 document.getElementById('tronPrice').textContent = `$${tronPriceUSD.toFixed(4)}`;
                 document.getElementById('tronChange').textContent = '24s: 0.00%';
                 document.getElementById('tronChange').className = 'chart-change';
-                
-                showStatusMessage('TRON fiyatı güncellenirken hata oluştu, varsayılan değer kullanılıyor.', 'info');
             }
         }
         
@@ -1850,8 +1954,8 @@
             }
             
             // Görevleri başlat
-            if (!appData.dailyTasks || appData.dailyTasks.length === 0) {
-                initializeTasks();
+            if (!appData.achievements || appData.achievements.length === 0) {
+                initializeDefaultTasks();
             }
             
             // Kullanıcı verilerini kontrol et
@@ -1866,7 +1970,7 @@
         
         function initializeDefaultData() {
             // Varsayılan görevleri oluştur
-            initializeTasks();
+            initializeDefaultTasks();
             
             // Varsayılan admin ayarları
             appData.adminSettings = {
@@ -1891,45 +1995,14 @@
             appData.completedWithdrawals = [];
         }
         
-        function initializeTasks() {
-            // Günlük görevler
-            appData.dailyTasks = [
-                {
-                    id: 'daily_ad_5',
-                    title: '5 Reklam İzle',
-                    description: 'Günde 5 reklam izleyerek TRON kazanın',
-                    rewardUSD: 0.02,
-                    target: 5,
-                    type: 'daily',
-                    link: null
-                },
-                {
-                    id: 'daily_ad_10',
-                    title: '10 Reklam İzle',
-                    description: 'Günde 10 reklam izleyerek daha fazla TRON kazanın',
-                    rewardUSD: 0.04,
-                    target: 10,
-                    type: 'daily',
-                    link: null
-                },
-                {
-                    id: 'daily_ad_20',
-                    title: '20 Reklam İzle',
-                    description: 'Günde 20 reklam izleyerek maksimum TRON kazanın',
-                    rewardUSD: 0.08,
-                    target: 20,
-                    type: 'daily',
-                    link: null
-                }
-            ];
-            
+        function initializeDefaultTasks() {
             // Başarımlar
             appData.achievements = [
                 {
                     id: 'achievement_50_ads',
                     title: 'Reklam Sever',
                     description: 'Toplam 50 reklam izleyin',
-                    rewardUSD: 0.10,
+                    reward: 0.2,
                     target: 50,
                     type: 'achievement',
                     link: null
@@ -1938,17 +2011,8 @@
                     id: 'achievement_100_ads',
                     title: 'Reklam Uzmanı',
                     description: 'Toplam 100 reklam izleyin',
-                    rewardUSD: 0.25,
+                    reward: 0.5,
                     target: 100,
-                    type: 'achievement',
-                    link: null
-                },
-                {
-                    id: 'achievement_500_ads',
-                    title: 'Reklam Kralı',
-                    description: 'Toplam 500 reklam izleyin',
-                    rewardUSD: 1.00,
-                    target: 500,
                     type: 'achievement',
                     link: null
                 }
@@ -1960,7 +2024,7 @@
                     id: 'referral_1',
                     title: 'İlk Referansını Kazan',
                     description: 'İlk referansınızı kazanarak bonus alın',
-                    rewardUSD: 0.10,
+                    reward: 0.2,
                     target: 1,
                     type: 'referral',
                     link: null
@@ -1969,37 +2033,32 @@
                     id: 'referral_5',
                     title: '5 Referans Kazan',
                     description: '5 referans kazanarak ekstra ödül alın',
-                    rewardUSD: 0.50,
+                    reward: 0.5,
                     target: 5,
                     type: 'referral',
                     link: null
-                },
+                }
+            ];
+            
+            // Reklam görevleri
+            appData.adTasks = [
                 {
-                    id: 'referral_10',
-                    title: '10 Referans Kazan',
-                    description: '10 referans kazanarak büyük ödül alın',
-                    rewardUSD: 1.00,
+                    id: 'daily_10_ads',
+                    title: 'Günlük 10 Reklam',
+                    description: 'Günde 10 reklam izleyin',
+                    reward: 0.1,
                     target: 10,
-                    type: 'referral',
+                    type: 'ad',
                     link: null
                 },
                 {
-                    id: 'join_telegram',
-                    title: 'Telegram Kanalımıza Katılın',
-                    description: 'Resmi Telegram kanalımıza katılın',
-                    rewardUSD: 0.05,
-                    target: 1,
-                    type: 'referral',
-                    link: 'https://t.me/TorreAds_bot'
-                },
-                {
-                    id: 'follow_twitter',
-                    title: 'Twitter\'da Bizi Takip Edin',
-                    description: 'Twitter hesabımızı takip edin',
-                    rewardUSD: 0.05,
-                    target: 1,
-                    type: 'referral',
-                    link: 'https://twitter.com/torreadsofficial'
+                    id: 'daily_20_ads',
+                    title: 'Günlük 20 Reklam',
+                    description: 'Günde 20 reklam izleyin',
+                    reward: 0.2,
+                    target: 20,
+                    type: 'ad',
+                    link: null
                 }
             ];
         }
@@ -2336,36 +2395,9 @@
         }
         
         function updateTasks() {
-            updateDailyTasks();
             updateAchievements();
             updateReferralTasks();
-        }
-        
-        function updateDailyTasks() {
-            const tasksList = document.getElementById('dailyTasksList');
-            tasksList.innerHTML = '';
-            
-            appData.dailyTasks.forEach(task => {
-                const current = userData.dailyAdCount || 0;
-                const progress = Math.min(current, task.target);
-                const isCompleted = progress >= task.target;
-                const trxReward = (task.rewardUSD / tronPriceUSD).toFixed(4);
-                
-                const taskItem = document.createElement('div');
-                taskItem.className = 'task-item';
-                taskItem.innerHTML = `
-                    <div class="task-info">
-                        <div class="task-title">${task.title}</div>
-                        <div class="task-description">${task.description}</div>
-                        <div class="task-description">İlerleme: ${progress}/${task.target}</div>
-                    </div>
-                    <div class="task-reward">${trxReward} TRX</div>
-                    <button class="task-btn ${isCompleted ? 'completed' : ''}" ${isCompleted ? '' : 'disabled'}>
-                        ${isCompleted ? 'Tamamlandı' : 'Devam Ediyor'}
-                    </button>
-                `;
-                tasksList.appendChild(taskItem);
-            });
+            updateAdTasks();
         }
         
         function updateAchievements() {
@@ -2373,23 +2405,35 @@
             achievementsList.innerHTML = '';
             
             appData.achievements.forEach(task => {
-                const current = userData.adCount || 0;
+                let current = 0;
+                
+                if (task.type === 'achievement') {
+                    current = userData.adCount || 0;
+                }
+                
                 const progress = Math.min(current, task.target);
                 const isCompleted = progress >= task.target;
-                const trxReward = (task.rewardUSD / tronPriceUSD).toFixed(4);
+                const isClaimed = userData.completedTasks && userData.completedTasks.includes(task.id);
                 
                 const taskItem = document.createElement('div');
                 taskItem.className = 'task-item';
+                
+                let buttonHTML = '';
+                if (isCompleted && !isClaimed) {
+                    buttonHTML = `<button class="task-btn" onclick="claimTask('${task.id}')">Ödülü Al</button>`;
+                } else if (isClaimed) {
+                    buttonHTML = `<button class="task-btn completed">Tamamlandı</button>`;
+                } else {
+                    buttonHTML = `<button class="task-btn" disabled>${progress}/${task.target}</button>`;
+                }
+                
                 taskItem.innerHTML = `
                     <div class="task-info">
                         <div class="task-title">${task.title}</div>
                         <div class="task-description">${task.description}</div>
-                        <div class="task-description">İlerleme: ${progress}/${task.target}</div>
                     </div>
-                    <div class="task-reward">${trxReward} TRX</div>
-                    <button class="task-btn ${isCompleted ? 'completed' : ''}" ${isCompleted ? '' : 'disabled'}>
-                        ${isCompleted ? 'Tamamlandı' : 'Devam Ediyor'}
-                    </button>
+                    <div class="task-reward">${task.reward} TRX</div>
+                    ${buttonHTML}
                 `;
                 achievementsList.appendChild(taskItem);
             });
@@ -2400,43 +2444,66 @@
             referralTasksList.innerHTML = '';
             
             appData.referralTasks.forEach(task => {
-                let current = 0;
-                let progress = 0;
-                
-                if (task.id.includes('referral')) {
-                    current = userData.referrals ? userData.referrals.length : 0;
-                    progress = Math.min(current, task.target);
-                } else {
-                    // Diğer görevler için tamamlanmış mı kontrol et
-                    current = userData.completedTasks && userData.completedTasks.includes(task.id) ? 1 : 0;
-                    progress = current;
-                }
-                
+                let current = userData.referrals ? userData.referrals.length : 0;
+                const progress = Math.min(current, task.target);
                 const isCompleted = progress >= task.target;
-                const trxReward = (task.rewardUSD / tronPriceUSD).toFixed(4);
+                const isClaimed = userData.completedTasks && userData.completedTasks.includes(task.id);
                 
                 const taskItem = document.createElement('div');
                 taskItem.className = 'task-item';
                 
                 let buttonHTML = '';
-                if (task.link) {
-                    buttonHTML = `<button class="task-btn external" onclick="window.open('${task.link}', '_blank')">Katıl</button>`;
+                if (isCompleted && !isClaimed) {
+                    buttonHTML = `<button class="task-btn" onclick="claimTask('${task.id}')">Ödülü Al</button>`;
+                } else if (isClaimed) {
+                    buttonHTML = `<button class="task-btn completed">Tamamlandı</button>`;
                 } else {
-                    buttonHTML = `<button class="task-btn ${isCompleted ? 'completed' : ''}" ${isCompleted ? '' : 'disabled'}>
-                        ${isCompleted ? 'Tamamlandı' : 'Devam Ediyor'}
-                    </button>`;
+                    buttonHTML = `<button class="task-btn" disabled>${progress}/${task.target}</button>`;
                 }
                 
                 taskItem.innerHTML = `
                     <div class="task-info">
                         <div class="task-title">${task.title}</div>
                         <div class="task-description">${task.description}</div>
-                        <div class="task-description">İlerleme: ${progress}/${task.target}</div>
                     </div>
-                    <div class="task-reward">${trxReward} TRX</div>
+                    <div class="task-reward">${task.reward} TRX</div>
                     ${buttonHTML}
                 `;
                 referralTasksList.appendChild(taskItem);
+            });
+        }
+        
+        function updateAdTasks() {
+            const dailyTasksList = document.getElementById('dailyTasksList');
+            dailyTasksList.innerHTML = '';
+            
+            appData.adTasks.forEach(task => {
+                let current = userData.dailyAdCount || 0;
+                const progress = Math.min(current, task.target);
+                const isCompleted = progress >= task.target;
+                const isClaimed = userData.completedTasks && userData.completedTasks.includes(task.id + '_' + new Date().toDateString());
+                
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                
+                let buttonHTML = '';
+                if (isCompleted && !isClaimed) {
+                    buttonHTML = `<button class="task-btn" onclick="claimTask('${task.id + '_' + new Date().toDateString()}')">Ödülü Al</button>`;
+                } else if (isClaimed) {
+                    buttonHTML = `<button class="task-btn completed">Tamamlandı</button>`;
+                } else {
+                    buttonHTML = `<button class="task-btn" disabled>${progress}/${task.target}</button>`;
+                }
+                
+                taskItem.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                    </div>
+                    <div class="task-reward">${task.reward} TRX</div>
+                    ${buttonHTML}
+                `;
+                dailyTasksList.appendChild(taskItem);
             });
         }
         
@@ -2463,9 +2530,58 @@
         
         function updateTaskProgress(taskType, increment) {
             // Bu fonksiyon görev ilerlemesini günceller
-            // Şu anlık basit bir implementasyon
             console.log(`Görev ilerlemesi güncellendi: ${taskType} +${increment}`);
         }
+        
+        // Global fonksiyonlar
+        window.claimTask = async function(taskId) {
+            let task = null;
+            let taskReward = 0;
+            
+            // Görevi bul
+            for (const achievement of appData.achievements) {
+                if (achievement.id === taskId) {
+                    task = achievement;
+                    taskReward = achievement.reward;
+                    break;
+                }
+            }
+            
+            if (!task) {
+                for (const referralTask of appData.referralTasks) {
+                    if (referralTask.id === taskId) {
+                        task = referralTask;
+                        taskReward = referralTask.reward;
+                        break;
+                    }
+                }
+            }
+            
+            if (!task) {
+                for (const adTask of appData.adTasks) {
+                    if (adTask.id + '_' + new Date().toDateString() === taskId) {
+                        task = adTask;
+                        taskReward = adTask.reward;
+                        break;
+                    }
+                }
+            }
+            
+            if (task) {
+                // Ödülü ver
+                userData.balance += taskReward;
+                userData.taskEarnings += taskReward;
+                userData.totalEarnings += taskReward;
+                
+                if (!userData.completedTasks) userData.completedTasks = [];
+                userData.completedTasks.push(taskId);
+                
+                await saveUserData();
+                updateUI();
+                
+                showStatusMessage(`Tebrikler! ${taskReward} TRX ödül kazandınız.`, 'success');
+            }
+        };
         
         function updateAdminPanel() {
             // İstatistikleri güncelle
@@ -2488,6 +2604,7 @@
             
             updateAdminUserList();
             updateWithdrawalRequests();
+            updateAdminTasksList();
         }
         
         function updateAdminUserList() {
@@ -2552,7 +2669,33 @@
                 });
         }
         
-        // Global fonksiyonlar
+        function updateAdminTasksList() {
+            const tasksList = document.getElementById('adminTasksList');
+            tasksList.innerHTML = '';
+            
+            const allTasks = [...appData.achievements, ...appData.referralTasks, ...appData.adTasks];
+            
+            if (allTasks.length === 0) {
+                tasksList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz görev yok.</div>';
+                return;
+            }
+            
+            allTasks.forEach((task, index) => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-title">${task.title} (${task.type})</div>
+                        <div class="task-description">${task.description}</div>
+                        <div class="task-description">Hedef: ${task.target} | Ödül: ${task.reward} TRX</div>
+                    </div>
+                    <button class="task-btn" onclick="adminDeleteTask('${task.type}', ${index})">Sil</button>
+                `;
+                tasksList.appendChild(taskItem);
+            });
+        }
+        
+        // Global admin fonksiyonları
         window.adminAddBalance = async function(userId, amount) {
             if (appData.users[userId]) {
                 appData.users[userId].balance += amount;
@@ -2666,6 +2809,75 @@
             updateWithdrawalRequests();
         };
         
+        window.adminAddTask = async function() {
+            const taskType = document.getElementById('taskType').value;
+            const title = document.getElementById('adminTaskTitle').value.trim();
+            const description = document.getElementById('adminTaskDescription').value.trim();
+            const target = parseInt(document.getElementById('adminTaskTarget').value);
+            const reward = parseFloat(document.getElementById('adminTaskReward').value);
+            const link = document.getElementById('adminTaskLink').value.trim() || null;
+            
+            if (!title || !description) {
+                showStatusMessage('Lütfen görev başlığı ve açıklaması girin.', 'error');
+                return;
+            }
+            
+            if (isNaN(target) || target <= 0) {
+                showStatusMessage('Lütfen geçerli bir hedef sayısı girin.', 'error');
+                return;
+            }
+            
+            if (isNaN(reward) || reward <= 0 || reward > 0.5) {
+                showStatusMessage('Lütfen 0.01 ile 0.5 TRX arasında bir ödül girin.', 'error');
+                return;
+            }
+            
+            const task = {
+                id: taskType + '_' + Date.now(),
+                title,
+                description,
+                reward,
+                target,
+                type: taskType,
+                link
+            };
+            
+            if (taskType === 'achievement') {
+                appData.achievements.push(task);
+            } else if (taskType === 'referral') {
+                appData.referralTasks.push(task);
+            } else if (taskType === 'ad') {
+                appData.adTasks.push(task);
+            }
+            
+            // Formu temizle
+            document.getElementById('adminTaskTitle').value = '';
+            document.getElementById('adminTaskDescription').value = '';
+            document.getElementById('adminTaskTarget').value = '';
+            document.getElementById('adminTaskReward').value = '';
+            document.getElementById('adminTaskLink').value = '';
+            
+            await saveAppDataToJSONBin();
+            updateAdminPanel();
+            showStatusMessage('Görev başarıyla eklendi!', 'success');
+        };
+        
+        window.adminDeleteTask = async function(taskType, index) {
+            if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+                if (taskType === 'achievement') {
+                    appData.achievements.splice(index, 1);
+                } else if (taskType === 'referral') {
+                    appData.referralTasks.splice(index, 1);
+                } else if (taskType === 'ad') {
+                    appData.adTasks.splice(index, 1);
+                }
+                
+                await saveAppDataToJSONBin();
+                updateAdminPanel();
+                showStatusMessage('Görev silindi!', 'success');
+            }
+        };
+        
         async function searchUser() {
             const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
             const userList = document.getElementById('adminUserList');
@@ -2719,12 +2931,12 @@
         
         async function updateRewards() {
             const newAdReward = parseFloat(prompt('Yeni reklam ödülü ($):', appData.adRewardUSD));
-            const newReferralReward = parseFloat(prompt('Yeni referans ödülü ($):', appData.referralRewardUSD));
+            const newReferralReward = parseFloat(prompt('Yeni referans ödülü (TRX):', appData.referralRewardTRX));
             const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarı (TRX):', appData.minWithdraw));
             const newDailyLimit = parseInt(prompt('Yeni günlük reklam limiti:', appData.dailyAdLimit));
             
             if (!isNaN(newAdReward) && newAdReward > 0) appData.adRewardUSD = newAdReward;
-            if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralRewardUSD = newReferralReward;
+            if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralRewardTRX = newReferralReward;
             if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) appData.minWithdraw = newMinWithdraw;
             if (!isNaN(newDailyLimit) && newDailyLimit > 0) appData.dailyAdLimit = newDailyLimit;
             
@@ -2742,12 +2954,12 @@
                     appData = {
                         adRewardUSD: 0.002,
                         minWithdraw: 2.5,
-                        referralRewardUSD: 0.02,
+                        referralRewardTRX: 0.5,
                         dailyAdLimit: 100,
                         appVersion: '2.0.0',
-                        dailyTasks: [],
                         achievements: [],
                         referralTasks: [],
+                        adTasks: [],
                         withdrawRequests: [],
                         completedWithdrawals: [],
                         users: {},
@@ -2766,7 +2978,7 @@
                     };
                     
                     // Görevleri başlat
-                    initializeTasks();
+                    initializeDefaultTasks();
                     
                     // Mevcut kullanıcıyı geri yükle
                     if (currentUser) {
