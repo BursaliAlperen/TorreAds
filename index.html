@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TorreAds - Reklam İzle, TRON Kazan</title>
+    <title>TorreAds - Veri Kurtarma</title>
     
     <!-- GigaPub SDK -->
     <script src="https://ad.gigapub.tech/script?id=986"></script>
@@ -823,6 +823,10 @@
             background: var(--gradient-secondary);
         }
 
+        .admin-control-btn.recovery {
+            background: var(--gradient-success);
+        }
+
         /* Admin User List */
         .admin-user-list {
             max-height: 400px;
@@ -1381,6 +1385,7 @@
                 <div class="admin-controls">
                     <button class="admin-control-btn" id="resetAdsBtn">Günlük Reklamları Sıfırla</button>
                     <button class="admin-control-btn" id="updateRewardsBtn">Ödülleri Güncelle</button>
+                    <button class="admin-control-btn recovery" id="recoverDataBtn">Verileri Kurtar</button>
                     <button class="admin-control-btn danger" id="clearDataBtn">Tüm Verileri Temizle</button>
                 </div>
             </div>
@@ -1424,6 +1429,9 @@
         const JSONBIN_BIN_ID = '68e0f039d0ea881f4094f01a';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+        // YEDEK JSONBIN ID - ESKİ VERİLER İÇİN
+        const JSONBIN_BACKUP_ID = '68e0f039d0ea881f4094f01a'; // Aynı bin ID, versiyonlama kullanacağız
 
         let tg;
         try {
@@ -1512,6 +1520,123 @@
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
         
+        // YENİ: Veri kurtarma fonksiyonu
+        async function recoverUserData() {
+            if (!confirm('JSONBin\'deki eski kullanıcı verilerini kurtarmak istediğinizden emin misiniz? Bu işlem mevcut verilerin üzerine yazacaktır.')) {
+                return;
+            }
+
+            try {
+                showStatusMessage('Eski veriler aranıyor...', 'info');
+                
+                // JSONBin versiyon geçmişini kontrol et
+                const versionsResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/versions`, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+
+                if (versionsResponse.ok) {
+                    const versions = await versionsResponse.json();
+                    console.log('Mevcut versiyonlar:', versions);
+                    
+                    if (versions && versions.length > 1) {
+                        // En eski 5 versiyonu kontrol et
+                        const oldVersions = versions.slice(-5);
+                        let recoveredData = null;
+                        
+                        for (const version of oldVersions) {
+                            try {
+                                const versionResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/versions/${version.version}`, {
+                                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                                });
+                                
+                                if (versionResponse.ok) {
+                                    const versionData = await versionResponse.json();
+                                    const oldAppData = versionData.record;
+                                    
+                                    // Eski verilerde kullanıcı var mı kontrol et
+                                    if (oldAppData && oldAppData.users && Object.keys(oldAppData.users).length > 0) {
+                                        recoveredData = oldAppData;
+                                        console.log(`Versiyon ${version.version}'da kullanıcı verileri bulundu:`, Object.keys(oldAppData.users).length, 'kullanıcı');
+                                        break;
+                                    }
+                                }
+                            } catch (error) {
+                                console.error(`Versiyon ${version.version} yüklenirken hata:`, error);
+                            }
+                        }
+                        
+                        if (recoveredData) {
+                            // Mevcut verileri yedekle
+                            const backupData = { ...appData };
+                            
+                            // Eski verileri yükle
+                            appData = { ...appData, ...recoveredData };
+                            
+                            // Eksik alanları tamamla
+                            initializeMissingData();
+                            
+                            // JSONBin'e kaydet
+                            await saveAppDataToJSONBin();
+                            
+                            showStatusMessage(`Başarılı! ${Object.keys(recoveredData.users).length} kullanıcının verisi kurtarıldı.`, 'success');
+                            updateAdminPanel();
+                            
+                            // Mevcut kullanıcının verilerini güncelle
+                            if (appData.users[userData.userId]) {
+                                userData = { ...userData, ...appData.users[userData.userId] };
+                                updateUI();
+                            }
+                        } else {
+                            showStatusMessage('Eski versiyonlarda kullanıcı verisi bulunamadı.', 'error');
+                        }
+                    } else {
+                        showStatusMessage('Yeterli versiyon geçmişi bulunamadı.', 'error');
+                    }
+                } else {
+                    showStatusMessage('Versiyon geçmişi alınamadı.', 'error');
+                }
+            } catch (error) {
+                console.error('Veri kurtarma hatası:', error);
+                showStatusMessage('Veri kurtarma işlemi başarısız: ' + error.message, 'error');
+            }
+        }
+
+        // YENİ: Manuel veri kurtarma
+        async function manualDataRecovery() {
+            const recoveryData = prompt('Eski verilerinizi buraya yapıştırın (JSON formatında):');
+            if (!recoveryData) return;
+            
+            try {
+                const parsedData = JSON.parse(recoveryData);
+                
+                if (parsedData.users && Object.keys(parsedData.users).length > 0) {
+                    if (confirm(`${Object.keys(parsedData.users).length} kullanıcının verisini geri yüklemek istediğinizden emin misiniz?`)) {
+                        // Mevcut verilerle birleştir
+                        appData.users = { ...appData.users, ...parsedData.users };
+                        
+                        // İstatistikleri güncelle
+                        appData.userStats.totalUsers = Object.keys(appData.users).length;
+                        
+                        // JSONBin'e kaydet
+                        await saveAppDataToJSONBin();
+                        
+                        showStatusMessage(`${Object.keys(parsedData.users).length} kullanıcının verisi geri yüklendi.`, 'success');
+                        updateAdminPanel();
+                        
+                        // Mevcut kullanıcının verilerini güncelle
+                        if (appData.users[userData.userId]) {
+                            userData = { ...userData, ...appData.users[userData.userId] };
+                            updateUI();
+                        }
+                    }
+                } else {
+                    showStatusMessage('Geçerli kullanıcı verisi bulunamadı.', 'error');
+                }
+            } catch (error) {
+                showStatusMessage('Geçersiz JSON formatı: ' + error.message, 'error');
+            }
+        }
+
         // Referans kodunu URL parametrelerinden kontrol et
         function getReferralCodeFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1591,6 +1716,7 @@
             document.getElementById('searchUserBtn').addEventListener('click', searchUser);
             document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
             document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
+            document.getElementById('recoverDataBtn').addEventListener('click', recoverUserData);
             document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
             
             // Ödeme adresi değişikliğini dinle
@@ -1913,6 +2039,7 @@
                     if (data.record) {
                         appData = { ...appData, ...data.record };
                         console.log('JSONBin verileri başarıyla yüklendi');
+                        console.log('Toplam kullanıcı:', Object.keys(appData.users).length);
                         
                         // Eksik alanları kontrol et ve varsayılan değerlerle doldur
                         initializeMissingData();
@@ -1960,6 +2087,8 @@
                 if (!user.joinDate) user.joinDate = new Date().toISOString();
                 if (!user.lastActive) user.lastActive = new Date().toISOString();
                 if (!user.isActive) user.isActive = true;
+                if (!user.referrals) user.referrals = [];
+                if (!user.withdrawHistory) user.withdrawHistory = [];
             }
         }
         
@@ -1998,7 +2127,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_API_KEY,
-                        'X-Bin-Versioning': 'false'
+                        'X-Bin-Versioning': 'true' // Versiyonlamayı aç
                     },
                     body: JSON.stringify(appData)
                 });
