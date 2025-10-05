@@ -8,6 +8,8 @@
     <!-- GigaPub SDK -->
     <script src="https://ad.gigapub.tech/script?id=986"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- AdsGram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1361,6 +1363,10 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
+        // ADSGRAM KONFİGÜRASYONU
+        const ADSGRAM_BLOCK_ID_REWARDED = "15769"; // Reward ad block ID
+        const ADSGRAM_BLOCK_ID_INTERSTITIAL = "15770"; // Interstitial ad block ID
+
         let tg;
         try {
             tg = window.Telegram.WebApp;
@@ -1374,6 +1380,9 @@
         }
         
         const ADMIN_USER_IDS = ['8401848644', '7904032877'];
+        
+        // ADSGRAM CONTROLLERS
+        let AdControllerRewarded, AdControllerInterstitial;
         
         // TAM VERİTABANI YAPISI
         let userData = {
@@ -1403,7 +1412,6 @@
             adRewardUSD: 0.001, // 0.001$ ödeme
             minWithdraw: 5, // 5 TRX minimum çekim
             referralRewardUSD: 0.02, // 0.02$ referans ödülü
-            referralBonusPercent: 25, // %25 referans bonusu
             dailyAdLimit: 200, // 200 reklam günlük limit
             appVersion: '2.0.0',
             
@@ -1547,6 +1555,19 @@
             userData.joinDate = new Date().toISOString();
             userData.lastActive = new Date().toISOString();
             
+            // AdsGram SDK başlatma
+            try {
+                if (typeof window.Adsgram !== 'undefined') {
+                    AdControllerRewarded = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID_REWARDED });
+                    AdControllerInterstitial = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID_INTERSTITIAL });
+                    console.log('AdsGram SDK başarıyla yüklendi');
+                } else {
+                    console.warn('AdsGram SDK yüklenemedi');
+                }
+            } catch (error) {
+                console.error('AdsGram başlatma hatası:', error);
+            }
+            
             // TRON fiyatını yükle
             await loadTronPrice();
             
@@ -1626,17 +1647,17 @@
             for (const userId in appData.users) {
                 const user = appData.users[userId];
                 if (user.referralCode === referralCode) {
-                    // REFERANS BONUSU: Referans olana 0.02$ ver
+                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.02$ ver
                     const usdReward = appData.referralRewardUSD;
                     const trxReward = usdToTrx(usdReward);
                     
-                    // Referans olan kullanıcıya bonus ver
+                    // 1. Referans olan kullanıcıya bonus ver
                     userData.referredBy = user.userId;
                     userData.balance += trxReward;
                     userData.referralBonus += trxReward;
                     userData.totalEarnings += trxReward;
                     
-                    // Referans veren kullanıcıya da referans listesine ekle
+                    // 2. Referans veren kullanıcıya da bonus ver
                     if (!user.referrals) user.referrals = [];
                     
                     // Yeni referansı ekle
@@ -1647,6 +1668,10 @@
                         bonusEarned: trxReward
                     });
                     
+                    // Referans veren kullanıcıya da bonus ver
+                    user.referralBonus += trxReward;
+                    user.balance += trxReward;
+                    user.totalEarnings += trxReward;
                     user.lastUpdated = Date.now();
                     
                     // JSONBin'e kaydet
@@ -2047,7 +2072,8 @@
             }
         }
         
-        function showAd() {
+        // GELİŞTİRİLMİŞ REKLAM GÖSTERİM FONKSİYONU - ADSGRAM ENTEGRASYONLU
+        async function showAd() {
             const adBtn = document.getElementById('rewardedBtn');
             
             // Limit kontrolü
@@ -2063,35 +2089,77 @@
             
             console.log('Reklam butonuna tıklandı, reklam gösteriliyor...');
             
-            // GigaPub SDK kullanımı
-            if (typeof window.showGiga !== 'undefined') {
-                console.log('GigaPub SDK bulundu, reklam gösteriliyor...');
+            // Öncelikle AdsGram deneyelim
+            if (AdControllerRewarded) {
+                console.log('AdsGram SDK ile reklam gösteriliyor...');
                 
-                // GigaPub SDK doğrudan kullanımı
-                window.showGiga("main")
-                    .then(() => {
-                        console.log('Reklam başarıyla izlendi, ödül veriliyor...');
-                        // Reklam başarıyla izlendi
+                try {
+                    const result = await AdControllerRewarded.show();
+                    
+                    if (result.done) {
+                        console.log('AdsGram reklamı başarıyla izlendi, ödül veriliyor...');
                         handleAdCompleted();
-                    })
-                    .catch((error) => {
-                        console.error('Reklam hatası:', error);
-                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                        
-                        // Butonu tekrar aktif et
-                        setTimeout(() => {
-                            updateRewardedAdButton();
-                        }, 2000);
-                    });
+                    } else {
+                        console.log('AdsGram reklamı tamamlanmadı:', result.description);
+                        showStatusMessage('Reklam tamamlanmadı. Lütfen tekrar deneyin.', 'error');
+                        updateRewardedAdButton();
+                    }
+                } catch (error) {
+                    console.error('AdsGram reklam hatası:', error);
+                    // Fallback: GigaPub SDK'ya geç
+                    await showAdWithGigaPub();
+                }
             } else {
-                // Fallback: Reklam gösterilemezse test modu
-                console.log('GigaPub SDK bulunamadı, test modu aktif');
-                showStatusMessage('Test reklamı gösteriliyor...', 'info');
-                
+                // Fallback: GigaPub SDK
+                await showAdWithGigaPub();
+            }
+        }
+
+        // GigaPub fallback fonksiyonu
+        async function showAdWithGigaPub() {
+            console.log('GigaPub SDK ile reklam gösteriliyor...');
+            
+            if (typeof window.showGiga !== 'undefined') {
+                try {
+                    await window.showGiga("main");
+                    console.log('GigaPub reklamı başarıyla izlendi, ödül veriliyor...');
+                    handleAdCompleted();
+                } catch (error) {
+                    console.error('GigaPub reklam hatası:', error);
+                    // Son fallback: Test reklamı
+                    await showTestAd();
+                }
+            } else {
+                // Son fallback: Test reklamı
+                await showTestAd();
+            }
+        }
+
+        // Test reklamı fallback fonksiyonu
+        async function showTestAd() {
+            console.log('Test reklamı gösteriliyor...');
+            showStatusMessage('Test reklamı gösteriliyor...', 'info');
+            
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     console.log('Test reklamı tamamlandı, ödül veriliyor...');
                     handleAdCompleted();
+                    resolve();
                 }, 3000);
+            });
+        }
+        
+        // Interstitial reklam gösterim fonksiyonu
+        async function showInterstitialAd() {
+            // Rastgele interstitial reklam göster (örneğin %30 şans)
+            if (Math.random() < 0.3 && AdControllerInterstitial) {
+                try {
+                    console.log('Interstitial reklam gösteriliyor...');
+                    await AdControllerInterstitial.show();
+                    console.log('Interstitial reklam gösterildi');
+                } catch (error) {
+                    console.error('Interstitial reklam hatası:', error);
+                }
             }
         }
         
@@ -2108,25 +2176,6 @@
             userData.totalEarnings += trxReward;
             userData.lastAdDate = new Date().toDateString();
             userData.lastUpdated = Date.now();
-            
-            // Referans bonusu - %25 bonus
-            if (userData.referredBy && appData.users[userData.referredBy]) {
-                const referrer = appData.users[userData.referredBy];
-                const referralBonus = trxReward * (appData.referralBonusPercent / 100);
-                
-                referrer.balance += referralBonus;
-                referrer.referralBonus += referralBonus;
-                referrer.totalEarnings += referralBonus;
-                referrer.lastUpdated = Date.now();
-                
-                // Referans geçmişini güncelle
-                const referral = referrer.referrals.find(r => r.userId === userData.userId);
-                if (referral) {
-                    referral.bonusEarned += referralBonus;
-                }
-                
-                console.log(`Referans bonusu verildi: ${referralBonus.toFixed(4)} TRX`);
-            }
             
             // Sistem istatistiklerini güncelle
             appData.userStats.totalEarnings += trxReward;
@@ -2512,13 +2561,11 @@
         async function updateRewards() {
             const newAdReward = parseFloat(prompt('Yeni reklam ödülü ($):', appData.adRewardUSD));
             const newReferralReward = parseFloat(prompt('Yeni referans ödülü ($):', appData.referralRewardUSD));
-            const newReferralBonus = parseInt(prompt('Yeni referans bonus yüzdesi (%):', appData.referralBonusPercent));
             const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarı (TRX):', appData.minWithdraw));
             const newDailyLimit = parseInt(prompt('Yeni günlük reklam limiti:', appData.dailyAdLimit));
             
             if (!isNaN(newAdReward) && newAdReward > 0) appData.adRewardUSD = newAdReward;
             if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralRewardUSD = newReferralReward;
-            if (!isNaN(newReferralBonus) && newReferralBonus > 0) appData.referralBonusPercent = newReferralBonus;
             if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) appData.minWithdraw = newMinWithdraw;
             if (!isNaN(newDailyLimit) && newDailyLimit > 0) appData.dailyAdLimit = newDailyLimit;
             
@@ -2537,7 +2584,6 @@
                         adRewardUSD: 0.001,
                         minWithdraw: 5,
                         referralRewardUSD: 0.02,
-                        referralBonusPercent: 25,
                         dailyAdLimit: 200,
                         appVersion: '2.0.0',
                         withdrawRequests: [],
