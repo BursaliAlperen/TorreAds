@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TorreAds - Veri Kurtarma</title>
+    <title>TorreAds - Reklam İzle, TRON Kazan</title>
     
     <!-- GigaPub SDK -->
     <script src="https://ad.gigapub.tech/script?id=986"></script>
@@ -591,35 +591,6 @@
             transform: translateY(-3px);
         }
 
-        /* Referral Link Box */
-        .referral-link-box {
-            background: rgba(59, 130, 246, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px dashed var(--tg-theme-hint-color);
-            margin-top: 15px;
-            cursor: pointer;
-            color: var(--tg-theme-text-color);
-            transition: var(--transition);
-            text-align: center;
-            font-size: 14px;
-            word-break: break-all;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .referral-link-box:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--accent-color);
-            transform: translateY(-3px);
-        }
-
-        .referral-link-label {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color);
-            margin-bottom: 8px;
-            display: block;
-        }
-
         /* Referral Share Button */
         .referral-share-btn {
             background: var(--gradient-primary);
@@ -823,10 +794,6 @@
             background: var(--gradient-secondary);
         }
 
-        .admin-control-btn.recovery {
-            background: var(--gradient-success);
-        }
-
         /* Admin User List */
         .admin-user-list {
             max-height: 400px;
@@ -875,11 +842,11 @@
         .admin-user-actions {
             display: flex;
             gap: 5px;
-            flex-wrap: wrap;
         }
 
         .admin-action-btn {
             padding: 6px 10px;
+            background: var(--gradient-primary);
             color: white;
             border: none;
             border-radius: 6px;
@@ -887,18 +854,6 @@
             font-size: 11px;
             font-weight: 600;
             transition: var(--transition);
-        }
-
-        .admin-action-btn.primary {
-            background: var(--gradient-primary);
-        }
-
-        .admin-action-btn.warning {
-            background: var(--gradient-warning);
-        }
-
-        .admin-action-btn.danger {
-            background: var(--gradient-secondary);
         }
 
         .admin-action-btn:hover {
@@ -1099,16 +1054,6 @@
                 padding: 6px 12px;
                 font-size: 11px;
             }
-            
-            .admin-user-actions {
-                flex-direction: column;
-                gap: 3px;
-            }
-            
-            .admin-action-btn {
-                padding: 4px 8px;
-                font-size: 10px;
-            }
         }
     </style>
 </head>
@@ -1269,19 +1214,6 @@
                     Kodu kopyalamak için üzerine tıklayın
                 </p>
             </div>
-
-            <!-- YENİ: Referans Linki Kopyalama -->
-            <div class="card">
-                <h2><i class="fas fa-link"></i> Referans Linkiniz</h2>
-                <p>Aşağıdaki linki arkadaşlarınızla paylaşın. Linke tıklayan herkes otomatik olarak sizin referansınız olarak kaydolur!</p>
-                <div class="referral-link-box" id="referralLinkBox" title="Linki kopyalamak için tıklayın">
-                    <span class="referral-link-label">Referans Linkiniz:</span>
-                    <span id="userReferralLink">Yükleniyor...</span>
-                </div>
-                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px; text-align: center;">
-                    Linki kopyalamak için üzerine tıklayın
-                </p>
-            </div>
             
             <div class="card">
                 <h2><i class="fas fa-share-alt"></i> Referansınızı Paylaşın</h2>
@@ -1385,7 +1317,6 @@
                 <div class="admin-controls">
                     <button class="admin-control-btn" id="resetAdsBtn">Günlük Reklamları Sıfırla</button>
                     <button class="admin-control-btn" id="updateRewardsBtn">Ödülleri Güncelle</button>
-                    <button class="admin-control-btn recovery" id="recoverDataBtn">Verileri Kurtar</button>
                     <button class="admin-control-btn danger" id="clearDataBtn">Tüm Verileri Temizle</button>
                 </div>
             </div>
@@ -1430,9 +1361,6 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-        // YEDEK JSONBIN ID - ESKİ VERİLER İÇİN
-        const JSONBIN_BACKUP_ID = '68e0f039d0ea881f4094f01a'; // Aynı bin ID, versiyonlama kullanacağız
-
         let tg;
         try {
             tg = window.Telegram.WebApp;
@@ -1475,6 +1403,7 @@
             adRewardUSD: 0.001, // 0.001$ ödeme
             minWithdraw: 5, // 5 TRX minimum çekim
             referralRewardUSD: 0.02, // 0.02$ referans ödülü
+            referralBonusPercent: 25, // %25 referans bonusu
             dailyAdLimit: 200, // 200 reklam günlük limit
             appVersion: '2.0.0',
             
@@ -1520,123 +1449,6 @@
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
         
-        // YENİ: Veri kurtarma fonksiyonu
-        async function recoverUserData() {
-            if (!confirm('JSONBin\'deki eski kullanıcı verilerini kurtarmak istediğinizden emin misiniz? Bu işlem mevcut verilerin üzerine yazacaktır.')) {
-                return;
-            }
-
-            try {
-                showStatusMessage('Eski veriler aranıyor...', 'info');
-                
-                // JSONBin versiyon geçmişini kontrol et
-                const versionsResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/versions`, {
-                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                });
-
-                if (versionsResponse.ok) {
-                    const versions = await versionsResponse.json();
-                    console.log('Mevcut versiyonlar:', versions);
-                    
-                    if (versions && versions.length > 1) {
-                        // En eski 5 versiyonu kontrol et
-                        const oldVersions = versions.slice(-5);
-                        let recoveredData = null;
-                        
-                        for (const version of oldVersions) {
-                            try {
-                                const versionResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/versions/${version.version}`, {
-                                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                                });
-                                
-                                if (versionResponse.ok) {
-                                    const versionData = await versionResponse.json();
-                                    const oldAppData = versionData.record;
-                                    
-                                    // Eski verilerde kullanıcı var mı kontrol et
-                                    if (oldAppData && oldAppData.users && Object.keys(oldAppData.users).length > 0) {
-                                        recoveredData = oldAppData;
-                                        console.log(`Versiyon ${version.version}'da kullanıcı verileri bulundu:`, Object.keys(oldAppData.users).length, 'kullanıcı');
-                                        break;
-                                    }
-                                }
-                            } catch (error) {
-                                console.error(`Versiyon ${version.version} yüklenirken hata:`, error);
-                            }
-                        }
-                        
-                        if (recoveredData) {
-                            // Mevcut verileri yedekle
-                            const backupData = { ...appData };
-                            
-                            // Eski verileri yükle
-                            appData = { ...appData, ...recoveredData };
-                            
-                            // Eksik alanları tamamla
-                            initializeMissingData();
-                            
-                            // JSONBin'e kaydet
-                            await saveAppDataToJSONBin();
-                            
-                            showStatusMessage(`Başarılı! ${Object.keys(recoveredData.users).length} kullanıcının verisi kurtarıldı.`, 'success');
-                            updateAdminPanel();
-                            
-                            // Mevcut kullanıcının verilerini güncelle
-                            if (appData.users[userData.userId]) {
-                                userData = { ...userData, ...appData.users[userData.userId] };
-                                updateUI();
-                            }
-                        } else {
-                            showStatusMessage('Eski versiyonlarda kullanıcı verisi bulunamadı.', 'error');
-                        }
-                    } else {
-                        showStatusMessage('Yeterli versiyon geçmişi bulunamadı.', 'error');
-                    }
-                } else {
-                    showStatusMessage('Versiyon geçmişi alınamadı.', 'error');
-                }
-            } catch (error) {
-                console.error('Veri kurtarma hatası:', error);
-                showStatusMessage('Veri kurtarma işlemi başarısız: ' + error.message, 'error');
-            }
-        }
-
-        // YENİ: Manuel veri kurtarma
-        async function manualDataRecovery() {
-            const recoveryData = prompt('Eski verilerinizi buraya yapıştırın (JSON formatında):');
-            if (!recoveryData) return;
-            
-            try {
-                const parsedData = JSON.parse(recoveryData);
-                
-                if (parsedData.users && Object.keys(parsedData.users).length > 0) {
-                    if (confirm(`${Object.keys(parsedData.users).length} kullanıcının verisini geri yüklemek istediğinizden emin misiniz?`)) {
-                        // Mevcut verilerle birleştir
-                        appData.users = { ...appData.users, ...parsedData.users };
-                        
-                        // İstatistikleri güncelle
-                        appData.userStats.totalUsers = Object.keys(appData.users).length;
-                        
-                        // JSONBin'e kaydet
-                        await saveAppDataToJSONBin();
-                        
-                        showStatusMessage(`${Object.keys(parsedData.users).length} kullanıcının verisi geri yüklendi.`, 'success');
-                        updateAdminPanel();
-                        
-                        // Mevcut kullanıcının verilerini güncelle
-                        if (appData.users[userData.userId]) {
-                            userData = { ...userData, ...appData.users[userData.userId] };
-                            updateUI();
-                        }
-                    }
-                } else {
-                    showStatusMessage('Geçerli kullanıcı verisi bulunamadı.', 'error');
-                }
-            } catch (error) {
-                showStatusMessage('Geçersiz JSON formatı: ' + error.message, 'error');
-            }
-        }
-
         // Referans kodunu URL parametrelerinden kontrol et
         function getReferralCodeFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1675,22 +1487,17 @@
             
             // Referans butonları
             document.getElementById('referralCodeBox').addEventListener('click', () => {
-                copyToClipboard(userData.referralCode);
-                showStatusMessage('Referans kodu kopyalandı!', 'success');
-            });
-            
-            // YENİ: Referans linki kopyalama
-            document.getElementById('referralLinkBox').addEventListener('click', () => {
-                const referralLink = generateReferralLink();
-                copyToClipboard(referralLink);
-                showStatusMessage('Referans linki kopyalandı!', 'success');
+                const message = `Sende bugün torreAds🎉' a katıl ve reklam izleyerek tron Kazanmaya başla \nReferans kodum (${userData.referralCode}) kodu girersen 0.02$ alırsın.\nhttps://t.me/TorreAds_Bot`;
+                
+                copyToClipboard(message);
+                showStatusMessage('Referans mesajı kopyalandı! Arkadaşlarınızla paylaşın.', 'success');
             });
             
             document.getElementById('submitReferralBtn').addEventListener('click', submitReferralCode);
             
             // Referans paylaş butonu
             document.getElementById('referralShareBtn').addEventListener('click', () => {
-                const message = `Sende bugün torreAds🎉' a katıl ve reklam izleyerek tron Kazanmaya başla \nReferans kodum (${userData.referralCode}) kodu girersen 0.02$ alırsın.\n${generateReferralLink()}`;
+                const message = `Sende bugün torreAds🎉' a katıl ve reklam izleyerek tron Kazanmaya başla \nReferans kodum (${userData.referralCode}) kodu girersen 0.02$ alırsın.\nhttps://t.me/TorreAds_Bot`;
                 
                 if (navigator.share) {
                     navigator.share({
@@ -1716,7 +1523,6 @@
             document.getElementById('searchUserBtn').addEventListener('click', searchUser);
             document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
             document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
-            document.getElementById('recoverDataBtn').addEventListener('click', recoverUserData);
             document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
             
             // Ödeme adresi değişikliğini dinle
@@ -1730,12 +1536,6 @@
             document.getElementById('tronChart').addEventListener('click', () => {
                 window.open('https://www.coingecko.com/tr/coins/tron', '_blank');
             });
-        }
-        
-        // YENİ: Referans linki oluştur
-        function generateReferralLink() {
-            const currentUrl = window.location.href.split('?')[0]; // Mevcut URL'yi al
-            return `${currentUrl}?ref=${userData.referralCode}`;
         }
         
         async function initApp() {
@@ -1806,7 +1606,7 @@
             setInterval(syncData, 5000);
         }
         
-        // Referans kodunu uygula - GÜNCELLENDİ
+        // Referans kodunu uygula
         async function applyReferralCode(referralCode) {
             if (!referralCode) return false;
             
@@ -1826,17 +1626,17 @@
             for (const userId in appData.users) {
                 const user = appData.users[userId];
                 if (user.referralCode === referralCode) {
-                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.02$ ver
+                    // REFERANS BONUSU: Referans olana 0.02$ ver
                     const usdReward = appData.referralRewardUSD;
                     const trxReward = usdToTrx(usdReward);
                     
-                    // 1. Referans olan kullanıcıya bonus ver
+                    // Referans olan kullanıcıya bonus ver
                     userData.referredBy = user.userId;
                     userData.balance += trxReward;
                     userData.referralBonus += trxReward;
                     userData.totalEarnings += trxReward;
                     
-                    // 2. Referans veren kullanıcıya da bonus ver ve referans sayısını artır
+                    // Referans veren kullanıcıya da referans listesine ekle
                     if (!user.referrals) user.referrals = [];
                     
                     // Yeni referansı ekle
@@ -1847,10 +1647,6 @@
                         bonusEarned: trxReward
                     });
                     
-                    // Referans veren kullanıcıya da bonus ver
-                    user.referralBonus += trxReward;
-                    user.balance += trxReward;
-                    user.totalEarnings += trxReward;
                     user.lastUpdated = Date.now();
                     
                     // JSONBin'e kaydet
@@ -2039,7 +1835,6 @@
                     if (data.record) {
                         appData = { ...appData, ...data.record };
                         console.log('JSONBin verileri başarıyla yüklendi');
-                        console.log('Toplam kullanıcı:', Object.keys(appData.users).length);
                         
                         // Eksik alanları kontrol et ve varsayılan değerlerle doldur
                         initializeMissingData();
@@ -2087,8 +1882,6 @@
                 if (!user.joinDate) user.joinDate = new Date().toISOString();
                 if (!user.lastActive) user.lastActive = new Date().toISOString();
                 if (!user.isActive) user.isActive = true;
-                if (!user.referrals) user.referrals = [];
-                if (!user.withdrawHistory) user.withdrawHistory = [];
             }
         }
         
@@ -2127,7 +1920,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_API_KEY,
-                        'X-Bin-Versioning': 'true' // Versiyonlamayı aç
+                        'X-Bin-Versioning': 'false'
                     },
                     body: JSON.stringify(appData)
                 });
@@ -2193,9 +1986,6 @@
             document.getElementById('referralCountDisplay').textContent = userData.referrals ? userData.referrals.length : 0;
             document.getElementById('referralBonusDisplay').textContent = `TRX ${userData.referralBonus.toFixed(3)}`;
             document.getElementById('userReferralCode').textContent = userData.referralCode;
-            
-            // YENİ: Referans linkini güncelle
-            document.getElementById('userReferralLink').textContent = generateReferralLink();
             
             updateWithdrawButton();
             updateRewardedAdButton();
@@ -2273,7 +2063,7 @@
             
             console.log('Reklam butonuna tıklandı, reklam gösteriliyor...');
             
-            // GigaPub SDK kontrolü
+            // GigaPub SDK kullanımı
             if (typeof window.showGiga !== 'undefined') {
                 console.log('GigaPub SDK bulundu, reklam gösteriliyor...');
                 
@@ -2318,6 +2108,25 @@
             userData.totalEarnings += trxReward;
             userData.lastAdDate = new Date().toDateString();
             userData.lastUpdated = Date.now();
+            
+            // Referans bonusu - %25 bonus
+            if (userData.referredBy && appData.users[userData.referredBy]) {
+                const referrer = appData.users[userData.referredBy];
+                const referralBonus = trxReward * (appData.referralBonusPercent / 100);
+                
+                referrer.balance += referralBonus;
+                referrer.referralBonus += referralBonus;
+                referrer.totalEarnings += referralBonus;
+                referrer.lastUpdated = Date.now();
+                
+                // Referans geçmişini güncelle
+                const referral = referrer.referrals.find(r => r.userId === userData.userId);
+                if (referral) {
+                    referral.bonusEarned += referralBonus;
+                }
+                
+                console.log(`Referans bonusu verildi: ${referralBonus.toFixed(4)} TRX`);
+            }
             
             // Sistem istatistiklerini güncelle
             appData.userStats.totalEarnings += trxReward;
@@ -2496,10 +2305,9 @@
                         <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
                     </div>
                     <div class="admin-user-actions">
-                        <button class="admin-action-btn primary" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                        <button class="admin-action-btn primary" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                        <button class="admin-action-btn warning" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                        <button class="admin-action-btn danger" onclick="adminDeleteUser('${user.userId}')">Sil</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                        <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
                     </div>
                 `;
                 userList.appendChild(userItem);
@@ -2576,7 +2384,7 @@
                         referredBy: appData.users[userId].referredBy,
                         referrals: appData.users[userId].referrals || [],
                         referralBonus: appData.users[userId].referralBonus || 0,
-                        withdrawHistory: [],
+                        withdrawHistory: appData.users[userId].withdrawHistory || [],
                         paymentAddress: appData.users[userId].paymentAddress || '',
                         joinDate: appData.users[userId].joinDate,
                         lastActive: new Date().toISOString(),
@@ -2596,54 +2404,6 @@
                     
                     showStatusMessage(`${userId} kullanıcısı sıfırlandı.`, 'success');
                     updateAdminPanel();
-                } else {
-                    showStatusMessage('Kullanıcı bulunamadı.', 'error');
-                }
-            }
-        };
-        
-        // YENİ: Kullanıcı silme fonksiyonu
-        window.adminDeleteUser = async function(userId) {
-            if (confirm(`${userId} kullanıcısını SİLMEK istediğinizden emin misiniz? Bu işlem geri alınamaz!`)) {
-                if (appData.users[userId]) {
-                    // Kullanıcıyı sil
-                    delete appData.users[userId];
-                    
-                    // İstatistikleri güncelle
-                    appData.userStats.totalUsers = Object.keys(appData.users).length;
-                    
-                    // Eğer silinen kullanıcı mevcut kullanıcıysa, yeni kullanıcı oluştur
-                    if (userData.userId === userId) {
-                        userData = {
-                            userId: userId,
-                            firstName: userData.firstName,
-                            lastName: userData.lastName,
-                            username: userData.username,
-                            balance: 0,
-                            adCount: 0,
-                            dailyAdCount: 0,
-                            lastAdDate: new Date().toDateString(),
-                            referralCode: generateReferralCode(),
-                            referredBy: '',
-                            referrals: [],
-                            referralBonus: 0,
-                            withdrawHistory: [],
-                            paymentAddress: '',
-                            joinDate: new Date().toISOString(),
-                            lastActive: new Date().toISOString(),
-                            totalEarnings: 0,
-                            isActive: true,
-                            lastUpdated: Date.now()
-                        };
-                        appData.users[userId] = userData;
-                        appData.userStats.totalUsers++;
-                    }
-                    
-                    await saveAppDataToJSONBin();
-                    
-                    showStatusMessage(`${userId} kullanıcısı silindi.`, 'success');
-                    updateAdminPanel();
-                    updateUI();
                 } else {
                     showStatusMessage('Kullanıcı bulunamadı.', 'error');
                 }
@@ -2720,10 +2480,9 @@
                             <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
                         </div>
                         <div class="admin-user-actions">
-                            <button class="admin-action-btn primary" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
-                            <button class="admin-action-btn primary" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
-                            <button class="admin-action-btn warning" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
-                            <button class="admin-action-btn danger" onclick="adminDeleteUser('${user.userId}')">Sil</button>
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                            <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
                         </div>
                     `;
                     userList.appendChild(userItem);
@@ -2753,11 +2512,13 @@
         async function updateRewards() {
             const newAdReward = parseFloat(prompt('Yeni reklam ödülü ($):', appData.adRewardUSD));
             const newReferralReward = parseFloat(prompt('Yeni referans ödülü ($):', appData.referralRewardUSD));
+            const newReferralBonus = parseInt(prompt('Yeni referans bonus yüzdesi (%):', appData.referralBonusPercent));
             const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarı (TRX):', appData.minWithdraw));
             const newDailyLimit = parseInt(prompt('Yeni günlük reklam limiti:', appData.dailyAdLimit));
             
             if (!isNaN(newAdReward) && newAdReward > 0) appData.adRewardUSD = newAdReward;
             if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralRewardUSD = newReferralReward;
+            if (!isNaN(newReferralBonus) && newReferralBonus > 0) appData.referralBonusPercent = newReferralBonus;
             if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) appData.minWithdraw = newMinWithdraw;
             if (!isNaN(newDailyLimit) && newDailyLimit > 0) appData.dailyAdLimit = newDailyLimit;
             
@@ -2776,6 +2537,7 @@
                         adRewardUSD: 0.001,
                         minWithdraw: 5,
                         referralRewardUSD: 0.02,
+                        referralBonusPercent: 25,
                         dailyAdLimit: 200,
                         appVersion: '2.0.0',
                         withdrawRequests: [],
