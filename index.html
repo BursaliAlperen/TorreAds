@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TorreAds - Reklam İzle, TRON Kazan</title>
     
-    <!-- Gigapub SDK -->
-    <script src="https://cdn.gigapub.com/js/gigapub.js"></script>
-    <!-- AdExtra SDK -->
-    <script async src="https://partner.adextra.io/jt/254e088e4b2148cb7ae6d69b4aac5abe9d22694a.js"></script>
+    <!-- GigaPub SDK -->
+    <script src="https://ad.gigapub.tech/script?id=986"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <!-- Font Awesome Icons -->
@@ -19,24 +17,24 @@
 
     <style>
         :root {
-            --tg-theme-bg-color: #f8fafc;
-            --tg-theme-text-color: #334155;
-            --tg-theme-button-color: #2563eb;
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #1e293b;
+            --tg-theme-button-color: #3b82f6;
             --tg-theme-button-text-color: #ffffff;
             --tg-theme-hint-color: #64748b;
-            --success-color: #059669;
-            --warning-color: #d97706;
-            --danger-color: #dc2626;
-            --secondary-bg-color: #e2e8f0;
-            --border-color: #cbd5e1;
-            --accent-color: #2563eb;
-            --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            --gradient-secondary: linear-gradient(135deg, #475569 0%, #334155 100%);
-            --gradient-success: linear-gradient(135deg, #059669 0%, #047857 100%);
-            --gradient-warning: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-            --gradient-card: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-            --shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
-            --shadow-light: 0 5px 15px rgba(37, 99, 235, 0.1);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --secondary-bg-color: #f8fafc;
+            --border-color: #e2e8f0;
+            --accent-color: #3b82f6;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --gradient-secondary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            --shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+            --shadow-light: 0 5px 15px rgba(59, 130, 246, 0.1);
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
@@ -141,7 +139,7 @@
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            background: linear-gradient(90deg, #2563eb, #1e40af);
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
@@ -191,7 +189,7 @@
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2);
         }
 
         .card::before {
@@ -227,7 +225,7 @@
             color: var(--tg-theme-text-color);
             margin-bottom: 10px;
             text-align: center;
-            background: linear-gradient(90deg, #2563eb, #1e40af);
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: pulse 2s infinite;
@@ -242,7 +240,7 @@
         }
 
         .ad-info-item {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 15px;
             border-radius: 12px;
             transition: var(--transition);
@@ -250,7 +248,7 @@
         }
 
         .ad-info-item:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             transform: translateY(-3px);
         }
 
@@ -433,7 +431,7 @@
             display: flex;
             justify-content: space-around;
             padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 -5px 20px rgba(59, 130, 246, 0.1);
             border-top: 1px solid var(--border-color);
             z-index: 999;
             backdrop-filter: blur(10px);
@@ -526,7 +524,7 @@
         .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
             outline: none;
             border-color: var(--tg-theme-button-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
             background: rgba(255, 255, 255, 1);
         }
 
@@ -534,7 +532,7 @@
         .referral-input-container {
             margin-top: 20px;
             padding: 20px;
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             border-radius: 12px;
             border: 1px solid var(--border-color);
             animation: fadeInUp 0.5s ease-out;
@@ -572,7 +570,7 @@
         }
 
         .referral-code-box {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 20px;
             border-radius: 12px;
             border: 1px dashed var(--tg-theme-hint-color);
@@ -588,7 +586,7 @@
         }
 
         .referral-code-box:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             border-color: var(--accent-color);
             transform: translateY(-3px);
         }
@@ -658,7 +656,7 @@
         .chart-container {
             margin-top: 20px;
             padding: 20px;
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             border-radius: 12px;
             border: 1px solid var(--border-color);
             animation: fadeInUp 0.5s ease-out;
@@ -691,12 +689,12 @@
         }
 
         .chart-change.positive {
-            background: rgba(5, 150, 105, 0.2);
+            background: rgba(16, 185, 129, 0.2);
             color: var(--success-color);
         }
 
         .chart-change.negative {
-            background: rgba(220, 38, 38, 0.2);
+            background: rgba(239, 68, 68, 0.2);
             color: var(--danger-color);
         }
 
@@ -716,7 +714,7 @@
         }
 
         .chart-placeholder:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .chart-info {
@@ -742,7 +740,7 @@
         }
 
         .admin-stat-card {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 20px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -752,7 +750,7 @@
         }
 
         .admin-stat-card:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             transform: translateY(-3px);
         }
 
@@ -804,7 +802,7 @@
         }
 
         .admin-user-item {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -816,7 +814,7 @@
         }
 
         .admin-user-item:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             transform: translateY(-2px);
         }
 
@@ -870,7 +868,7 @@
         }
 
         .withdraw-request-item {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -879,7 +877,7 @@
         }
 
         .withdraw-request-item:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             transform: translateY(-2px);
         }
 
@@ -902,7 +900,7 @@
         .withdraw-request-address {
             font-size: 11px;
             color: var(--tg-theme-hint-color);
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             padding: 8px;
             border-radius: 6px;
             margin: 5px 0;
@@ -912,7 +910,7 @@
         }
 
         .withdraw-request-address:hover {
-            background: rgba(37, 99, 235, 0.2);
+            background: rgba(59, 130, 246, 0.2);
         }
 
         .withdraw-request-date {
@@ -956,7 +954,7 @@
         }
 
         .referral-history-item {
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(59, 130, 246, 0.05);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -965,7 +963,7 @@
         }
 
         .referral-history-item:hover {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             transform: translateY(-2px);
         }
 
@@ -1012,7 +1010,7 @@
         .admin-user-list::-webkit-scrollbar-track,
         .withdraw-requests-list::-webkit-scrollbar-track,
         .referral-history::-webkit-scrollbar-track {
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             border-radius: 3px;
         }
 
@@ -1057,103 +1055,9 @@
                 font-size: 11px;
             }
         }
-
-        /* Registration Badge Styles */
-        .registration-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-left: 5px;
-        }
-
-        .badge-link {
-            background: var(--gradient-success);
-            color: white;
-        }
-
-        .badge-normal {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        /* AdExtra Container */
-        .adextra-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .adextra-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--danger-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 10001;
-        }
-
-        /* Gigapub Container */
-        .gigapub-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .gigapub-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--danger-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 10001;
-        }
     </style>
 </head>
 <body>
-    <!-- Gigapub Container -->
-    <div class="gigapub-container" id="gigapubContainer">
-        <button class="gigapub-close" id="gigapubClose">
-            <i class="fas fa-times"></i>
-        </button>
-        <div id="gigapubAdContainer"></div>
-    </div>
-
-    <!-- AdExtra Container -->
-    <div class="adextra-container" id="adextraContainer">
-        <button class="adextra-close" id="adextraClose">
-            <i class="fas fa-times"></i>
-        </button>
-        <div id="254e088e4b2148cb7ae6d69b4aac5abe9d22694a"></div>
-    </div>
-
     <div class="container">
         <!-- Ana Sayfa -->
         <div id="home-view" class="view">
@@ -1207,301 +1111,271 @@
                 </div>
             </div>
             
-            <!-- Reklam Butonları -->
+            <!-- Reklam Butonu -->
             <div class="ad-buttons">
                 <button class="btn btn-primary" id="rewardedBtn">
                     <i class="fas fa-play-circle"></i>
-                    Reklam İzle (+0.001 TRX)
-                </button>
-                <button class="btn btn-success" id="withdrawBtn">
-                    <i class="fas fa-money-bill-wave"></i>
-                    TRON Çek
+                    Reklam İzle (+0.001$)
                 </button>
             </div>
             
-            <!-- Referral Bölümü -->
-            <div class="card">
-                <h2><i class="fas fa-users"></i> Arkadaşlarını Davet Et</h2>
-                <p>Her arkadaşın için 0.01 TRX kazan!</p>
-                
-                <div class="referral-input-container">
-                    <label>Referans Kodu ile Kayıt Ol</label>
-                    <div class="referral-input-group">
-                        <input type="text" id="referralInput" placeholder="Referans kodunu gir">
-                        <button id="applyReferralBtn">Uygula</button>
-                    </div>
-                </div>
-                
-                <div class="referral-code-box" id="referralCodeBox">
-                    Kopyalamak için tıkla: <span id="referralCodeText">TORRE12345</span>
-                </div>
-                
-                <button class="referral-share-btn" id="referralShareBtn">
-                    <i class="fas fa-share-alt"></i>
-                    Arkadaşlarını Davet Et
-                </button>
-                
+            <!-- Çekim Butonu -->
+            <button class="btn btn-success" id="mainWithdrawBtn" disabled>
+                <i class="fas fa-money-bill-wave"></i>
+                Çekim Yapmak İçin 5 TRX'ye Ulaş
+            </button>
+
+            <!-- Sosyal Medya Butonları -->
+            <div class="card" style="margin-top: 30px;">
+                <h2><i class="fas fa-users"></i> Topluluğa Katılın</h2>
                 <div class="social-buttons">
-                    <button class="social-btn telegram" id="telegramBtn">
+                    <button class="social-btn telegram" id="telegramChannelBtn">
                         <i class="fab fa-telegram"></i>
-                        Telegram Kanalımız
+                        Telegram Kanalına Katılın
                     </button>
-                    <button class="social-btn group" id="groupBtn">
-                        <i class="fas fa-users"></i>
-                        Telegram Grubumuza Katıl
+                    <button class="social-btn group" id="telegramGroupBtn">
+                        <i class="fas fa-comments"></i>
+                        Telegram Grubuna Katılın
                     </button>
                 </div>
             </div>
         </div>
-        
-        <!-- Çekim Sayfası -->
+
+        <!-- Para Çekme View -->
         <div id="withdraw-view" class="view">
             <div class="header">
-                <h1>TRON Çekim</h1>
-                <p>TRON cüzdanınıza para çekin</p>
+                <h1>Para Çekme</h1>
+                <p>Kazancınızı talep edin</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-wallet"></i> Mevcut Bakiye</h2>
+                <h2><i class="fas fa-wallet"></i> Bakiyeniz</h2>
                 <div class="balance-amount" id="withdrawBalanceDisplay">TRX 0.00</div>
+                <p style="color: var(--tg-theme-hint-color); margin-top: 15px; text-align: center;">
+                    Minimum çekim miktarı 5 TRX'dir.
+                </p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-money-bill-wave"></i> Çekim Talep Et</h2>
-                
+                <h2><i class="fas fa-money-check"></i> Ödeme Detayları</h2>
                 <div class="input-group">
-                    <label for="withdrawAmount">Çekim Miktarı (TRX)</label>
-                    <input type="number" id="withdrawAmount" placeholder="Minimum: 10 TRX" min="10" step="0.1">
+                    <label for="paymentAddress"><i class="fas fa-address-card"></i> TRON Cüzdan Adresiniz</label>
+                    <input type="text" id="paymentAddress" placeholder="T... (TRON Adresi)">
+                    <p style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;">
+                        TRON (TRC20) adresinizi girin. T ile başlamalıdır.
+                    </p>
                 </div>
-                
-                <div class="input-group">
-                    <label for="tronAddress">TRON Cüzdan Adresi</label>
-                    <input type="text" id="tronAddress" placeholder="Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                </div>
-                
-                <button class="btn btn-success" id="requestWithdrawBtn">
+                <button class="btn btn-success" id="finalWithdrawBtn" disabled>
                     <i class="fas fa-paper-plane"></i>
-                    Çekim Talebi Gönder
+                    Para Çek
                 </button>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-history"></i> Çekim Geçmişi</h2>
-                <div id="withdrawHistory">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">Henüz çekim talebiniz yok</p>
-                </div>
             </div>
         </div>
         
-        <!-- Referans Sayfası -->
+        <!-- Referans View -->
         <div id="referral-view" class="view">
             <div class="header">
-                <h1>Referans Programı</h1>
-                <p>Arkadaşlarını davet et, TRON kazan</p>
+                <h1>Referanslar</h1>
+                <p>Arkadaşlarını davet et ve daha fazla kazan!</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-trophy"></i> Referans İstatistikleri</h2>
+                <h2><i class="fas fa-chart-bar"></i> Referans İstatistikleriniz</h2>
                 <div class="ad-info-grid">
                     <div class="ad-info-item">
                         <h3 id="referralCountDisplay">0</h3>
                         <p>Toplam Referans</p>
                     </div>
                     <div class="ad-info-item">
-                        <h3 id="referralEarningsDisplay">TRX 0.00</h3>
+                        <h3 id="referralBonusDisplay">TRX 0.00</h3>
                         <p>Referans Kazancı</p>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-share-alt"></i> Referans Linkin</h2>
-                <div class="referral-code-box" id="referralLinkBox">
-                    Kopyalamak için tıkla: <span id="referralLinkText">https://t.me/TorreAdsBot?start=ref12345</span>
+                <h2><i class="fas fa-user-plus"></i> Referans Kodunu Girin</h2>
+                <p>Eğer birisi sizi referans ettiyse, bonus almak için kodunu buraya girin!</p>
+                <div class="referral-input-container">
+                    <div class="referral-input-group">
+                        <input type="text" id="referralCodeInput" placeholder="Referans kodunu girin">
+                        <button id="submitReferralBtn">Gönder</button>
+                    </div>
                 </div>
-                
-                <button class="referral-share-btn" id="referralLinkShareBtn">
-                    <i class="fas fa-share-alt"></i>
-                    Referans Linkini Paylaş
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-qrcode"></i> Referans Kodunuz</h2>
+                <p>Bu kodu arkadaşlarınızla paylaşın. Katılan her onaylanmış arkadaş için 0.02$ değerinde TRX kazanırsınız!</p>
+                <div class="referral-code-box" id="referralCodeBox" title="Kopyalamak için tıklayın">
+                    <span id="userReferralCode">Yükleniyor...</span>
+                </div>
+                <p style="font-size:12px; color:var(--tg-theme-hint-color); margin-top:15px; text-align: center;">
+                    Kodu kopyalamak için üzerine tıklayın
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-share-alt"></i> Referansınızı Paylaşın</h2>
+                <p>Aşağıdaki butona tıklayarak referansınızı paylaşabilirsiniz!</p>
+                <button class="referral-share-btn" id="referralShareBtn">
+                    <i class="fas fa-share"></i>
+                    Referansımı Paylaş
                 </button>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-users"></i> Davet Ettiğin Kişiler</h2>
-                <div id="referralHistory">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">Henüz kimseyi davet etmedin</p>
+                <h2><i class="fas fa-history"></i> Referans Geçmişi</h2>
+                <div class="referral-history" id="referralHistory">
+                    <!-- Referans geçmişi buraya eklenecek -->
                 </div>
             </div>
         </div>
-        
-        <!-- Hakkında Sayfası -->
+
+        <!-- Hakkında View -->
         <div id="about-view" class="view">
             <div class="header">
-                <h1>TorreAds Hakkında</h1>
-                <p>Reklam izle, TRON kazan!</p>
+                <h1>Hakkında</h1>
+                <p>TorreAds hakkında bilgiler</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-info-circle"></i> Nasıl Çalışır?</h2>
-                <div class="about-section">
-                    <p>TorreAds, reklam izleyerek TRON (TRX) kazanabileceğiniz bir platformdur. Günlük 200 reklam izleyerek TRON kazanabilirsiniz.</p>
+                <h2><i class="fas fa-info-circle"></i> Uygulama Bilgileri</h2>
+                <div class="about-content">
+                    <div class="about-section">
+                        <h3>TorreAds Nedir?</h3>
+                        <p>TorreAds, Telegram kullanıcılarının reklam izleyerek ve görevleri tamamlayarak TRON kazanabileceği bir platformdur.</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>Nasıl Çalışır?</h3>
+                        <p>1. Reklam izleyerek TRON kazanın<br>2. Arkadaşlarınızı davet ederek ekstra kazanın<br>3. Bakiyeniz 5 TRX'ye ulaştığında çekim yapın</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>İletişim</h3>
+                        <p>Herhangi bir sorunuz veya öneriniz varsa, lütfen destek ekibimizle iletişime geçin: @TorreAdsSupport</p>
+                    </div>
                 </div>
-                
-                <div class="about-section">
-                    <h3>Kazanç Yöntemleri</h3>
-                    <p>• Reklam izleyerek TRON kazanın<br>
-                       • Arkadaşlarınızı davet ederek bonus kazanın<br>
-                       • Günlük bonuslar ve ödüller kazanın</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Minimum Çekim</h3>
-                    <p>Minimum çekim miktarı 10 TRX'dir. Çekimler 24-48 saat içinde işleme alınır.</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-question-circle"></i> Sıkça Sorulan Sorular</h2>
-                
-                <div class="about-section">
-                    <h3>Reklamlar neden yüklenmiyor?</h3>
-                    <p>Reklam yüklenmemesi genellikle internet bağlantısı veya reklam sağlayıcı kaynaklıdır. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Çekim talebim ne zaman işleme alınır?</h3>
-                    <p>Çekim talepleriniz 24-48 saat içinde işleme alınır. Hafta sonları ve resmi tatillerde işlem süresi uzayabilir.</p>
-                </div>
-                
-                <div class="about-section">
-                    <h3>Günde kaç reklam izleyebilirim?</h3>
-                    <p>Günde maksimum 200 reklam izleyebilirsiniz. Bu limit her gün saat 00:00'da sıfırlanır.</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-headset"></i> Destek</h2>
-                <p>Herhangi bir sorunuz veya sorununuz varsa, destek ekibimizle iletişime geçmekten çekinmeyin.</p>
-                
-                <button class="btn btn-primary" id="supportBtn">
-                    <i class="fas fa-envelope"></i>
-                    Destek Ekibiyle İletişime Geç
-                </button>
             </div>
         </div>
         
-        <!-- Admin Sayfası -->
+        <!-- Admin View -->
         <div id="admin-view" class="view">
             <div class="header">
-                <h1>Yönetici Paneli</h1>
-                <p>TorreAds Yönetim</p>
+                <h1>Admin Paneli</h1>
+                <p>Uygulama yönetimi ve kullanıcı kontrolü</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-chart-bar"></i> İstatistikler</h2>
+                <h2><i class="fas fa-chart-bar"></i> Genel İstatistikler</h2>
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalUsers">0</div>
+                        <div class="admin-stat-value" id="totalUsers">0</div>
                         <div class="admin-stat-label">Toplam Kullanıcı</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTotalAds">0</div>
+                        <div class="admin-stat-value" id="totalAds">0</div>
                         <div class="admin-stat-label">Toplam Reklam</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTodayUsers">0</div>
-                        <div class="admin-stat-label">Bugünkü Kullanıcı</div>
+                        <div class="admin-stat-value" id="totalWithdrawals">0</div>
+                        <div class="admin-stat-label">Toplam Çekim</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="admin-stat-value" id="adminTodayAds">0</div>
-                        <div class="admin-stat-label">Bugünkü Reklam</div>
+                        <div class="admin-stat-value" id="totalBalance">TRX 0.00</div>
+                        <div class="admin-stat-label">Toplam Bakiye</div>
                     </div>
                 </div>
             </div>
             
+            <!-- Kullanıcı Yönetimi -->
             <div class="card">
                 <h2><i class="fas fa-users"></i> Kullanıcı Yönetimi</h2>
+                <div class="input-group">
+                    <label for="userSearch">Kullanıcı Ara (ID veya İsim)</label>
+                    <input type="text" id="userSearch" placeholder="Kullanıcı ID veya isim girin">
+                </div>
+                <button class="btn btn-primary" id="searchUserBtn">Ara</button>
+                
                 <div class="admin-user-list" id="adminUserList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcı yükleniyor...</p>
+                    <!-- Kullanıcılar buraya eklenecek -->
                 </div>
             </div>
             
+            <!-- Çekim Talepleri -->
             <div class="card">
                 <h2><i class="fas fa-money-bill-wave"></i> Çekim Talepleri</h2>
                 <div class="withdraw-requests-list" id="withdrawRequestsList">
-                    <p style="text-align: center; color: var(--tg-theme-hint-color);">Çekim talebi yok</p>
+                    <!-- Çekim talepleri buraya eklenecek -->
                 </div>
             </div>
             
+            <!-- Sistem Ayarları -->
             <div class="card">
-                <h2><i class="fas fa-cog"></i> Yönetim Kontrolleri</h2>
+                <h2><i class="fas fa-cogs"></i> Sistem Ayarları</h2>
                 <div class="admin-controls">
-                    <button class="admin-control-btn" id="adminUpdateRatesBtn">
-                        <i class="fas fa-sync-alt"></i>
-                        Oranları Güncelle
-                    </button>
-                    <button class="admin-control-btn" id="adminResetDailyBtn">
-                        <i class="fas fa-redo"></i>
-                        Günlük Limitleri Sıfırla
-                    </button>
-                    <button class="admin-control-btn danger" id="adminClearDataBtn">
-                        <i class="fas fa-trash"></i>
-                        Tüm Verileri Temizle
-                    </button>
+                    <button class="admin-control-btn" id="resetAdsBtn">Günlük Reklamları Sıfırla</button>
+                    <button class="admin-control-btn" id="updateRewardsBtn">Ödülleri Güncelle</button>
+                    <button class="admin-control-btn danger" id="clearDataBtn">Tüm Verileri Temizle</button>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Durum Mesajı -->
     <div class="status-message" id="statusMessage"></div>
-    
+
     <!-- Alt Navigasyon -->
     <div class="footer-nav">
         <button class="nav-btn active" data-view="home-view">
-            <div class="icon"><i class="fas fa-home"></i></div>
-            <span>Ana Sayfa</span>
+            <div class="icon">
+                <i class="fas fa-home"></i>
+            </div>
+            Ana Sayfa
         </button>
         <button class="nav-btn" data-view="withdraw-view">
-            <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-            <span>Çekim</span>
+            <div class="icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            Para Çek
         </button>
         <button class="nav-btn" data-view="referral-view">
-            <div class="icon"><i class="fas fa-users"></i></div>
-            <span>Referans</span>
+            <div class="icon">
+                <i class="fas fa-user-friends"></i>
+            </div>
+            Referans
         </button>
         <button class="nav-btn" data-view="about-view">
-            <div class="icon"><i class="fas fa-info-circle"></i></div>
-            <span>Hakkında</span>
+            <div class="icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            Hakkında
         </button>
     </div>
 
     <script>
-        // Telegram WebApp başlatma
-        let tg;
-        try {
-            tg = window.Telegram.WebApp;
-            tg.expand();
-            tg.enableClosingConfirmation();
-        } catch (error) {
-            console.log("Telegram WebApp not available, using mock data");
-            tg = {
-                initDataUnsafe: {
-                    user: {
-                        id: 'test_user_' + Date.now(),
-                        first_name: 'Test User'
-                    }
-                }
-            };
-        }
-        
         // JSONBIN.IO KONFİGÜRASYONU
         const JSONBIN_API_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY.';
         const JSONBIN_BIN_ID = '68e0f039d0ea881f4094f01a';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-        // Kullanıcı verileri
+        let tg;
+        try {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+            tg.MainButton.hide();
+        } catch (error) {
+            tg = {
+                initDataUnsafe: { user: { id: 'test_user_' + Date.now(), first_name: 'Test User' } }
+            };
+        }
+        
+        const ADMIN_USER_IDS = ['8401848644', '7904032877'];
+        
+        // TAM VERİTABANI YAPISI
         let userData = {
             userId: '',
             balance: 0,
@@ -1526,10 +1400,10 @@
         
         let appData = {
             // Sistem Ayarları
-            adRewardUSD: 0.001,
-            minWithdraw: 10,
-            referralRewardUSD: 0.01,
-            dailyAdLimit: 200,
+            adRewardUSD: 0.001, // 0.001$ ödeme
+            minWithdraw: 5, // 5 TRX minimum çekim
+            referralRewardUSD: 0.02, // 0.02$ referans ödülü
+            dailyAdLimit: 200, // 200 reklam günlük limit
             appVersion: '2.0.0',
             
             // Çekimler
@@ -1557,7 +1431,7 @@
                 maintenanceMode: false,
                 newUserBonus: 0,
                 welcomeMessage: 'Hoş geldiniz!',
-                adCooldown: 2.5
+                adCooldown: 2.5 // 2.5 saniye bekleme
             },
             
             lastUpdated: Date.now(),
@@ -1565,18 +1439,20 @@
         };
 
         // TRON fiyat bilgisi
-        let tronPriceUSD = 0.12;
+        let tronPriceUSD = 0.12; // Varsayılan değer
         let tronPriceHistory = [];
         let chart = null;
-
-        // Gigapub reklam durumu
-        let gigapubAdShown = false;
-        let adextraAdShown = false;
 
         const views = document.querySelectorAll('.view');
         const navButtons = document.querySelectorAll('.nav-btn');
         const statusMessage = document.getElementById('statusMessage');
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+        
+        // Referans kodunu URL parametrelerinden kontrol et
+        function getReferralCodeFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('ref') || '';
+        }
         
         // Buton event listener'larını başlat
         function initEventListeners() {
@@ -1597,60 +1473,67 @@
                 navButtons.forEach(btn => btn.classList.remove('active'));
             });
             
-            // Reklam butonları
-            document.getElementById('rewardedBtn').addEventListener('click', showAds);
+            // Reklam butonu
+            document.getElementById('rewardedBtn').addEventListener('click', showAd);
             
             // Çekim butonları
-            document.getElementById('withdrawBtn').addEventListener('click', () => {
+            document.getElementById('mainWithdrawBtn').addEventListener('click', () => {
                 switchView('withdraw-view');
                 navButtons.forEach(btn => btn.classList.remove('active'));
-                document.querySelector('.nav-btn[data-view="withdraw-view"]').classList.add('active');
             });
             
-            document.getElementById('requestWithdrawBtn').addEventListener('click', requestWithdraw);
+            document.getElementById('finalWithdrawBtn').addEventListener('click', processWithdrawal);
             
             // Referans butonları
-            document.getElementById('referralCodeBox').addEventListener('click', copyReferralCode);
-            document.getElementById('applyReferralBtn').addEventListener('click', applyReferralCode);
-            document.getElementById('referralShareBtn').addEventListener('click', shareReferral);
-            document.getElementById('referralLinkBox').addEventListener('click', copyReferralLink);
-            document.getElementById('referralLinkShareBtn').addEventListener('click', shareReferralLink);
+            document.getElementById('referralCodeBox').addEventListener('click', () => {
+                const message = `Sende bugün torreAds🎉' a katıl ve reklam izleyerek tron Kazanmaya başla \nReferans kodum (${userData.referralCode}) kodu girersen 0.02$ alırsın.\nhttps://t.me/TorreAds_Bot`;
+                
+                copyToClipboard(message);
+                showStatusMessage('Referans mesajı kopyalandı! Arkadaşlarınızla paylaşın.', 'success');
+            });
+            
+            document.getElementById('submitReferralBtn').addEventListener('click', submitReferralCode);
+            
+            // Referans paylaş butonu
+            document.getElementById('referralShareBtn').addEventListener('click', () => {
+                const message = `Sende bugün torreAds🎉' a katıl ve reklam izleyerek tron Kazanmaya başla \nReferans kodum (${userData.referralCode}) kodu girersen 0.02$ alırsın.\nhttps://t.me/TorreAds_Bot`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'TorreAds - Reklam İzle, TRON Kazan',
+                        text: message
+                    });
+                } else {
+                    copyToClipboard(message);
+                    showStatusMessage('Referans mesajı kopyalandı! Arkadaşlarınızla paylaşın.', 'success');
+                }
+            });
             
             // Sosyal medya butonları
-            document.getElementById('telegramBtn').addEventListener('click', () => {
-                window.open('https://t.me/TorreAds', '_blank');
+            document.getElementById('telegramChannelBtn').addEventListener('click', () => {
+                window.open('https://t.me/Torrelabs', '_blank');
             });
             
-            document.getElementById('groupBtn').addEventListener('click', () => {
-                window.open('https://t.me/TorreAdsGroup', '_blank');
-            });
-            
-            // Destek butonu
-            document.getElementById('supportBtn').addEventListener('click', () => {
-                window.open('https://t.me/TorreAdsSupport', '_blank');
+            document.getElementById('telegramGroupBtn').addEventListener('click', () => {
+                window.open('https://t.me/torreAdsChat', '_blank');
             });
             
             // Admin butonları
-            document.getElementById('adminUpdateRatesBtn').addEventListener('click', updateRates);
-            document.getElementById('adminResetDailyBtn').addEventListener('click', resetDailyLimits);
-            document.getElementById('adminClearDataBtn').addEventListener('click', clearAllData);
+            document.getElementById('searchUserBtn').addEventListener('click', searchUser);
+            document.getElementById('resetAdsBtn').addEventListener('click', resetDailyAds);
+            document.getElementById('updateRewardsBtn').addEventListener('click', updateRewards);
+            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
             
-            // Gigapub ve AdExtra kapatma butonları
-            document.getElementById('gigapubClose').addEventListener('click', closeGigapubAd);
-            document.getElementById('adextraClose').addEventListener('click', closeAdExtraAd);
-            
-            // AdExtra container tıklama (dışarı tıklayınca kapatma)
-            document.getElementById('adextraContainer').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('adextraContainer')) {
-                    closeAdExtraAd();
-                }
+            // Ödeme adresi değişikliğini dinle
+            document.getElementById('paymentAddress').addEventListener('input', () => {
+                userData.paymentAddress = document.getElementById('paymentAddress').value;
+                saveUserData();
+                updateWithdrawButton();
             });
-            
-            // Gigapub container tıklama (dışarı tıklayınca kapatma)
-            document.getElementById('gigapubContainer').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('gigapubContainer')) {
-                    closeGigapubAd();
-                }
+
+            // TRON grafiği tıklama
+            document.getElementById('tronChart').addEventListener('click', () => {
+                window.open('https://www.coingecko.com/tr/coins/tron', '_blank');
             });
         }
         
@@ -1669,20 +1552,36 @@
             // JSONBin'den verileri yükle
             await loadAppDataFromJSONBin();
             
+            // Referans kodunu URL'den kontrol et
+            const referralCodeFromURL = getReferralCodeFromURL();
+            
             // Kullanıcı verisini kontrol et
             if (appData.users[userData.userId]) {
                 // Kullanıcı zaten varsa, verileri yükle
                 userData = { ...userData, ...appData.users[userData.userId] };
                 userData.lastActive = new Date().toISOString();
                 console.log('Mevcut kullanıcı yüklendi:', userData.userId);
+                
+                // URL'den referans kodu varsa ve kullanıcı daha önce referans kullanmadıysa
+                if (referralCodeFromURL && !userData.referredBy) {
+                    await applyReferralCode(referralCodeFromURL);
+                } else {
+                    showStatusMessage(appData.adminSettings.welcomeMessage, 'success');
+                }
             } else {
                 // Yeni kullanıcı oluştur
                 userData.referralCode = generateReferralCode();
                 userData.balance = appData.adminSettings.newUserBonus || 0;
-                
                 appData.users[userData.userId] = userData;
                 appData.userStats.totalUsers++;
                 console.log('Yeni kullanıcı oluşturuldu:', userData.userId);
+                
+                // URL'den referans kodu varsa uygula
+                if (referralCodeFromURL) {
+                    await applyReferralCode(referralCodeFromURL);
+                } else {
+                    showStatusMessage(appData.adminSettings.welcomeMessage, 'success');
+                }
                 
                 await saveAppDataToJSONBin();
             }
@@ -1692,6 +1591,7 @@
             if (userData.lastAdDate !== today) {
                 userData.dailyAdCount = 0;
                 userData.lastAdDate = today;
+                await saveUserData();
             }
             
             if (ADMIN_USER_IDS.includes(userData.userId.toString())) {
@@ -1701,233 +1601,22 @@
             updateUI();
             initEventListeners();
             
-            // Periyodik senkronizasyon başlat (10 saniyede bir)
-            setInterval(syncData, 10000);
-        }
-        
-        // Reklamları göster
-        function showAds() {
-            const btn = document.getElementById('rewardedBtn');
-            
-            // Günlük limit kontrolü
-            if (userData.dailyAdCount >= appData.dailyAdLimit) {
-                showStatusMessage('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin.', 'error');
-                return;
-            }
-            
-            // Butonu yükleniyor durumuna getir
-            btn.disabled = true;
-            btn.classList.add('btn-loading');
-            btn.innerHTML = 'Reklam Yükleniyor...';
-            
-            console.log('Reklam gösteriliyor...');
-            
-            // Gigapub reklamını göster (ilk reklam)
-            if (!gigapubAdShown) {
-                showGigapubAd();
-            } 
-            // AdExtra reklamını göster (ikinci reklam)
-            else if (!adextraAdShown) {
-                showAdExtraAd();
-            }
-        }
-        
-        // Gigapub reklamını göster
-        function showGigapubAd() {
-            const container = document.getElementById('gigapubContainer');
-            container.style.display = 'flex';
-            
-            console.log('Gigapub reklamı gösteriliyor...');
-            
-            // Gigapub reklamını başlat
-            if (typeof window.showGiga !== 'undefined') {
-                window.showGiga("main")
-                    .then(() => {
-                        // Reklam başarıyla izlendi
-                        console.log('Gigapub reklamı tamamlandı');
-                        gigapubAdShown = true;
-                        closeGigapubAd();
-                        
-                        // İkinci reklamı göster
-                        showAdExtraAd();
-                    })
-                    .catch(e => {
-                        // Reklam hatası
-                        console.error('Gigapub reklam hatası:', e);
-                        closeGigapubAd();
-                        resetRewardButton();
-                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                    });
-            } else {
-                // Fallback: Gigapub SDK bulunamazsa test modu
-                console.log('Gigapub SDK bulunamadı, test modu aktif');
-                showStatusMessage('Test reklamı gösteriliyor...', 'info');
-                
-                setTimeout(() => {
-                    console.log('Test reklamı tamamlandı');
-                    gigapubAdShown = true;
-                    closeGigapubAd();
-                    
-                    // İkinci reklamı göster
-                    showAdExtraAd();
-                }, 3000);
-            }
-        }
-        
-        // Gigapub reklamını kapat
-        function closeGigapubAd() {
-            const container = document.getElementById('gigapubContainer');
-            container.style.display = 'none';
-        }
-        
-        // AdExtra reklamını göster
-        function showAdExtraAd() {
-            const container = document.getElementById('adextraContainer');
-            container.style.display = 'flex';
-            
-            console.log('AdExtra reklamı gösteriliyor...');
-            
-            // AdExtra reklamını başlat
-            // AdExtra otomatik olarak reklam gösterir ve kapanır
-            // Burada reklamın izlenip izlenmediğini kontrol etmek için bir süre bekleyeceğiz
-            
-            // 30 saniye sonra otomatik kapanma (fallback)
-            setTimeout(() => {
-                if (document.getElementById('adextraContainer').style.display === 'flex') {
-                    console.log('AdExtra reklamı tamamlandı (timeout)');
-                    handleAdCompleted();
-                }
-            }, 30000);
-        }
-        
-        // AdExtra reklamını kapat
-        function closeAdExtraAd() {
-            const container = document.getElementById('adextraContainer');
-            container.style.display = 'none';
-        }
-        
-        // Reklam tamamlandığında ödül ver
-        function handleAdCompleted() {
-            const usdReward = appData.adRewardUSD;
-            const trxReward = usdToTrx(usdReward);
-            
-            console.log('Reklam tamamlandı, kullanıcıya ödül veriliyor:', trxReward, 'TRX');
-            
-            // Kullanıcı verilerini güncelle
-            userData.balance += trxReward;
-            userData.adCount++;
-            userData.dailyAdCount++;
-            userData.totalEarnings += trxReward;
-            userData.lastAdDate = new Date().toDateString();
-            userData.lastUpdated = Date.now();
-            
-            // Sistem istatistiklerini güncelle
-            appData.userStats.totalEarnings += trxReward;
-            
-            // Verileri kaydet
-            saveUserData().then(() => {
-                console.log('Kullanıcı verileri kaydedildi');
-                
-                // UI'ı güncelle
-                updateUI();
-                
-                // AdExtra container'ı kapat
-                closeAdExtraAd();
-                
-                // Reklam durumlarını sıfırla
-                gigapubAdShown = false;
-                adextraAdShown = false;
-                
-                // Butonu sıfırla
-                resetRewardButton();
-                
-                // Başarı mesajı göster
-                showStatusMessage(`Tebrikler! ${trxReward.toFixed(4)} TRX (${usdReward}$) kazandınız.`, 'success');
-                
-                console.log('Reklam işlemi tamamlandı');
-            }).catch(error => {
-                console.error('Veri kaydetme hatası:', error);
-                showStatusMessage('Ödül kaydedilirken bir hata oluştu.', 'error');
-                closeAdExtraAd();
-                resetRewardButton();
-            });
-        }
-        
-        // Ödül butonunu sıfırla
-        function resetRewardButton() {
-            const btn = document.getElementById('rewardedBtn');
-            btn.classList.remove('btn-loading');
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-play-circle"></i> Reklam İzle (+${usdToTrx(appData.adRewardUSD).toFixed(4)} TRX)`;
-        }
-        
-        // Çekim talep et
-        function requestWithdraw() {
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            const address = document.getElementById('tronAddress').value.trim();
-            
-            // Doğrulamalar
-            if (!amount || amount < appData.minWithdraw) {
-                showStatusMessage(`Minimum çekim miktarı ${appData.minWithdraw} TRX'dir.`, 'error');
-                return;
-            }
-            
-            if (amount > userData.balance) {
-                showStatusMessage('Yetersiz bakiye.', 'error');
-                return;
-            }
-            
-            if (!isValidTronAddress(address)) {
-                showStatusMessage('Geçerli bir TRON cüzdan adresi girin.', 'error');
-                return;
-            }
-            
-            // Çekim talebi oluştur
-            const withdrawRequest = {
-                id: 'wd_' + Date.now(),
-                userId: userData.userId,
-                userName: userData.firstName,
-                amount: amount,
-                address: address,
-                date: new Date().toISOString(),
-                status: 'pending'
-            };
-            
-            userData.paymentAddress = address;
-            
-            if (!userData.withdrawHistory) userData.withdrawHistory = [];
-            userData.withdrawHistory.push(withdrawRequest);
-            appData.withdrawRequests.push(withdrawRequest);
-            userData.balance -= amount;
-            
-            saveUserData().then(() => {
-                updateUI();
-                
-                // Formu temizle
-                document.getElementById('withdrawAmount').value = '';
-                document.getElementById('tronAddress').value = '';
-                
-                showStatusMessage(`Çekim talebiniz alındı. ${amount.toFixed(3)} TRX yakında gönderilecek.`, 'success');
-            });
+            // Periyodik senkronizasyon başlat (5 saniyede bir)
+            setInterval(syncData, 5000);
         }
         
         // Referans kodunu uygula
-        function applyReferralCode() {
-            const code = document.getElementById('referralInput').value.trim().toUpperCase();
-            
-            if (!code) {
-                showStatusMessage('Lütfen bir referans kodu girin.', 'error');
-                return;
-            }
+        async function applyReferralCode(referralCode) {
+            if (!referralCode) return false;
             
             if (userData.referredBy) {
-                showStatusMessage('Zaten bir referans kodu kullandınız.', 'error');
-                return;
+                console.log('Kullanıcı zaten bir referans kodu kullandı');
+                return false;
             }
             
-            if (code === userData.referralCode) {
-                showStatusMessage('Kendi referans kodunuzu kullanamazsınız.', 'error');
-                return;
+            if (referralCode === userData.referralCode) {
+                console.log('Kullanıcı kendi referans kodunu kullanamaz');
+                return false;
             }
             
             // JSONBin'de referans kodunu ara
@@ -1935,8 +1624,8 @@
             
             for (const userId in appData.users) {
                 const user = appData.users[userId];
-                if (user.referralCode === code) {
-                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.01$ ver
+                if (user.referralCode === referralCode) {
+                    // REFERANS BONUSU: Hem referans olana hem de referans verene 0.02$ ver
                     const usdReward = appData.referralRewardUSD;
                     const trxReward = usdToTrx(usdReward);
                     
@@ -1967,96 +1656,21 @@
                     appData.users[userData.userId] = userData;
                     appData.users[userId] = user;
                     
-                    saveAppDataToJSONBin().then(() => {
-                        updateUI();
-                        document.getElementById('referralInput').value = '';
-                        showStatusMessage(`Referans kodu başarıyla uygulandı! ${trxReward.toFixed(4)} TRX ödülünüz hesabınıza eklendi.`, 'success');
-                    });
+                    await saveAppDataToJSONBin();
                     
                     referrerFound = true;
+                    
+                    // Özel referans giriş mesajı
+                    showStatusMessage(`Referans linki ile giriş yaptınız! ${trxReward.toFixed(4)} TRX ödülünüz hesabınıza eklendi.`, 'success');
+                    
                     break;
                 }
             }
             
-            if (!referrerFound) {
-                showStatusMessage('Geçersiz referans kodu. Lütfen tekrar deneyin.', 'error');
-            }
+            return referrerFound;
         }
         
-        // Referans kodunu kopyala
-        function copyReferralCode() {
-            const code = document.getElementById('referralCodeText').textContent;
-            copyToClipboard(code);
-            showStatusMessage('Referans kodu panoya kopyalandı!', 'success');
-        }
-        
-        // Referans linkini kopyala
-        function copyReferralLink() {
-            const link = document.getElementById('referralLinkText').textContent;
-            copyToClipboard(link);
-            showStatusMessage('Referans linki panoya kopyalandı!', 'success');
-        }
-        
-        // Referans paylaş
-        function shareReferral() {
-            const code = document.getElementById('referralCodeText').textContent;
-            const message = `TorreAds uygulamasını kullanarak reklam izleyip TRON kazanıyorum! Benim referans kodumu kullanarak kaydol ve bonus kazan: ${code}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'TorreAds - Reklam İzle, TRON Kazan',
-                    text: message
-                });
-            } else {
-                copyToClipboard(message);
-                showStatusMessage('Referans mesajı panoya kopyalandı!', 'success');
-            }
-        }
-        
-        // Referans linkini paylaş
-        function shareReferralLink() {
-            const link = document.getElementById('referralLinkText').textContent;
-            const message = `TorreAds uygulamasını kullanarak reklam izleyip TRON kazanıyorum! Bu linkten kaydol ve bonus kazan: ${link}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'TorreAds - Reklam İzle, TRON Kazan',
-                    text: message
-                });
-            } else {
-                copyToClipboard(message);
-                showStatusMessage('Referans linki panoya kopyalandı!', 'success');
-            }
-        }
-        
-        // Panoya kopyala
-        function copyToClipboard(text) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text);
-            } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-        }
-        
-        // TRON adresi doğrulama
-        function isValidTronAddress(address) {
-            if (!address) return false;
-            // TRON adresi T ile başlar ve 34 karakter uzunluğundadır
-            const tronRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
-            return tronRegex.test(address.trim());
-        }
-        
-        // USD'yi TRX'ye çevir
-        function usdToTrx(usdAmount) {
-            return usdAmount / tronPriceUSD;
-        }
-        
-        // TRON fiyatını yükle
+        // TRON fiyatını yükle - Geliştirilmiş versiyon
         async function loadTronPrice() {
             try {
                 console.log('TRON fiyatı yükleniyor...');
@@ -2159,9 +1773,9 @@
             
             // Mavi gradient
             const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.8)');
-            gradient.addColorStop(1, 'rgba(37, 99, 235, 0.2)');
-            ctx.strokeStyle = '#2563eb';
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+            ctx.strokeStyle = '#3b82f6';
             
             const pointWidth = (width - padding * 2) / (tronPriceHistory.length - 1);
             
@@ -2191,11 +1805,24 @@
             
             ctx.beginPath();
             ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
-            ctx.fillStyle = '#2563eb';
+            ctx.fillStyle = '#3b82f6';
             ctx.fill();
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 2;
             ctx.stroke();
+        }
+        
+        // USD'yi TRX'ye çevir
+        function usdToTrx(usdAmount) {
+            return usdAmount / tronPriceUSD;
+        }
+        
+        // TRON adresi doğrulama
+        function isValidTronAddress(address) {
+            if (!address) return false;
+            // TRON adresi T ile başlar ve 34 karakter uzunluğundadır
+            const tronRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+            return tronRegex.test(address.trim());
         }
         
         async function loadAppDataFromJSONBin() {
@@ -2211,15 +1838,78 @@
                     if (data.record) {
                         appData = { ...appData, ...data.record };
                         console.log('JSONBin verileri başarıyla yüklendi');
+                        
+                        // Eksik alanları kontrol et ve varsayılan değerlerle doldur
+                        initializeMissingData();
                     }
                 } else {
                     console.error('JSONBin yükleme hatası:', response.status);
                     // Varsayılan verileri oluştur
+                    initializeDefaultData();
                     await saveAppDataToJSONBin();
                 }
             } catch (error) {
                 console.error('JSONBin yükleme hatası:', error);
+                // Varsayılan verileri oluştur
+                initializeDefaultData();
             }
+        }
+        
+        function initializeMissingData() {
+            // Eksik alanları kontrol et ve varsayılan değerlerle doldur
+            if (!appData.userStats) {
+                appData.userStats = {
+                    totalUsers: Object.keys(appData.users).length,
+                    activeUsers: Object.keys(appData.users).length,
+                    totalEarnings: 0,
+                    totalWithdrawals: 0
+                };
+            }
+            
+            if (!appData.systemLogs) appData.systemLogs = [];
+            if (!appData.errorLogs) appData.errorLogs = [];
+            if (!appData.rewardHistory) appData.rewardHistory = [];
+            if (!appData.adminSettings) {
+                appData.adminSettings = {
+                    maintenanceMode: false,
+                    newUserBonus: 0,
+                    welcomeMessage: 'Hoş geldiniz!',
+                    adCooldown: 2.5
+                };
+            }
+            
+            // Kullanıcı verilerini kontrol et
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                if (!user.totalEarnings) user.totalEarnings = user.balance + user.referralBonus;
+                if (!user.joinDate) user.joinDate = new Date().toISOString();
+                if (!user.lastActive) user.lastActive = new Date().toISOString();
+                if (!user.isActive) user.isActive = true;
+            }
+        }
+        
+        function initializeDefaultData() {
+            // Varsayılan admin ayarları
+            appData.adminSettings = {
+                maintenanceMode: false,
+                newUserBonus: 0,
+                welcomeMessage: 'Hoş geldiniz! TorreAds ile TRON kazanmaya başlayın.',
+                adCooldown: 2.5
+            };
+            
+            // Varsayılan istatistikler
+            appData.userStats = {
+                totalUsers: 0,
+                activeUsers: 0,
+                totalEarnings: 0,
+                totalWithdrawals: 0
+            };
+            
+            // Diğer koleksiyonlar
+            appData.systemLogs = [];
+            appData.errorLogs = [];
+            appData.rewardHistory = [];
+            appData.completedWithdrawals = [];
         }
         
         async function saveAppDataToJSONBin() {
@@ -2297,15 +1987,15 @@
             document.getElementById('adCountDisplay').textContent = userData.adCount;
             document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / ${appData.dailyAdLimit}`;
             document.getElementById('referralCountDisplay').textContent = userData.referrals ? userData.referrals.length : 0;
-            document.getElementById('referralEarningsDisplay').textContent = `TRX ${userData.referralBonus.toFixed(3)}`;
-            document.getElementById('referralCodeText').textContent = userData.referralCode;
-            document.getElementById('referralLinkText').textContent = `https://t.me/TorreAdsBot?start=${userData.referralCode}`;
+            document.getElementById('referralBonusDisplay').textContent = `TRX ${userData.referralBonus.toFixed(3)}`;
+            document.getElementById('userReferralCode').textContent = userData.referralCode;
             
             updateWithdrawButton();
             updateRewardedAdButton();
+            updateReferralHistory();
             
             if (userData.paymentAddress) {
-                document.getElementById('tronAddress').value = userData.paymentAddress;
+                document.getElementById('paymentAddress').value = userData.paymentAddress;
             }
             
             // Admin panelini güncelle
@@ -2331,14 +2021,22 @@
         }
         
         function updateWithdrawButton() {
-            const withdrawBtn = document.getElementById('withdrawBtn');
+            const withdrawBtn = document.getElementById('mainWithdrawBtn');
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
             
             if (userData.balance >= appData.minWithdraw) {
                 withdrawBtn.disabled = false;
                 withdrawBtn.innerHTML = `<i class="fas fa-money-bill-wave"></i> Para Çek (${userData.balance.toFixed(3)} TRX)`;
+                
+                if (userData.paymentAddress && isValidTronAddress(userData.paymentAddress)) {
+                    finalWithdrawBtn.disabled = false;
+                } else {
+                    finalWithdrawBtn.disabled = true;
+                }
             } else {
                 withdrawBtn.disabled = true;
                 withdrawBtn.innerHTML = `<i class="fas fa-money-bill-wave"></i> Çekim Yapmak İçin ${appData.minWithdraw} TRX'ye Ulaş`;
+                finalWithdrawBtn.disabled = true;
             }
         }
         
@@ -2352,6 +2050,170 @@
             }
         }
         
+        function showAd() {
+            const adBtn = document.getElementById('rewardedBtn');
+            
+            // Limit kontrolü
+            if (userData.dailyAdCount >= appData.dailyAdLimit) {
+                showStatusMessage('Bugünkü reklam limitinize ulaştınız. Yarın tekrar deneyin!', 'error');
+                return;
+            }
+            
+            // Butonu kilitle
+            adBtn.disabled = true;
+            adBtn.classList.add('btn-loading');
+            adBtn.innerHTML = 'Reklam Yükleniyor...';
+            
+            console.log('Reklam butonuna tıklandı, reklam gösteriliyor...');
+            
+            // GigaPub SDK kontrolü
+            if (typeof window.showGiga !== 'undefined') {
+                console.log('GigaPub SDK bulundu, reklam gösteriliyor...');
+                
+                // GigaPub SDK doğrudan kullanımı
+                window.showGiga("main")
+                    .then(() => {
+                        console.log('Reklam başarıyla izlendi, ödül veriliyor...');
+                        // Reklam başarıyla izlendi
+                        handleAdCompleted();
+                    })
+                    .catch((error) => {
+                        console.error('Reklam hatası:', error);
+                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                        
+                        // Butonu tekrar aktif et
+                        setTimeout(() => {
+                            updateRewardedAdButton();
+                        }, 2000);
+                    });
+            } else {
+                // Fallback: Reklam gösterilemezse test modu
+                console.log('GigaPub SDK bulunamadı, test modu aktif');
+                showStatusMessage('Test reklamı gösteriliyor...', 'info');
+                
+                setTimeout(() => {
+                    console.log('Test reklamı tamamlandı, ödül veriliyor...');
+                    handleAdCompleted();
+                }, 3000);
+            }
+        }
+        
+        function handleAdCompleted() {
+            const usdReward = appData.adRewardUSD;
+            const trxReward = usdToTrx(usdReward);
+            
+            console.log('Reklam tamamlandı, kullanıcıya ödül veriliyor:', trxReward, 'TRX');
+            
+            // Kullanıcı verilerini güncelle
+            userData.balance += trxReward;
+            userData.adCount++;
+            userData.dailyAdCount++;
+            userData.totalEarnings += trxReward;
+            userData.lastAdDate = new Date().toDateString();
+            userData.lastUpdated = Date.now();
+            
+            // Sistem istatistiklerini güncelle
+            appData.userStats.totalEarnings += trxReward;
+            
+            // Verileri kaydet
+            saveUserData().then(() => {
+                console.log('Kullanıcı verileri kaydedildi');
+                
+                // UI'ı güncelle
+                updateUI();
+                
+                // Başarı mesajı göster
+                showStatusMessage(`Tebrikler! ${trxReward.toFixed(4)} TRX (${usdReward}$) kazandınız.`, 'success');
+                
+                // 2.5 saniye bekleme
+                setTimeout(() => {
+                    updateRewardedAdButton();
+                }, 2500);
+                
+                console.log('Reklam işlemi tamamlandı, buton sıfırlanıyor');
+            }).catch(error => {
+                console.error('Veri kaydetme hatası:', error);
+                showStatusMessage('Ödül kaydedilirken bir hata oluştu.', 'error');
+            });
+        }
+        
+        async function processWithdrawal() {
+            const paymentAddress = document.getElementById('paymentAddress').value.trim();
+            
+            if (!paymentAddress) {
+                showStatusMessage('Lütfen geçerli bir TRON cüzdan adresi girin.', 'error');
+                return;
+            }
+            
+            if (!isValidTronAddress(paymentAddress)) {
+                showStatusMessage('Geçersiz TRON adresi. Lütfen T ile başlayan geçerli bir TRON adresi girin.', 'error');
+                return;
+            }
+            
+            if (userData.balance < appData.minWithdraw) {
+                showStatusMessage(`Çekim yapmak için en az ${appData.minWithdraw} TRX'ye ihtiyacınız var.`, 'error');
+                return;
+            }
+            
+            userData.paymentAddress = paymentAddress;
+            const withdrawal = {
+                id: 'wd_' + Date.now(),
+                userId: userData.userId,
+                userName: userData.firstName,
+                amount: userData.balance,
+                address: paymentAddress,
+                date: new Date().toISOString(),
+                status: 'pending',
+                processedBy: null,
+                processedAt: null
+            };
+            
+            if (!userData.withdrawHistory) userData.withdrawHistory = [];
+            userData.withdrawHistory.push(withdrawal);
+            appData.withdrawRequests.push(withdrawal);
+            userData.balance = 0;
+            
+            await saveUserData();
+            updateUI();
+            
+            showStatusMessage(`Çekim talebiniz alındı. ${withdrawal.amount.toFixed(3)} TRX yakında gönderilecek.`, 'success');
+            switchView('home-view');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.nav-btn[data-view="home-view"]').classList.add('active');
+        }
+        
+        async function submitReferralCode() {
+            const referralCodeInput = document.getElementById('referralCodeInput');
+            const referralCode = referralCodeInput.value.trim().toUpperCase();
+            
+            if (!referralCode) {
+                showStatusMessage('Lütfen bir referans kodu girin.', 'error');
+                return;
+            }
+            
+            const success = await applyReferralCode(referralCode);
+            
+            if (success) {
+                referralCodeInput.value = '';
+                updateUI();
+            } else {
+                showStatusMessage('Geçersiz referans kodu. Lütfen tekrar deneyin.', 'error');
+            }
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+        }
+        
         function showStatusMessage(message, type) {
             statusMessage.textContent = message;
             statusMessage.className = `status-message ${type}`;
@@ -2362,7 +2224,27 @@
             }, 5000);
         }
         
-        // Admin panelini güncelle
+        function updateReferralHistory() {
+            const referralHistory = document.getElementById('referralHistory');
+            referralHistory.innerHTML = '';
+            
+            if (!userData.referrals || userData.referrals.length === 0) {
+                referralHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Henüz referansınız yok.</p>';
+                return;
+            }
+            
+            userData.referrals.forEach(ref => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'referral-history-item';
+                historyItem.innerHTML = `
+                    <div class="referral-history-user">${ref.userName || 'Kullanıcı'} (${ref.userId})</div>
+                    <div class="referral-history-date">${new Date(ref.date).toLocaleDateString('tr-TR')}</div>
+                    <div class="referral-history-bonus">+${ref.bonusEarned.toFixed(4)} TRX</div>
+                `;
+                referralHistory.appendChild(historyItem);
+            });
+        }
+        
         function updateAdminPanel() {
             // İstatistikleri güncelle
             let totalUsers = Object.keys(appData.users).length;
@@ -2377,32 +2259,324 @@
                 totalWithdrawals += user.withdrawHistory ? user.withdrawHistory.length : 0;
             }
             
-            document.getElementById('adminTotalUsers').textContent = totalUsers;
-            document.getElementById('adminTotalAds').textContent = totalAds;
-            document.getElementById('adminTodayUsers').textContent = totalUsers; // Basit bir değer
-            document.getElementById('adminTodayAds').textContent = totalAds; // Basit bir değer
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('totalAds').textContent = totalAds;
+            document.getElementById('totalWithdrawals').textContent = totalWithdrawals;
+            document.getElementById('totalBalance').textContent = `TRX ${totalBalance.toFixed(2)}`;
+            
+            updateAdminUserList();
+            updateWithdrawalRequests();
         }
         
-        // Admin buton işlevleri
-        function updateRates() {
-            showStatusMessage('Oranlar güncellendi.', 'success');
+        function updateAdminUserList() {
+            const userList = document.getElementById('adminUserList');
+            userList.innerHTML = '';
+            
+            const users = Object.values(appData.users);
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'admin-user-item';
+                userItem.innerHTML = `
+                    <div class="admin-user-info">
+                        <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
+                        <div class="admin-user-balance">Bakiye: TRX ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
+                        <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
+                    </div>
+                    <div class="admin-user-actions">
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                        <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
+                    </div>
+                `;
+                userList.appendChild(userItem);
+            });
         }
         
-        function resetDailyLimits() {
-            showStatusMessage('Günlük limitler sıfırlandı.', 'success');
+        function updateWithdrawalRequests() {
+            const requestsList = document.getElementById('withdrawRequestsList');
+            requestsList.innerHTML = '';
+            
+            if (appData.withdrawRequests.length === 0) {
+                requestsList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Bekleyen çekim talebi yok.</div>';
+                return;
+            }
+            
+            appData.withdrawRequests
+                .filter(request => request.status === 'pending')
+                .forEach(request => {
+                    const requestItem = document.createElement('div');
+                    requestItem.className = 'withdraw-request-item';
+                    requestItem.innerHTML = `
+                        <div class="withdraw-request-info">
+                            <div class="withdraw-request-user">${request.userName} (${request.userId})</div>
+                            <div class="withdraw-request-details">Miktar: TRX ${request.amount.toFixed(3)} | Adres: </div>
+                            <div class="withdraw-request-address" onclick="copyToClipboard('${request.address}'); showStatusMessage('TRON adresi kopyalandı!', 'success')">
+                                ${request.address}
+                            </div>
+                            <div class="withdraw-request-date">Tarih: ${new Date(request.date).toLocaleDateString('tr-TR')}</div>
+                        </div>
+                        <div class="withdraw-request-actions">
+                            <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal('${request.id}', 'approved')">Onayla</button>
+                            <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal('${request.id}', 'rejected')">Reddet</button>
+                        </div>
+                    `;
+                    requestsList.appendChild(requestItem);
+                });
         }
         
-        function clearAllData() {
+        // Global admin fonksiyonları
+        window.adminAddBalance = async function(userId, amount) {
+            if (appData.users[userId]) {
+                appData.users[userId].balance += amount;
+                appData.users[userId].totalEarnings += amount;
+                appData.users[userId].lastUpdated = Date.now();
+                
+                await saveAppDataToJSONBin();
+                
+                if (userData.userId === userId) {
+                    userData.balance += amount;
+                    userData.totalEarnings += amount;
+                    updateUI();
+                }
+                
+                showStatusMessage(`${userId} kullanıcısına ${amount} TRX eklendi.`, 'success');
+                updateAdminPanel();
+            } else {
+                showStatusMessage('Kullanıcı bulunamadı.', 'error');
+            }
+        };
+        
+        window.adminResetUser = async function(userId) {
+            if (confirm(`${userId} kullanıcısını sıfırlamak istediğinizden emin misiniz?`)) {
+                if (appData.users[userId]) {
+                    const newUserData = {
+                        userId: appData.users[userId].userId,
+                        firstName: appData.users[userId].firstName,
+                        lastName: appData.users[userId].lastName,
+                        username: appData.users[userId].username,
+                        balance: 0,
+                        adCount: 0,
+                        dailyAdCount: 0,
+                        lastAdDate: new Date().toDateString(),
+                        referralCode: appData.users[userId].referralCode,
+                        referredBy: appData.users[userId].referredBy,
+                        referrals: appData.users[userId].referrals || [],
+                        referralBonus: appData.users[userId].referralBonus || 0,
+                        withdrawHistory: appData.users[userId].withdrawHistory || [],
+                        paymentAddress: appData.users[userId].paymentAddress || '',
+                        joinDate: appData.users[userId].joinDate,
+                        lastActive: new Date().toISOString(),
+                        totalEarnings: 0,
+                        isActive: true,
+                        lastUpdated: Date.now()
+                    };
+                    
+                    appData.users[userId] = newUserData;
+                    
+                    await saveAppDataToJSONBin();
+                    
+                    if (userData.userId === userId) {
+                        userData = newUserData;
+                        updateUI();
+                    }
+                    
+                    showStatusMessage(`${userId} kullanıcısı sıfırlandı.`, 'success');
+                    updateAdminPanel();
+                } else {
+                    showStatusMessage('Kullanıcı bulunamadı.', 'error');
+                }
+            }
+        };
+        
+        window.adminProcessWithdrawal = async function(requestId, action) {
+            const requestIndex = appData.withdrawRequests.findIndex(req => req.id === requestId);
+            if (requestIndex === -1) {
+                showStatusMessage('Çekim talebi bulunamadı.', 'error');
+                return;
+            }
+            
+            const request = appData.withdrawRequests[requestIndex];
+            
+            if (action === 'approved') {
+                appData.withdrawRequests[requestIndex].status = 'approved';
+                appData.withdrawRequests[requestIndex].processedBy = userData.userId;
+                appData.withdrawRequests[requestIndex].processedAt = new Date().toISOString();
+                
+                // Completed withdrawals'a ekle
+                appData.completedWithdrawals.push(appData.withdrawRequests[requestIndex]);
+                
+                showStatusMessage(`Çekim talebi onaylandı. ${request.amount.toFixed(3)} TRX gönderildi.`, 'success');
+            } else {
+                appData.withdrawRequests[requestIndex].status = 'rejected';
+                appData.withdrawRequests[requestIndex].processedBy = userData.userId;
+                appData.withdrawRequests[requestIndex].processedAt = new Date().toISOString();
+                
+                // Kullanıcının bakiyesini geri yükle
+                if (appData.users[request.userId]) {
+                    appData.users[request.userId].balance += request.amount;
+                    appData.users[request.userId].lastUpdated = Date.now();
+                    
+                    if (appData.users[request.userId].withdrawHistory) {
+                        const userWithdrawalIndex = appData.users[request.userId].withdrawHistory.findIndex(w => w.id === requestId);
+                        if (userWithdrawalIndex !== -1) {
+                            appData.users[request.userId].withdrawHistory[userWithdrawalIndex].status = 'rejected';
+                        }
+                    }
+                    
+                    if (userData.userId === request.userId) {
+                        userData.balance += request.amount;
+                        updateUI();
+                    }
+                }
+                
+                showStatusMessage('Çekim talebi reddedildi ve bakiye iade edildi.', 'success');
+            }
+            
+            await saveAppDataToJSONBin();
+            updateWithdrawalRequests();
+        };
+        
+        async function searchUser() {
+            const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+            const userList = document.getElementById('adminUserList');
+            userList.innerHTML = '';
+            
+            let foundUsers = 0;
+            
+            for (const userId in appData.users) {
+                const user = appData.users[userId];
+                const userName = (user.firstName || '').toLowerCase();
+                const userIdStr = user.userId.toString();
+                
+                if (userName.includes(searchTerm) || userIdStr.includes(searchTerm)) {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'admin-user-item';
+                    userItem.innerHTML = `
+                        <div class="admin-user-info">
+                            <div class="admin-user-id">${user.firstName || 'Kullanıcı'} (${user.userId})</div>
+                            <div class="admin-user-balance">Bakiye: TRX ${(user.balance || 0).toFixed(3)} | Reklam: ${user.adCount || 0} | Referans: ${user.referrals ? user.referrals.length : 0}</div>
+                            <div class="admin-user-date">Katılım: ${new Date(user.joinDate).toLocaleDateString('tr-TR')}</div>
+                        </div>
+                        <div class="admin-user-actions">
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 0.1)">+0.1</button>
+                            <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1</button>
+                            <button class="admin-action-btn" onclick="adminResetUser('${user.userId}')">Sıfırla</button>
+                        </div>
+                    `;
+                    userList.appendChild(userItem);
+                    foundUsers++;
+                }
+            }
+            
+            if (foundUsers === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color); padding: 20px;">Kullanıcı bulunamadı.</div>';
+            }
+        }
+        
+        async function resetDailyAds() {
+            for (const userId in appData.users) {
+                appData.users[userId].dailyAdCount = 0;
+                appData.users[userId].lastAdDate = new Date().toDateString();
+                appData.users[userId].lastUpdated = Date.now();
+            }
+            
+            userData.dailyAdCount = 0;
+            userData.lastAdDate = new Date().toDateString();
+            await saveUserData();
+            updateUI();
+            showStatusMessage('Tüm kullanıcıların günlük reklamları sıfırlandı.', 'success');
+        }
+        
+        async function updateRewards() {
+            const newAdReward = parseFloat(prompt('Yeni reklam ödülü ($):', appData.adRewardUSD));
+            const newReferralReward = parseFloat(prompt('Yeni referans ödülü ($):', appData.referralRewardUSD));
+            const newMinWithdraw = parseFloat(prompt('Yeni minimum çekim miktarı (TRX):', appData.minWithdraw));
+            const newDailyLimit = parseInt(prompt('Yeni günlük reklam limiti:', appData.dailyAdLimit));
+            
+            if (!isNaN(newAdReward) && newAdReward > 0) appData.adRewardUSD = newAdReward;
+            if (!isNaN(newReferralReward) && newReferralReward > 0) appData.referralRewardUSD = newReferralReward;
+            if (!isNaN(newMinWithdraw) && newMinWithdraw > 0) appData.minWithdraw = newMinWithdraw;
+            if (!isNaN(newDailyLimit) && newDailyLimit > 0) appData.dailyAdLimit = newDailyLimit;
+            
+            await saveAppDataToJSONBin();
+            updateUI();
+            showStatusMessage('Ödüller güncellendi.', 'success');
+        }
+        
+        async function clearAllData() {
             if (confirm('TÜM verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
-                showStatusMessage('Tüm veriler temizlendi.', 'success');
+                if (confirm('BU İŞLEM GERİ ALINAMAZ! Emin misiniz?')) {
+                    // Sadece temel yapıyı koru, verileri temizle
+                    const currentUser = appData.users[userData.userId];
+                    
+                    appData = {
+                        adRewardUSD: 0.001,
+                        minWithdraw: 5,
+                        referralRewardUSD: 0.02,
+                        dailyAdLimit: 200,
+                        appVersion: '2.0.0',
+                        withdrawRequests: [],
+                        completedWithdrawals: [],
+                        users: {},
+                        userStats: {
+                            totalUsers: 1,
+                            activeUsers: 1,
+                            totalEarnings: 0,
+                            totalWithdrawals: 0
+                        },
+                        systemLogs: [],
+                        errorLogs: [],
+                        rewardHistory: [],
+                        adminSettings: appData.adminSettings,
+                        lastUpdated: Date.now(),
+                        createdDate: new Date().toISOString()
+                    };
+                    
+                    // Mevcut kullanıcıyı geri yükle
+                    if (currentUser) {
+                        const cleanUser = {
+                            userId: currentUser.userId,
+                            firstName: currentUser.firstName,
+                            lastName: currentUser.lastName,
+                            username: currentUser.username,
+                            balance: 0,
+                            adCount: 0,
+                            dailyAdCount: 0,
+                            lastAdDate: new Date().toDateString(),
+                            referralCode: currentUser.referralCode,
+                            referredBy: currentUser.referredBy,
+                            referrals: currentUser.referrals || [],
+                            referralBonus: currentUser.referralBonus || 0,
+                            withdrawHistory: [],
+                            paymentAddress: currentUser.paymentAddress || '',
+                            joinDate: currentUser.joinDate,
+                            lastActive: new Date().toISOString(),
+                            totalEarnings: 0,
+                            isActive: true,
+                            lastUpdated: Date.now()
+                        };
+                        
+                        appData.users[userData.userId] = cleanUser;
+                        userData = cleanUser;
+                    }
+                    
+                    await saveAppDataToJSONBin();
+                    
+                    updateUI();
+                    updateAdminPanel();
+                    showStatusMessage('Tüm veriler temizlendi.', 'success');
+                }
             }
         }
         
         // Pencere boyutu değiştiğinde grafiği yeniden çiz
         window.addEventListener('resize', drawChart);
-        
-        // Admin kullanıcı ID'leri
-        const ADMIN_USER_IDS = ['8401848644', '7904032877'];
         
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
