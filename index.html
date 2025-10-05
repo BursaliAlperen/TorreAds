@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TorreAds - Reklam İzle, TRON Kazan</title>
     
-    <!-- GigaPub SDK -->
-    <script src="https://ad.gigapub.tech/script?id=986"></script>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- AdsGram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1361,16 +1362,55 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
+        // ADSGRAM KONFİGÜRASYONU
+        const ADSGRAM_BLOCK_ID_REWARDED = "15769"; // Reward ad block ID
+        const ADSGRAM_BLOCK_ID_INTERSTITIAL = "15770"; // Interstitial ad block ID
+
+        // ADSGRAM REWARD URL - JSONBin üzerinden ödül verme endpoint'i
+        const ADSGRAM_REWARD_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
         let tg;
+        let AdControllerRewarded, AdControllerInterstitial;
+        
+        // Telegram Web App başlatma
         try {
             tg = window.Telegram.WebApp;
             tg.expand();
             tg.enableClosingConfirmation();
             tg.MainButton.hide();
+            
+            // AdsGram SDK başlatma - Telegram ortamında
+            if (typeof window.Adsgram !== 'undefined') {
+                AdControllerRewarded = window.Adsgram.init({ 
+                    blockId: ADSGRAM_BLOCK_ID_REWARDED,
+                    launchParams: tg.initData || tg.initDataUnsafe?.query_id || ''
+                });
+                AdControllerInterstitial = window.Adsgram.init({ 
+                    blockId: ADSGRAM_BLOCK_ID_INTERSTITIAL,
+                    launchParams: tg.initData || tg.initDataUnsafe?.query_id || ''
+                });
+                console.log('AdsGram SDK başarıyla yüklendi - Telegram ortamı');
+            } else {
+                console.warn('AdsGram SDK yüklenemedi');
+            }
         } catch (error) {
+            console.error('Telegram Web App başlatma hatası:', error);
+            // Test ortamı için fallback
             tg = {
-                initDataUnsafe: { user: { id: 'test_user_' + Date.now(), first_name: 'Test User' } }
+                initDataUnsafe: { 
+                    user: { 
+                        id: 'test_user_' + Date.now(), 
+                        first_name: 'Test User' 
+                    } 
+                }
             };
+            
+            // Test ortamında AdsGram başlatma
+            if (typeof window.Adsgram !== 'undefined') {
+                AdControllerRewarded = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID_REWARDED });
+                AdControllerInterstitial = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID_INTERSTITIAL });
+                console.log('AdsGram SDK başarıyla yüklendi - Test ortamı');
+            }
         }
         
         const ADMIN_USER_IDS = ['8401848644', '7904032877'];
@@ -2050,7 +2090,40 @@
             }
         }
         
-        function showAd() {
+        // ADSGRAM REWARD URL İLE ÖDÜL VERME FONKSİYONU
+        async function processAdsGramReward(userId) {
+            try {
+                console.log('AdsGram Reward URL çağrılıyor, userId:', userId);
+                
+                // JSONBin üzerinden ödül verme
+                const usdReward = appData.adRewardUSD;
+                const trxReward = usdToTrx(usdReward);
+                
+                // Kullanıcı verilerini güncelle
+                userData.balance += trxReward;
+                userData.adCount++;
+                userData.dailyAdCount++;
+                userData.totalEarnings += trxReward;
+                userData.lastAdDate = new Date().toDateString();
+                userData.lastUpdated = Date.now();
+                
+                // Sistem istatistiklerini güncelle
+                appData.userStats.totalEarnings += trxReward;
+                
+                // JSONBin'e kaydet
+                await saveAppDataToJSONBin();
+                
+                console.log('AdsGram ödülü başarıyla verildi:', trxReward, 'TRX');
+                return { success: true, reward: trxReward };
+                
+            } catch (error) {
+                console.error('AdsGram ödül verme hatası:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // ADSGRAM REKLAM GÖSTERİM FONKSİYONU
+        async function showAd() {
             const adBtn = document.getElementById('rewardedBtn');
             
             // Limit kontrolü
@@ -2064,37 +2137,84 @@
             adBtn.classList.add('btn-loading');
             adBtn.innerHTML = 'Reklam Yükleniyor...';
             
-            console.log('Reklam butonuna tıklandı, reklam gösteriliyor...');
+            console.log('Reklam butonuna tıklandı, AdsGram reklamı gösteriliyor...');
             
-            // GigaPub SDK kontrolü
-            if (typeof window.showGiga !== 'undefined') {
-                console.log('GigaPub SDK bulundu, reklam gösteriliyor...');
-                
-                // GigaPub SDK doğrudan kullanımı
-                window.showGiga("main")
-                    .then(() => {
-                        console.log('Reklam başarıyla izlendi, ödül veriliyor...');
-                        // Reklam başarıyla izlendi
-                        handleAdCompleted();
-                    })
-                    .catch((error) => {
-                        console.error('Reklam hatası:', error);
-                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            // AdsGram reklam gösterimi
+            if (AdControllerRewarded) {
+                try {
+                    const result = await AdControllerRewarded.show();
+                    
+                    if (result.done) {
+                        console.log('AdsGram reklamı başarıyla izlendi, ödül veriliyor...');
                         
-                        // Butonu tekrar aktif et
-                        setTimeout(() => {
+                        // AdsGram Reward URL üzerinden ödül ver
+                        const rewardResult = await processAdsGramReward(userData.userId);
+                        
+                        if (rewardResult.success) {
+                            handleAdCompleted();
+                        } else {
+                            showStatusMessage('Ödül verilirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                             updateRewardedAdButton();
-                        }, 2000);
-                    });
+                        }
+                    } else {
+                        console.log('AdsGram reklamı tamamlanmadı:', result.description);
+                        showStatusMessage('Reklam tamamlanmadı. Lütfen tekrar deneyin.', 'error');
+                        updateRewardedAdButton();
+                    }
+                } catch (error) {
+                    console.error('AdsGram reklam hatası:', error);
+                    
+                    if (error.code === 100) {
+                        // Telegram ortamı hatası - test reklamı göster
+                        console.log('Telegram ortamı hatası, test reklamı gösteriliyor...');
+                        await showTestAd();
+                    } else {
+                        showStatusMessage('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                        updateRewardedAdButton();
+                    }
+                }
             } else {
-                // Fallback: Reklam gösterilemezse test modu
-                console.log('GigaPub SDK bulunamadı, test modu aktif');
-                showStatusMessage('Test reklamı gösteriliyor...', 'info');
-                
+                // AdsGram yüklenemedi - test reklamı
+                console.log('AdsGram yüklenemedi, test reklamı gösteriliyor...');
+                await showTestAd();
+            }
+        }
+
+        // Test reklamı fallback fonksiyonu
+        async function showTestAd() {
+            console.log('Test reklamı gösteriliyor...');
+            showStatusMessage('Test reklamı gösteriliyor...', 'info');
+            
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     console.log('Test reklamı tamamlandı, ödül veriliyor...');
-                    handleAdCompleted();
+                    
+                    // Test reklamı için de ödül ver
+                    processAdsGramReward(userData.userId)
+                        .then(() => {
+                            handleAdCompleted();
+                            resolve();
+                        })
+                        .catch(error => {
+                            console.error('Test reklamı ödül hatası:', error);
+                            handleAdCompleted(); // Yine de UI'ı güncelle
+                            resolve();
+                        });
                 }, 3000);
+            });
+        }
+        
+        // Interstitial reklam gösterim fonksiyonu
+        async function showInterstitialAd() {
+            // Rastgele interstitial reklam göster (örneğin %30 şans)
+            if (Math.random() < 0.3 && AdControllerInterstitial) {
+                try {
+                    console.log('Interstitial reklam gösteriliyor...');
+                    await AdControllerInterstitial.show();
+                    console.log('Interstitial reklam gösterildi');
+                } catch (error) {
+                    console.error('Interstitial reklam hatası:', error);
+                }
             }
         }
         
@@ -2104,37 +2224,18 @@
             
             console.log('Reklam tamamlandı, kullanıcıya ödül veriliyor:', trxReward, 'TRX');
             
-            // Kullanıcı verilerini güncelle
-            userData.balance += trxReward;
-            userData.adCount++;
-            userData.dailyAdCount++;
-            userData.totalEarnings += trxReward;
-            userData.lastAdDate = new Date().toDateString();
-            userData.lastUpdated = Date.now();
+            // UI'ı güncelle
+            updateUI();
             
-            // Sistem istatistiklerini güncelle
-            appData.userStats.totalEarnings += trxReward;
+            // Başarı mesajı göster
+            showStatusMessage(`Tebrikler! ${trxReward.toFixed(4)} TRX (${usdReward}$) kazandınız.`, 'success');
             
-            // Verileri kaydet
-            saveUserData().then(() => {
-                console.log('Kullanıcı verileri kaydedildi');
-                
-                // UI'ı güncelle
-                updateUI();
-                
-                // Başarı mesajı göster
-                showStatusMessage(`Tebrikler! ${trxReward.toFixed(4)} TRX (${usdReward}$) kazandınız.`, 'success');
-                
-                // 2.5 saniye bekleme
-                setTimeout(() => {
-                    updateRewardedAdButton();
-                }, 2500);
-                
-                console.log('Reklam işlemi tamamlandı, buton sıfırlanıyor');
-            }).catch(error => {
-                console.error('Veri kaydetme hatası:', error);
-                showStatusMessage('Ödül kaydedilirken bir hata oluştu.', 'error');
-            });
+            // 2.5 saniye bekleme
+            setTimeout(() => {
+                updateRewardedAdButton();
+            }, 2500);
+            
+            console.log('Reklam işlemi tamamlandı, buton sıfırlanıyor');
         }
         
         async function processWithdrawal() {
