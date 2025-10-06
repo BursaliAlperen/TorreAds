@@ -13,12 +13,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Telegram Theme Variables */
         :root {
             --tg-theme-bg-color: #ffffff;
             --tg-theme-text-color: #1e293b;
-            --tg-theme-button-color: #3b82f6;
+            --tg-theme-button-color: #3b82f6; /* Telegram Mavisi */
             --tg-theme-button-text-color: #ffffff;
-            --tg-theme-hint-color: #64748b;
+            --tg-theme-hint-color: #cbd5e1; /* Açık Gri (Çok hafif) */
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
@@ -28,7 +29,7 @@
             :root {
                 --tg-theme-bg-color: #1e293b;
                 --tg-theme-text-color: #f8fafc;
-                --tg-theme-hint-color: #94a3b8;
+                --tg-theme-hint-color: #475569; /* Koyu Modda Orta Gri */
             }
         }
 
@@ -39,6 +40,8 @@
             margin: 0;
             padding: 0;
             transition: background-color 0.3s, color 0.3s;
+            /* YENİ: Hafif Arka Plan Gradienti */
+            background-image: linear-gradient(135deg, var(--tg-theme-bg-color) 0%, #f7f9fc 100%);
         }
 
         .container {
@@ -47,299 +50,144 @@
             margin: 0 auto;
         }
 
-        .header {
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--tg-theme-hint-color);
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            font-weight: 600;
-        }
-
+        /* 1. GELİŞMİŞ BALANCE CARD - Gradient ve Derinlik */
         .balance-card {
-            background-color: var(--tg-theme-button-color);
+            background: linear-gradient(45deg, #4c96fa, #2a7cf5); /* Canlı Mavi Gradient */
             color: var(--tg-theme-button-text-color);
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 15px; /* Daha yuvarlak */
             text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); /* Derin Mavi Gölge */
+            transition: all 0.3s ease-in-out;
+            transform: perspective(1px) translateZ(0);
         }
-
-        .balance-card h2 {
-            margin: 0 0 5px 0;
-            font-size: 1rem;
-            font-weight: 400;
+        .balance-card:hover {
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px); /* Hafif yukarı kayma efekti */
         }
-
         .balance-card p {
             font-size: 2.5rem;
             font-weight: 700;
             margin: 0;
+            /* YENİ: Bakiye Metnine Titreşim/Pulse Animasyonu */
+            animation: pulse 2s infinite ease-in-out; 
         }
 
+        /* 2. DİNAMİK BUTONLAR */
         .action-button {
             width: 100%;
             padding: 15px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px; 
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s, opacity 0.2s;
+            transition: background-color 0.2s, opacity 0.2s, transform 0.1s, box-shadow 0.2s;
             margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Buton gölgesi */
         }
 
-        .btn-primary {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
+        .btn-primary:active:not(:disabled) {
+            background-color: #1e40af; /* Daha derin bir mavi */
+            transform: scale(0.95); /* Butonun içeri çökmesi */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Gölgenin azalması */
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background-color: #2563eb;
+        .btn-secondary:active:not(:disabled) {
+            background-color: #334155; /* Daha koyu gri */
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-secondary {
-            background-color: var(--tg-theme-hint-color);
-            color: var(--tg-theme-button-text-color);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: #4b5563;
-        }
-
-        .btn-loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .btn-loading i {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
+        /* 3. LIFTED INFO CARDS (Derinlikli Kartlar) */
         .info-card {
             background-color: var(--tg-theme-bg-color);
-            border: 1px solid var(--tg-theme-hint-color);
+            border: none; /* Kenarlığı kaldır, gölgeye güven */
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08); /* Daha belirgin gölge */
+            transition: all 0.3s ease-out;
+        }
+        .info-card:hover {
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
         }
 
-        .info-card h3 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            border-bottom: 1px solid var(--tg-theme-hint-color);
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            font-weight: 500;
+        /* 4. ANİMASYON KEYFRAMES */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.95; transform: scale(1.01); }
         }
 
-        .info-card p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
-
-        .info-card span {
-            font-weight: 600;
-        }
-
-        .tab-bar {
-            display: flex;
-            justify-content: space-around;
-            background-color: var(--tg-theme-bg-color);
-            border-top: 1px solid var(--tg-theme-hint-color);
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px 0;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-            z-index: 1000;
-        }
-
-        .tab-button {
-            background: none;
-            border: none;
-            color: var(--tg-theme-hint-color);
-            cursor: pointer;
-            padding: 10px 15px;
-            text-align: center;
-            font-size: 0.8rem;
-            transition: color 0.2s;
-        }
-
-        .tab-button.active {
-            color: var(--tg-theme-button-color);
-        }
-
-        .tab-button i {
-            display: block;
-            font-size: 1.2rem;
-            margin-bottom: 3px;
-        }
-
-        .content-area {
-            padding-bottom: 70px; /* Space for the tab bar */
+        @keyframes viewTransition {
+            from { opacity: 0; transform: translateY(20px); } /* Daha belirgin kayma */
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .view {
             display: none;
-            animation: fadeIn 0.3s;
         }
 
         .view.active {
             display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Withdrawal form */
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--tg-theme-hint-color);
-            border-radius: 6px;
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            box-sizing: border-box;
-            transition: border-color 0.2s;
-        }
-
-        .input-group input:focus {
-            border-color: var(--tg-theme-button-color);
-            outline: none;
+            animation: viewTransition 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Akıcı geçiş */
         }
         
+        /* 5. TAB BAR EFEKTLERİ */
+        .tab-bar {
+            /* ... mevcut stiller ... */
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .tab-button {
+            /* ... mevcut stiller ... */
+            transition: color 0.2s, transform 0.1s;
+        }
+        .tab-button.active {
+            color: var(--tg-theme-button-color);
+            transform: translateY(-2px); /* Aktif buton hafifçe kalkar */
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(59, 130, 246, 0.3); /* Hafif parlama */
+        }
+        .tab-button:active {
+            transform: scale(0.9); /* Daha belirgin tıklama */
+        }
+
+        /* Admin Panel Kartları için daha belirgin stil */
+        .user-card {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background-color: var(--tg-theme-bg-color);
+            border-left: 5px solid var(--tg-theme-button-color); /* Vurgu çizgisi */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease-out;
+        }
+        .user-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(2px);
+        }
+        
+        .user-card button {
+            transition: all 0.1s;
+        }
+        
+        .user-card button:active {
+             transform: scale(0.95);
+        }
+
         /* Status Message */
         .status-message {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            border-radius: 8px;
-            color: #ffffff;
-            font-weight: 500;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            display: none;
-        }
-
-        .status-message.success {
-            background-color: var(--success-color);
-        }
-
-        .status-message.error {
-            background-color: var(--danger-color);
+            /* ... existing styles ... */
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.3s ease-out;
         }
         
-        .referral-link {
-            display: flex;
-            align-items: center;
-            background-color: var(--tg-theme-bg-color);
-            border: 1px solid var(--tg-theme-hint-color);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .referral-link input {
-            flex-grow: 1;
-            border: none;
-            background: none;
-            color: var(--tg-theme-text-color);
-            font-size: 0.9rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .referral-link button {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-left: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: opacity 0.2s;
-        }
-
-        .admin-controls {
-            margin-top: 30px;
-            padding: 15px;
-            border: 2px solid var(--danger-color);
-            border-radius: 10px;
-            background-color: rgba(239, 68, 68, 0.1);
-        }
-        
-        .admin-controls h3 {
-            color: var(--danger-color);
-            text-align: center;
-        }
-        
-        .withdrawal-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .withdrawal-item {
-            padding: 10px;
-            border-bottom: 1px solid var(--tg-theme-hint-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .withdrawal-item:last-child {
-            border-bottom: none;
-        }
-
-        .withdrawal-details {
-            flex-grow: 1;
-        }
-
-        .withdrawal-actions button {
-            margin-left: 10px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .btn-approve {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .btn-reject {
-            background-color: var(--danger-color);
-            color: white;
+        @keyframes popIn {
+            from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+            to { opacity: 1; transform: translateX(-50%) scale(1); }
         }
     </style>
 </head>
@@ -386,7 +234,7 @@
             </div>
 
             <div id="withdraw-view" class="view">
-                <div class="balance-card" style="background-color: var(--success-color);">
+                <div class="balance-card" style="background: linear-gradient(45deg, #16a34a, #10b981); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);">
                     <h2>Çekilebilir Bakiye (TRX)</h2>
                     <p id="withdrawBalanceDisplay">TRX 0.0000</p>
                 </div>
@@ -450,10 +298,10 @@
             </div>
 
             <div id="admin-view" class="view">
-                <div class="admin-controls">
-                    <h3>Yönetici Paneli (Sunucuya Taşındı!)</h3>
+                <div class="admin-controls info-card" style="border-left: 5px solid var(--danger-color); box-shadow: 0 8px 15px rgba(239, 68, 68, 0.2);">
+                    <h3>Yönetici Paneli (Gelişmiş)</h3>
                     <p style="color: var(--danger-color); font-weight: bold;">
-                        DİKKAT: Tüm Admin Fonksiyonları SADECE Güvenli Sunucu (Backend) Üzerinden Çalışmalıdır. Bu görünüm sadece bilgilendirme amaçlıdır.
+                        DİKKAT: Tüm Admin Fonksiyonları SADECE Güvenli Sunucu (Backend) Üzerinden Çalışmalıdır. Bu görünüm sadece bir arayüz örneğidir.
                     </p>
                 </div>
 
@@ -462,6 +310,15 @@
                     <ul id="withdrawalList" class="withdrawal-list">
                         <li id="noWithdrawalsMessage" style="text-align: center; color: var(--tg-theme-hint-color);">Bekleyen çekim talebi yok.</li>
                     </ul>
+                </div>
+
+                <hr style="margin: 25px 0; border: none; border-top: 1px solid var(--tg-theme-hint-color);">
+
+                <div class="info-card">
+                    <h3>Tüm Kullanıcılar (<span id="userCountDisplay">0</span>)</h3>
+                    <div id="userList" class="user-list-section">
+                        <p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcılar Yükleniyor...</p>
+                    </div>
                 </div>
             </div>
 
@@ -480,33 +337,27 @@
             </button>
         </div>
     </div> <script>
-        // --- KRİTİK GÜVENLİK BİLGİLENDİRMESİ ---
-        // Uygulamanın güvenliği için tüm master key'ler ve kritik işlemler sunucuya taşınmıştır.
-        // Aşağıdaki kod, simüle edilmiş bir sunucu API'si üzerinden çalışır.
+        // --- KRİTİK AYAR ---
+        const BOT_USERNAME = 'YOUR_BOT_USERNAME'; // <--- BURAYA KENDİ BOT KULLANICI ADINIZI YAZIN! (Örn: 'TorreAds_Bot')
 
-        // GÜVENLİK GEREĞİ KALDIRILMIŞ DEĞERLER (Sunucuya Taşınmalıdır)
+        // --- GÜVENLİK BİLGİLENDİRMESİ VE MOCK API AYARLARI ---
         const BIN_ID = '68e2b3ebd0ea881f40965de6';
-        // const MASTER_KEY = '$2a$10$Z5pw8wmihH97EgC6kgHAoebiEzuzhHLO361BA7ZAdTLZR.NY1gfK6'; // KALDIRILDI!
         const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
         const UPDATE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-        const SECURE_SERVER_ENDPOINT = 'YOUR_SECURE_BACKEND_API_ENDPOINT'; // BURAYI GERÇEK SUNUCU ADRESİNİZLE DEĞİŞTİRİN!
+        const SECURE_SERVER_ENDPOINT = 'YOUR_SECURE_BACKEND_API_ENDPOINT'; 
 
-        // Telegram Web App nesnesi
         const tg = window.Telegram.WebApp;
 
-        // Uygulama verileri
         let userData = null;
         let appData = {
             users: {},
             system: {
-                // HARDCODED DEĞERLER MERKEZİLEŞTİRİLDİ
                 adminUsers: ['8401848644', '7904032877'], 
                 DAILY_AD_LIMIT: 200,             
                 MIN_WITHDRAWAL_TRX: 5,           
                 AD_REWARD_USD: 0.001,            
                 REFERRAL_BONUS_USD: 0.02,        
                 
-                // İstatistikler
                 totalAds: 0,
                 totalWithdrawals: 0,
                 totalTRXDistributed: 0,
@@ -520,9 +371,7 @@
         let trxChange = 0;
 
 
-        // --- GÜVENLİK AMAÇLI MOCK SUNUCU İŞLEVLERİ (GERÇEK SUNUCU İLE DEĞİŞTİRİLMELİ) ---
-        
-        // JSONBin.io'dan veri yükleme (Sadece MOCK için kullanılmıştır, güvenli değildir)
+        // JSONBin.io'dan veri yükleme (Legacy/Güvensiz Yöntem - MOCK için kullanılıyor)
         async function loadAppDataLegacy() {
             try {
                 const response = await fetch(API_URL);
@@ -537,14 +386,13 @@
             }
         }
 
-        // JSONBin.io'ya veri kaydetme (Sadece MOCK için kullanılmıştır, güvenli değildir)
+        // JSONBin.io'ya veri kaydetme (Legacy/Güvensiz Yöntem - MOCK için kullanılıyor)
         async function saveAppDataLegacy(data) {
             try {
                 const response = await fetch(UPDATE_URL, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        // MASTER KEY KALDIRILDI!
                         'X-Bin-Versioning': 'false'
                     },
                     body: JSON.stringify(data)
@@ -560,31 +408,34 @@
             }
         }
         
-        // Simüle Edilmiş Güvenli Sunucu API'si (Tüm KRİTİK İŞLEMLER BURADAN YAPILMALI)
+        // Simüle Edilmiş Güvenli Sunucu API'si (KRİTİK İŞLEMLER BURADAN YAPILMALI)
         const secureServer = {
-            // Veri Çekme
-            async fetchAppData() {
-                // GERÇEKTE: await fetch(`${SECURE_SERVER_ENDPOINT}/data?userId=${tg.initDataUnsafe.user.id}`);
-                return loadAppDataLegacy(); // Geçici MOCK
-            },
-            // Veri Kaydetme
-            async saveAppData(data) {
-                // GERÇEKTE: await fetch(`${SECURE_SERVER_ENDPOINT}/update`, { method: 'POST', body: JSON.stringify(data) });
-                return saveAppDataLegacy(data); // Geçici MOCK
-            },
-            // Admin fonksiyonları sunucuya taşınmalıdır
-            async adminAddBalance(targetId, amount) {
-                showStatus('KRİTİK HATA: Admin fonksiyonu sunucuya taşınmalıdır.', 'error');
+            async fetchAppData() { return loadAppDataLegacy(); },
+            async saveAppData(data) { return saveAppDataLegacy(data); },
+            async adminAddBalance(targetId, amount) { 
+                const data = await loadAppDataLegacy();
+                if (data.users[targetId]) {
+                    data.users[targetId].balance += amount;
+                    await saveAppDataLegacy(data);
+                    showStatus(`MOCK: ${targetId} kullanıcısına ${amount} TRX eklendi.`, 'warning'); 
+                    return true;
+                }
+                showStatus('MOCK: Kullanıcı bulunamadı.', 'error'); 
                 return false;
             },
-            async approveWithdrawal(requestId) {
-                showStatus('KRİTİK HATA: Onaylama fonksiyonu sunucuya taşınmalıdır.', 'error');
+            async adminBlockUser(userId, blockStatus) { 
+                const data = await loadAppDataLegacy();
+                if (data.users[userId]) {
+                    data.users[userId].isBlocked = blockStatus;
+                    await saveAppDataLegacy(data);
+                    showStatus(`MOCK: ${userId} kullanıcısı ${blockStatus ? 'BLOKE EDİLDİ' : 'BLOKESİ KALDIRILDI'}.`, 'warning'); 
+                    return true;
+                }
+                showStatus('MOCK: Kullanıcı bulunamadı.', 'error');
                 return false;
             },
-            async rejectWithdrawal(requestId) {
-                showStatus('KRİTİK HATA: Reddetme fonksiyonu sunucuya taşınmalıdır.', 'error');
-                return false;
-            }
+            async approveWithdrawal(requestId) { showStatus('KRİTİK HATA: Onaylama fonksiyonu sunucuya taşınmalıdır.', 'error'); return false; },
+            async rejectWithdrawal(requestId) { showStatus('KRİTİK HATA: Reddetme fonksiyonu sunucuya taşınmalıdır.', 'error'); return false; }
         };
 
 
@@ -603,39 +454,48 @@
             return userId && appData.system.adminUsers.includes(userId);
         }
 
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+
+            if (appData.system.lastAdReset !== today) {
+                appData.system.lastAdReset = today;
+            }
+
+            if (userData.lastAdDate !== today) {
+                userData.dailyAdCount = 0;
+                userData.lastAdDate = today;
+            }
+        }
+
         function updateUI() {
             if (!userData) return;
             
             const dailyLimit = appData.system.DAILY_AD_LIMIT;
-            const minWithdrawal = appData.system.MIN_WITHDRAWAL_TRX;
             const refBonus = appData.system.REFERRAL_BONUS_USD;
 
-            // Bakiye Güncellemeleri
             document.getElementById('balanceDisplay').textContent = `TRX ${userData.balance.toFixed(4)}`;
             const usdEquivalent = userData.balance * trxPrice;
             document.getElementById('usdEquivalent').textContent = `≈ $${usdEquivalent.toFixed(4)}`;
             document.getElementById('withdrawBalanceDisplay').textContent = `TRX ${userData.balance.toFixed(4)}`;
 
-            // Sayac Güncellemeleri
             document.getElementById('adCountDisplay').textContent = appData.system.totalAds;
             document.getElementById('dailyAdCountDisplay').textContent = `${userData.dailyAdCount} / ${dailyLimit}`;
 
-            // İstatistikler
             document.getElementById('totalWithdrawalsDisplay').textContent = `${appData.system.totalWithdrawals.toFixed(2)} TRX`;
             document.getElementById('totalTRXDistributedDisplay').textContent = `${appData.system.totalTRXDistributed.toFixed(2)} TRX`;
             document.getElementById('trxPriceDisplay').textContent = `$${trxPrice.toFixed(4)}`;
 
-            // Referans Güncellemeleri
             document.getElementById('referralBonusDisplay').textContent = `$${refBonus}`;
             document.getElementById('referredCountDisplay').textContent = userData.referredUsers.length;
             document.getElementById('referralBonusTotalDisplay').textContent = `${userData.referralBonus.toFixed(4)} TRX`;
+            
             const userId = getUserId();
-            document.getElementById('referralLink').value = `https://t.me/${tg.initDataUnsafe.user.username || 'share' }?start=${userId}`;
+            document.getElementById('referralLink').value = `https://t.me/${BOT_USERNAME}?start=${userId}`;
 
-            // Admin Kontrolü
             if (checkAdminStatus()) {
                 document.getElementById('adminTabBtn').style.display = 'block';
                 renderWithdrawalRequests();
+                renderUserList(); 
             } else {
                  document.getElementById('adminTabBtn').style.display = 'none';
             }
@@ -653,7 +513,6 @@
                 mainWithdrawBtn.innerHTML = '<i class="fas fa-money-bill-wave"></i> Para Çek';
                 
                 const address = document.getElementById('trxAddress').value.trim() || userData.paymentAddress;
-                // Adres T ile başlıyor ve en az 34 karakter uzunluğunda mı (Basit TRX kontrolü)
                 if (address && address.startsWith('T') && address.length >= 34) { 
                     finalWithdrawBtn.disabled = false;
                 } else {
@@ -682,12 +541,10 @@
                 activeTab.classList.add('active');
             }
             
-            // Çekim Onayı Görünümünü Yönetme
             if (viewId === 'withdraw-final-view') {
                 const address = document.getElementById('trxAddress').value.trim();
                 const amount = userData.balance.toFixed(4);
 
-                // Adresi kaydet ve UI'da göster
                 userData.paymentAddress = address; 
                 document.getElementById('finalWithdrawAmountDisplay').textContent = `${amount} TRX`;
                 document.getElementById('finalWithdrawAddressDisplay').textContent = address;
@@ -698,37 +555,18 @@
             tg.ready();
         }
         
-        function checkDailyReset() {
-            const today = new Date().toDateString();
-
-            // Uygulama istatistiklerini sıfırla (Günde bir kez)
-            if (appData.system.lastAdReset !== today) {
-                appData.system.lastAdReset = today;
-                // Diğer global istatistiklerin sıfırlanması gerekirse buraya eklenmeli
-            }
-
-            // Kullanıcı reklam sayısını sıfırla
-            if (userData.lastAdDate !== today) {
-                userData.dailyAdCount = 0;
-                userData.lastAdDate = today;
-            }
-        }
-
-        // --- ANA UYGULAMA İŞLEVLERİ ---
+        // --- ANA UYGULAMA İŞLEVLERİ (initApp, loadTRXPrice, watchAd, submitWithdrawal, applyReferralCode aynı kaldı) ---
 
         async function initApp() {
             tg.ready();
             tg.expand();
             tg.MainButton.hide();
 
-            // 1. Verileri Yükle
             const loadedData = await secureServer.fetchAppData();
             if (loadedData) {
-                // appData'yı güncelleyip yüklenen verilerle birleştirme
                 appData = {...appData, ...loadedData};
             }
 
-            // 2. Kullanıcıyı Bul veya Oluştur
             const userId = getUserId();
             if (!userId) {
                 document.getElementById('loading').textContent = 'Kullanıcı kimliği alınamadı. Lütfen Telegram içinden açın.';
@@ -738,7 +576,6 @@
             document.getElementById('userIdDisplay').textContent = `(${tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.id})`;
 
             if (!appData.users[userId]) {
-                // Yeni Kullanıcı Oluşturma
                 userData = {
                     balance: 0,
                     adCount: 0,
@@ -752,23 +589,19 @@
                     lastUpdated: Date.now()
                 };
                 appData.users[userId] = userData;
-                // Yeni kullanıcıyı kaydetme (Veri Kaydetme Hatası Düzeltmesi)
                 await secureServer.saveAppData(appData); 
             } else {
                 userData = appData.users[userId];
             }
             
-            // 3. Güncel TRX Fiyatını Yükle
             await loadTRXPrice();
 
-            // 4. Günlük Sıfırlama Kontrolü ve Yönlendirme Kodu Kontrolü
             checkDailyReset();
             const startParam = tg.initDataUnsafe.start_param;
             if (startParam && startParam !== userId && userData.referredBy === null) {
                 await applyReferralCode(startParam);
             }
 
-            // 5. UI Hazırla
             document.getElementById('loading').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('trxAddress').value = userData.paymentAddress;
@@ -781,10 +614,9 @@
             
             updateUI();
             
-            // 6. Periyodik Güncellemeleri Başlat
             startPeriodicUpdates();
         }
-
+        
         async function loadTRXPrice() {
             try {
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
@@ -796,7 +628,7 @@
                 if (data.tron) {
                     trxPrice = data.tron.usd;
                     trxChange = data.tron.usd_24h_change;
-                    appData.system.trxPrice = trxPrice; // appData'da da tutarlılık için güncelle
+                    appData.system.trxPrice = trxPrice; 
                     updateUI(); 
                 }
             } catch (error) {
@@ -804,7 +636,6 @@
             }
         }
         
-        // Reklam İzle ve Bakiye Ekle (Veri Kaydetme Hatası Düzeltmesi burada uygulandı)
         async function watchAd() {
             const btn = document.getElementById('rewardedBtn');
             const adLimit = appData.system.DAILY_AD_LIMIT;
@@ -829,19 +660,16 @@
                 const rewarded = await window.adexora.showRewarded();
                 
                 if (rewarded) {
-                    // Ödül Hesaplama
                     const rewardAmount = usdToTRX(adReward); 
                     
-                    // Verileri Güncelle
                     userData.balance += rewardAmount;
                     userData.adCount += 1;
                     userData.dailyAdCount += 1;
                     userData.lastUpdated = Date.now();
                     
-                    appData.system.totalAds += 1; // Merkezi istatistik güncellemesi
+                    appData.system.totalAds += 1; 
                     appData.system.totalTRXDistributed += rewardAmount;
                     
-                    // Veritabanına Kaydet (Veri Bütünlüğü İçin Kritik Adım)
                     await secureServer.saveAppData(appData);
                     
                     showStatus(`Tebrikler! ${rewardAmount.toFixed(4)} TRX kazandınız.`, 'success', 3000);
@@ -853,7 +681,6 @@
                 console.error('Reklam izleme hatası:', error);
                 showStatus('Bir hata oluştu. Tekrar deneyin.', 'error', 3000);
             } finally {
-                // KRİTİK DÜZELTME: İşlem bittikten sonra veriyi yeniden çek
                 await secureServer.fetchAppData(); 
                 updateUI();
                 btn.classList.remove('btn-loading');
@@ -861,7 +688,6 @@
             }
         }
 
-        // Çekim Talebi Gönder (Veri Kaydetme Hatası Düzeltmesi burada uygulandı)
         async function submitWithdrawal() {
             const address = userData.paymentAddress.trim();
             const minWithdrawal = appData.system.MIN_WITHDRAWAL_TRX;
@@ -882,8 +708,11 @@
                 return;
             }
 
+            const finalWithdrawBtn = document.getElementById('finalWithdrawBtn');
+            finalWithdrawBtn.classList.add('btn-loading');
+            finalWithdrawBtn.disabled = true;
+
             try {
-                // Çekim talebi oluştur
                 const withdrawalRequest = {
                     id: Date.now(),
                     userId: getUserId(),
@@ -894,13 +723,11 @@
                     status: 'Beklemede'
                 };
                 
-                // Verileri Güncelle (Bakiye sıfırla, istek ekle)
-                appData.system.totalWithdrawals += amount; // Merkezi istatistik güncellemesi
+                appData.system.totalWithdrawals += amount; 
                 userData.balance = 0;
                 userData.lastUpdated = Date.now();
                 appData.withdrawRequests.push(withdrawalRequest);
 
-                // Veritabanına Kaydet
                 await secureServer.saveAppData(appData);
                 
                 showStatus('Çekim talebiniz başarıyla oluşturuldu. En kısa sürede onaylanacaktır.', 'success', 5000);
@@ -909,13 +736,12 @@
                 console.error('Çekim talebi hatası:', error);
                 showStatus('Çekim talebi gönderilirken bir hata oluştu.', 'error', 3000);
             } finally {
-                // KRİTİK DÜZELTME: İşlem bittikten sonra veriyi yeniden çek
                 await secureServer.fetchAppData();
                 updateUI();
+                finalWithdrawBtn.classList.remove('btn-loading');
             }
         }
 
-        // Referans Kodu Uygula (Veri Kaydetme Hatası Düzeltmesi burada uygulandı)
         async function applyReferralCode(referralCode) {
             const referrerId = referralCode;
             const referredId = getUserId();
@@ -938,7 +764,6 @@
             }
             
             try {
-                // Referansçı ve Yönlendirilen Kullanıcıyı Güncelle
                 userData.balance += bonusAmount;
                 userData.referralBonus += bonusAmount;
                 userData.referredBy = referrerId;
@@ -949,7 +774,6 @@
                 referrer.referredUsers.push(referredId);
                 referrer.lastUpdated = Date.now();
                 
-                // Veriyi kaydet
                 await secureServer.saveAppData(appData); 
                 
                 showStatus(`Başarılı! ${bonusAmount.toFixed(4)} TRX referans bonusu kazandınız.`, 'success', 5000);
@@ -962,7 +786,6 @@
                 showStatus('Referans kodu uygulanırken bir hata oluştu.', 'error', 3000);
                 return false;
             } finally {
-                // KRİTİK DÜZELTME: İşlem bittikten sonra veriyi yeniden çek
                 await secureServer.fetchAppData(); 
                 updateUI();
             }
@@ -977,8 +800,8 @@
             }
         }
         
-        // --- YÖNETİCİ İŞLEVLERİ (SADECE MOCK/UI AMAÇLI) ---
-        
+        // --- YÖNETİCİ İŞLEVLERİ ---
+
         function renderWithdrawalRequests() {
             const list = document.getElementById('withdrawalList');
             const requests = appData.withdrawRequests.filter(r => r.status === 'Beklemede');
@@ -992,31 +815,65 @@
             }
 
             requests.forEach(req => {
-                const item = document.createElement('li');
-                item.className = 'withdrawal-item';
-                item.innerHTML = `
+                 const item = document.createElement('li');
+                 item.className = 'withdrawal-item';
+                 item.innerHTML = `
                     <div class="withdrawal-details">
-                        <p style="margin: 0; font-weight: 600;">${req.amount.toFixed(4)} TRX</p>
-                        <p style="margin: 0; font-size: 0.8rem; color: var(--tg-theme-hint-color);">@${req.username} | ${req.date}</p>
-                        <p style="margin: 0; font-size: 0.8rem; word-break: break-all;">Adres: ${req.address}</p>
+                        <b>${req.amount.toFixed(4)} TRX</b> | ${req.username} (${req.userId})
+                        <p style="font-size: 0.8rem; color: var(--tg-theme-hint-color); margin: 0;">Adres: ${req.address.substring(0, 10)}...</p>
                     </div>
                     <div class="withdrawal-actions">
                         <button class="btn-approve" onclick="secureServer.approveWithdrawal(${req.id})"><i class="fas fa-check"></i> Onayla</button>
                         <button class="btn-reject" onclick="secureServer.rejectWithdrawal(${req.id})"><i class="fas fa-times"></i> Reddet</button>
                     </div>
-                `;
-                list.appendChild(item);
+                 `;
+                 list.appendChild(item);
             });
         }
         
-        // --- PERİYODİK GÜNCELLEMELER (Veri Bütünlüğü İçin Senkronizasyon) ---
+        // YENİ FONKSİYON: Kullanıcı Listesini Render Et
+        function renderUserList() {
+            const listContainer = document.getElementById('userList');
+            const users = appData.users;
+            const userKeys = Object.keys(users);
+
+            document.getElementById('userCountDisplay').textContent = userKeys.length;
+            listContainer.innerHTML = ''; 
+
+            userKeys.forEach(userId => {
+                const user = users[userId];
+                
+                if (!user) return; 
+
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                
+                const lastLoginDate = new Date(user.lastUpdated).toLocaleString('tr-TR');
+                const blockBtnClass = user.isBlocked ? 'btn-approve' : 'btn-reject';
+                const blockBtnText = user.isBlocked ? 'Engeli Kaldır' : 'Engelle';
+
+                card.innerHTML = `
+                    <h4>Kullanıcı ID: ${userId} ${user.isBlocked ? '(<span style="color: var(--danger-color); font-size: 0.9rem;">BLOKE</span>)' : ''}</h4>
+                    <p>Bakiye: <b>${user.balance.toFixed(4)} TRX</b></p>
+                    <p>Reklam Sayısı: ${user.adCount} (Bugün: ${user.dailyAdCount})</p>
+                    <p>Davet Eden: ${user.referredBy || 'Yok'}</p>
+                    <p>Davetli Sayısı: ${user.referredUsers.length}</p>
+                    <p style="color: var(--tg-theme-hint-color);">Son İşlem: ${lastLoginDate}</p>
+                    <div class="user-actions" style="margin-top: 10px;">
+                        <button class="action-button btn-primary" style="width: auto;" onclick="secureServer.adminAddBalance('${userId}', 10).then(updateUI)">+10 TRX Ekle (MOCK)</button>
+                        <button class="action-button ${blockBtnClass}" style="width: auto;" onclick="secureServer.adminBlockUser('${userId}', ${!user.isBlocked}).then(updateUI)">${blockBtnText} (MOCK)</button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+        
+        // --- PERİYODİK GÜNCELLEMELER ---
 
         function startPeriodicUpdates() {
-            // Veri çakışmasını azaltmak için kısa aralıkta (10 saniye) veri çek
             setInterval(async () => {
                 const loadedData = await secureServer.fetchAppData();
                 if (loadedData) {
-                    // Yüklenen veriyi mevcut appData ile birleştirme
                     appData = {...appData, ...loadedData};
                     if (appData.users[getUserId()]) {
                         userData = appData.users[getUserId()];
@@ -1026,7 +883,6 @@
                 }
             }, 10000);
             
-            // TRX fiyatını her 5 dakikada bir güncelle
             setInterval(async () => {
                 await loadTRXPrice();
             }, 300000);
@@ -1064,14 +920,16 @@
         document.getElementById('trxAddress').addEventListener('input', updateWithdrawButton);
         document.addEventListener('DOMContentLoaded', initApp);
 
-        // HTML onclick'ler için gerekli global erişimler
+        // Global Erişimler
         window.showView = showView;
         window.copyReferralCode = copyReferralCode;
         window.submitWithdrawal = submitWithdrawal;
         window.submitReferralCode = submitReferralCode;
+        window.updateUI = updateUI;
         
-        // Güvenlik uyarısı: Admin fonksiyonları tarayıcıdan çalıştırılamaz!
+        // Admin Mock Fonksiyonları
         window.adminAddBalance = secureServer.adminAddBalance;
+        window.adminBlockUser = secureServer.adminBlockUser;
         window.approveWithdrawal = secureServer.approveWithdrawal;
         window.rejectWithdrawal = secureServer.rejectWithdrawal;
     </script>
