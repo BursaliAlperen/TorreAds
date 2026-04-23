@@ -1,429 +1,338 @@
 #!/usr/bin/env python3
 """
-🌸 Mayiro Beefaucet Fairy - Auto Claim Bot with XEvil
-Auto‑generates config, solves captchas, claims forever!
+🌸 Mayiro Beefaucet Fairy - Termux Edition
+Ultra simple setup - only XEvil + FaucetPay email needed!
 """
 
 import os
 import json
 import time
 import random
-import logging
 import requests
 import urllib.parse
 from datetime import datetime
 from bs4 import BeautifulSoup
-from colorama import init, Fore, Style, Back
 
-# ===================== INITIALIZATION =====================
-init(autoreset=True)
-
-# ===================== KAWAIİ UI ELEMENTS =====================
+# ===================== SIMPLE UI (No colorama for Termux) =====================
 def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('clear')
 
-def print_kawaii_banner():
+def print_banner():
     clear_screen()
-    print(Fore.MAGENTA + Style.BRIGHT + r"""
+    print("""
     ╔══════════════════════════════════════════════════════╗
     ║                                                      ║
-    ║     🌸  𝓜𝓪𝔂𝓲𝓻𝓸  𝓑𝓮𝓮𝓕𝓪𝓾𝓬𝓮𝓽  𝓕𝓪𝓲𝓻𝔂  🌸                  ║
+    ║     🌸  Mayiro Beefaucet Fairy  🌸                  ║
     ║                                                      ║
-    ║     (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧  I'm your honey collector!        ║
+    ║     (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧  Auto Honey Collector!           ║
     ║                                                      ║
     ╚══════════════════════════════════════════════════════╝
-    """ + Style.RESET_ALL)
+    """)
 
-def kawaii_input(prompt):
-    """Cute input wrapper with sparkles"""
-    return input(Fore.CYAN + "✨ " + prompt + " ✨: " + Style.RESET_ALL)
+def safe_input(prompt):
+    """Error-proof input handler"""
+    try:
+        return input(f"✨ {prompt}: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n🌸 Goodbye! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧")
+        exit(0)
 
-def kawaii_print(message, emoji="🌸"):
-    print(f"{Fore.MAGENTA}{emoji} {message}{Style.RESET_ALL}")
-
-def kawaii_success(message):
-    print(f"{Fore.GREEN}✅ {message}{Style.RESET_ALL}")
-
-def kawaii_warning(message):
-    print(f"{Fore.YELLOW}⚠️  {message}{Style.RESET_ALL}")
-
-def kawaii_error(message):
-    print(f"{Fore.RED}❌ {message}{Style.RESET_ALL}")
-
-# ===================== CONFIG GENERATOR =====================
-def generate_config():
-    """Interactive first‑time setup wizard"""
-    print_kawaii_banner()
-    print(Fore.YELLOW + Style.BRIGHT + """
+# ===================== SETUP (2 Questions Only) =====================
+def setup_config():
+    """First-time setup with validation"""
+    print_banner()
+    print("""
     ╔══════════════════════════════════════════════════════╗
-    ║         🎀  FIRST TIME SETUP WIZARD  🎀              ║
+    ║         🎀  QUICK SETUP (2 Questions)  🎀           ║
     ╚══════════════════════════════════════════════════════╝
-    """ + Style.RESET_ALL)
+    """)
     
-    config = {}
+    # Question 1: Email
+    print("\n📧 Step 1/2: Your FaucetPay Email")
+    while True:
+        email = safe_input("FaucetPay email")
+        if '@' in email and '.' in email:
+            print("✅ Email looks valid!")
+            break
+        print("❌ Please enter a valid email!")
     
-    # Faucet URL
-    print(Fore.CYAN + "\n📌 Which faucet do you want to claim from?" + Style.RESET_ALL)
-    print(Fore.WHITE + "   [1] Beefaucet.org (Doge, LTC, etc.)" + Style.RESET_ALL)
-    print(Fore.WHITE + "   [2] Custom faucet URL" + Style.RESET_ALL)
-    choice = kawaii_input("Choose (1 or 2)")
+    # Question 2: XEvil API Key
+    print("\n🔑 Step 2/2: XEvil API Key")
+    print("   (Found in XEvil → Settings → API Key)")
+    while True:
+        xevil_key = safe_input("XEvil API key (default: mayiro123)")
+        if not xevil_key:
+            xevil_key = "mayiro123"
+        if len(xevil_key) >= 3:
+            print(f"✅ Using API key: {xevil_key}")
+            break
+        print("❌ API key too short!")
     
-    if choice == "1":
-        config['faucet_url'] = "https://beefaucet.org/faucet"
-        kawaii_success("Beefaucet.org selected!")
-    else:
-        config['faucet_url'] = kawaii_input("Enter full faucet claim page URL")
-    
-    # FaucetPay email
-    print(Fore.CYAN + "\n📧 Enter your FaucetPay email address:" + Style.RESET_ALL)
-    config['faucetpay_email'] = kawaii_input("FaucetPay email")
-    
-    # Captcha type
-    print(Fore.CYAN + "\n🤖 Which captcha does the site use?" + Style.RESET_ALL)
-    print(Fore.WHITE + "   [1] hCaptcha (most faucets)" + Style.RESET_ALL)
-    print(Fore.WHITE + "   [2] reCAPTCHA v2" + Style.RESET_ALL)
-    captcha_choice = kawaii_input("Choose (1 or 2)")
-    config['captcha_type'] = "hcaptcha" if captcha_choice == "1" else "recaptcha"
-    
-    # XEvil settings
-    print(Fore.CYAN + "\n🔧 XEvil Captcha Solver Settings:" + Style.RESET_ALL)
-    print(Fore.WHITE + "   XEvil should be running on your PC" + Style.RESET_ALL)
-    
-    xevil_url = kawaii_input("XEvil API URL (default: http://localhost:80)")
-    config['xevil_api_url'] = xevil_url if xevil_url else "http://localhost:80"
-    
-    xevil_key = kawaii_input("XEvil API Key (default: mayiro123)")
-    config['xevil_api_key'] = xevil_key if xevil_key else "mayiro123"
-    
-    # Timing settings
-    print(Fore.CYAN + "\n⏰ Claim timing settings:" + Style.RESET_ALL)
-    min_time = kawaii_input("Minimum seconds between claims (default: 60)")
-    config['min_claim_interval_seconds'] = int(min_time) if min_time else 60
-    
-    max_time = kawaii_input("Maximum seconds between claims (default: 300)")
-    config['max_claim_interval_seconds'] = int(max_time) if max_time else 300
+    # Create config
+    config = {
+        "faucet_url": "https://beefaucet.org/faucet",
+        "faucetpay_email": email,
+        "xevil_api_url": "http://localhost:80",
+        "xevil_api_key": xevil_key,
+        "captcha_type": "hcaptcha",
+        "min_delay": 60,
+        "max_delay": 180
+    }
     
     # Save config
     with open("config.json", "w") as f:
         json.dump(config, f, indent=4)
     
-    # Generate README
-    generate_readme(config)
-    
-    print_kawaii_banner()
-    kawaii_success("Configuration saved successfully! 🎉")
-    print(Fore.GREEN + Style.BRIGHT + """
-    ╔══════════════════════════════════════════════════════╗
-    ║  🌸  Setup complete! Bot will start in 3 seconds...  ║
-    ╚══════════════════════════════════════════════════════╝
-    """ + Style.RESET_ALL)
+    print_banner()
+    print("✅ Setup complete! 🎉")
+    print("🌸 Bot starting in 3 seconds...")
+    print("   Make sure XEvil is running!\n")
     time.sleep(3)
     
     return config
 
-def generate_readme(config):
-    """Create a cute instruction file"""
-    readme_content = f"""
-🌸 Mayiro Beefaucet Fairy - Instructions 🌸
-{'='*50}
-
-✨ Your Configuration:
-   • Faucet URL: {config['faucet_url']}
-   • Email: {config['faucetpay_email']}
-   • Captcha Type: {config['captcha_type']}
-   • XEvil API: {config['xevil_api_url']}
-
-🚀 To Start the Bot:
-   1. Make sure XEvil is running
-   2. Run: python mayiro_faucet.py
-   3. The bot will claim automatically!
-
-💡 Tips:
-   • Press Ctrl+C to stop
-   • Delete config.json to reconfigure
-   • Check logs for detailed info
-
-🌸 Made with love by Mayiro 🌸
-"""
-    with open("README.txt", "w") as f:
-        f.write(readme_content)
-
-def load_config():
-    """Load or generate configuration"""
-    if not os.path.exists("config.json"):
-        kawaii_warning("No config found! Let's set things up...")
-        return generate_config()
+def load_or_create_config():
+    """Load config or create new one"""
+    if os.path.exists("config.json"):
+        try:
+            with open("config.json", "r") as f:
+                config = json.load(f)
+            # Validate required fields
+            if config.get("faucetpay_email") and config.get("xevil_api_key"):
+                print(f"📂 Config loaded: {config['faucetpay_email']}")
+                return config
+        except Exception as e:
+            print(f"⚠️  Config error: {e}")
     
-    with open("config.json", "r") as f:
-        config = json.load(f)
-    
-    # Validate required fields
-    required = ['faucet_url', 'faucetpay_email', 'xevil_api_url', 'xevil_api_key', 'captcha_type']
-    missing = [field for field in required if field not in config]
-    
-    if missing:
-        kawaii_warning(f"Config is missing: {missing}. Re‑configuring...")
-        return generate_config()
-    
-    return config
+    return setup_config()
 
-# ===================== XEVIL CAPTCHA SOLVER =====================
-def solve_captcha(sitekey, page_url, cfg):
-    """Send captcha to local XEvil, return token"""
-    payload = {
-        'key': cfg['xevil_api_key'],
-        'method': 'hcaptcha' if cfg['captcha_type'].lower() == 'hcaptcha' else 'userrecaptcha',
-        'googlekey': sitekey,
-        'pageurl': page_url,
-        'json': 1
-    }
-    
+# ===================== CAPTCHA SOLVER =====================
+def solve_captcha(sitekey, page_url, api_key):
+    """Solve captcha using XEvil"""
     try:
-        kawaii_print("Solving captcha...", "🤖")
-        resp = requests.get(f"{cfg['xevil_api_url']}/in.php", params=payload, timeout=30)
+        # Submit captcha
+        resp = requests.get("http://localhost:80/in.php", params={
+            "key": api_key,
+            "method": "hcaptcha",
+            "googlekey": sitekey,
+            "pageurl": page_url,
+            "json": 1
+        }, timeout=10)
         data = resp.json()
     except Exception as e:
-        logging.error(f"XEvil submit error: {e}")
+        print(f"❌ XEvil connection failed: {e}")
+        print("   Is XEvil running on localhost:80?")
         return None
-
-    if data.get('status') != 1:
-        logging.error(f"XEvil error: {data.get('request')}")
-        return None
-
-    captcha_id = data['request']
-    logging.info(f"Captcha ID: {captcha_id}")
-
-    # Poll for solution
-    for attempt in range(24):
-        time.sleep(5)
-        try:
-            check = requests.get(f"{cfg['xevil_api_url']}/res.php", params={
-                'key': cfg['xevil_api_key'],
-                'action': 'get',
-                'id': captcha_id,
-                'json': 1
-            }, timeout=30).json()
-        except Exception as e:
-            logging.error(f"Polling error: {e}")
-            continue
-
-        if check.get('status') == 1:
-            token = check['request']
-            kawaii_success("Captcha solved!")
-            return token
-        if check.get('request') == 'ERROR_CAPTCHA_UNSOLVABLE':
-            kawaii_error("Captcha unsolvable")
-            return None
-        
-        if attempt % 4 == 0:  # Show progress every 20 seconds
-            kawaii_print(f"Still solving... (attempt {attempt+1}/24)", "⏳")
     
-    kawaii_error("Captcha timeout (2 minutes)")
+    if data.get("status") != 1:
+        print(f"❌ XEvil error: {data.get('request', 'unknown')}")
+        return None
+    
+    captcha_id = data["request"]
+    print(f"   🤖 Solving captcha #{captcha_id}...", end="", flush=True)
+    
+    # Wait for solution
+    for attempt in range(20):
+        time.sleep(5)
+        print(".", end="", flush=True)
+        
+        try:
+            check = requests.get("http://localhost:80/res.php", params={
+                "key": api_key,
+                "action": "get",
+                "id": captcha_id,
+                "json": 1
+            }, timeout=10).json()
+        except:
+            continue
+        
+        if check.get("status") == 1:
+            print(" ✅")
+            return check["request"]
+        if check.get("request") == "ERROR_CAPTCHA_UNSOLVABLE":
+            print(" ❌")
+            return None
+    
+    print(" ⏰ Timeout!")
     return None
 
 # ===================== CLAIM FUNCTION =====================
-def claim_beefaucet(cfg):
-    """Main claim logic"""
+def claim_once(config):
+    """Single claim attempt"""
     session = requests.Session()
     session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        "User-Agent": "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36"
     })
-
-    # 1. Load page
+    
+    # 1. Get page
+    print(f"🌐 Loading {config['faucet_url']}...")
     try:
-        kawaii_print(f"Loading {cfg['faucet_url']}...", "🌐")
-        resp = session.get(cfg['faucet_url'], timeout=30)
-        resp.raise_for_status()
+        resp = session.get(config["faucet_url"], timeout=15)
     except Exception as e:
-        logging.error(f"Page load failed: {e}")
-        return False
-
-    soup = BeautifulSoup(resp.text, 'html.parser')
-
-    # 2. Find captcha sitekey
-    container = None
-    if cfg['captcha_type'].lower() == 'hcaptcha':
-        container = soup.find('div', class_='h-captcha')
-    else:
-        container = soup.find('div', class_='g-recaptcha')
-    
-    if not container:
-        container = soup.find('div', attrs={'data-sitekey': True})
-    
-    if not container:
-        kawaii_error("Captcha not found on page!")
+        print(f"❌ Cannot access page: {e}")
         return False
     
-    sitekey = container.get('data-sitekey')
+    soup = BeautifulSoup(resp.text, "html.parser")
+    
+    # 2. Find sitekey
+    captcha_div = soup.find("div", class_="h-captcha")
+    if not captcha_div:
+        captcha_div = soup.find("div", attrs={"data-sitekey": True})
+    
+    if not captcha_div:
+        print("❌ Captcha not found!")
+        return False
+    
+    sitekey = captcha_div.get("data-sitekey")
     if not sitekey:
-        kawaii_error("Sitekey is empty!")
+        print("❌ Sitekey empty!")
         return False
     
-    kawaii_print(f"Found sitekey: {sitekey[:20]}...", "🔑")
-
-    # 3. Build form data
+    print(f"🔑 Sitekey: {sitekey[:30]}...")
+    
+    # 3. Find form
     form_data = {}
     target_form = None
-    for frm in soup.find_all('form'):
-        if (frm.find('div', class_='h-captcha') or 
-            frm.find('div', class_='g-recaptcha') or 
-            frm.find('div', attrs={'data-sitekey': True})):
-            target_form = frm
+    
+    for form in soup.find_all("form"):
+        if form.find("div", class_="h-captcha") or form.find("div", attrs={"data-sitekey": True}):
+            target_form = form
             break
     
     if target_form:
-        for inp in target_form.find_all('input', attrs={'name': True}):
-            form_data[inp['name']] = inp.get('value', '')
+        for inp in target_form.find_all("input", attrs={"name": True}):
+            form_data[inp["name"]] = inp.get("value", "")
     
-    # Insert email
-    if 'email' not in form_data and 'address' not in form_data:
-        form_data['email'] = cfg['faucetpay_email']
+    # Add email
+    if "email" not in form_data and "address" not in form_data:
+        form_data["email"] = config["faucetpay_email"]
     
-    kawaii_print(f"Form fields: {list(form_data.keys())}", "📝")
-
+    print(f"📝 Email: {config['faucetpay_email']}")
+    
     # 4. Solve captcha
-    token = solve_captcha(sitekey, cfg['faucet_url'], cfg)
+    token = solve_captcha(sitekey, config["faucet_url"], config["xevil_api_key"])
     if not token:
         return False
-
-    form_data['h-captcha-response'] = token
-    form_data['g-recaptcha-response'] = token
-
-    # 5. Determine submit URL
-    action = target_form.get('action') if target_form else ''
-    if not action or action == '#':
-        action = cfg['faucet_url']
-    elif not action.startswith('http'):
-        action = urllib.parse.urljoin(cfg['faucet_url'], action)
-
+    
+    form_data["h-captcha-response"] = token
+    form_data["g-recaptcha-response"] = token
+    
+    # 5. Submit URL
+    action = target_form.get("action") if target_form else ""
+    if not action or action == "#":
+        action = config["faucet_url"]
+    elif not action.startswith("http"):
+        action = urllib.parse.urljoin(config["faucet_url"], action)
+    
     # 6. Submit claim
-    kawaii_print("Submitting claim...", "📤")
+    print("📤 Submitting claim...")
     try:
-        post_resp = session.post(action, data=form_data, timeout=30)
-        post_resp.raise_for_status()
+        post_resp = session.post(action, data=form_data, timeout=15)
     except Exception as e:
-        logging.error(f"Claim POST failed: {e}")
+        print(f"❌ Submit failed: {e}")
         return False
-
-    # 7. Check response
+    
+    # 7. Check result
     text = post_resp.text.lower()
     
-    if 'success' in text:
-        kawaii_success("Claim SUCCESSFUL! 🍯💰")
+    if "success" in text:
+        print("✅ Claim SUCCESSFUL! 🍯💰")
         return True
-    elif 'already claimed' in text or 'too soon' in text:
-        kawaii_warning("Cooldown still active")
-        return False
-    elif 'invalid captcha' in text:
-        kawaii_error("Captcha rejected by site")
-        return False
-    elif 'error' in text:
-        kawaii_warning(f"Server returned error: {post_resp.text[:100]}")
+    elif "already claimed" in text or "too soon" in text:
+        print("⏳ Cooldown active, waiting...")
+        return "cooldown"
+    elif "invalid captcha" in text:
+        print("❌ Captcha rejected!")
         return False
     else:
-        kawaii_print(f"Response: {post_resp.text[:150]}", "❓")
+        # Show first 200 chars for debugging
+        snippet = post_resp.text[:200].replace('\n', ' ')
+        print(f"❓ Unknown response: {snippet}")
         return False
 
 # ===================== STATISTICS =====================
-class ClaimStats:
+class Stats:
     def __init__(self):
-        self.total_attempts = 0
-        self.successful = 0
+        self.total = 0
+        self.success = 0
         self.failed = 0
         self.start_time = datetime.now()
     
-    def add_success(self):
-        self.total_attempts += 1
-        self.successful += 1
-    
-    def add_fail(self):
-        self.total_attempts += 1
-        self.failed += 1
-    
-    def display(self):
+    def show(self):
         runtime = datetime.now() - self.start_time
-        hours = runtime.seconds // 3600
-        minutes = (runtime.seconds % 3600) // 60
+        h = runtime.seconds // 3600
+        m = (runtime.seconds % 3600) // 60
+        rate = (self.success / self.total * 100) if self.total > 0 else 0
         
-        print(Fore.CYAN + Style.BRIGHT + f"""
-    ╔══════════════════════════════════════════════════════╗
-    ║              📊  SESSION STATISTICS  📊              ║
-    ╠══════════════════════════════════════════════════════╣
-    ║  Runtime: {hours}h {minutes}m                                    ║
-    ║  Total Attempts: {self.total_attempts}                                    ║
-    ║  Successful: {Fore.GREEN}{self.successful}{Fore.CYAN}                                   ║
-    ║  Failed: {Fore.RED}{self.failed}{Fore.CYAN}                                       ║
-    ║  Success Rate: {((self.successful/self.total_attempts)*100 if self.total_attempts > 0 else 0):.1f}%                             ║
-    ╚══════════════════════════════════════════════════════╝
-        """ + Style.RESET_ALL)
+        print(f"""
+    ╔══════════════════════════════════════════╗
+    ║        📊  SESSION STATS  📊            ║
+    ╠══════════════════════════════════════════╣
+    ║  Runtime: {h}h {m}m                          ║
+    ║  Attempts: {self.total}                            ║
+    ║  Success: {self.success}                             ║
+    ║  Failed: {self.failed}                              ║
+    ║  Rate: {rate:.1f}%                            ║
+    ╚══════════════════════════════════════════╝
+    """)
 
 # ===================== MAIN LOOP =====================
 def main():
-    print_kawaii_banner()
+    print_banner()
     
-    # Load or generate config
-    cfg = load_config()
+    # Load config
+    config = load_or_create_config()
     
-    # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format=f'{Fore.CYAN}%(asctime)s{Style.RESET_ALL} - %(levelname)s: %(message)s',
-        datefmt='%H:%M:%S'
-    )
+    # Stats
+    stats = Stats()
     
-    # Initialize stats
-    stats = ClaimStats()
-    
-    kawaii_print("Bot is starting! Press Ctrl+C to stop gracefully.", "🌸")
-    print(Fore.MAGENTA + "─" * 60 + Style.RESET_ALL)
+    print("🌸 Bot starting! Press Ctrl+C to stop.\n")
+    print("─" * 50)
     
     try:
         while True:
-            kawaii_print(f"Attempt #{stats.total_attempts + 1}", "🔄")
+            stats.total += 1
+            print(f"\n🔄 Attempt #{stats.total} - {datetime.now().strftime('%H:%M:%S')}")
             
-            success = claim_beefaucet(cfg)
+            result = claim_once(config)
             
-            if success:
-                stats.add_success()
-                wait = random.randint(
-                    cfg['min_claim_interval_seconds'], 
-                    cfg['max_claim_interval_seconds']
-                )
-                kawaii_print(f"Next claim in {wait // 60}m {wait % 60}s...", "⏰")
+            if result == True:
+                stats.success += 1
+                delay = random.randint(config["min_delay"], config["max_delay"])
+                print(f"⏰ Next claim in {delay//60}m {delay%60}s...")
+            elif result == "cooldown":
+                stats.failed += 1
+                delay = 60
+                print(f"⏰ Retrying in {delay}s...")
             else:
-                stats.add_fail()
-                wait = 60
-                kawaii_print("Retrying in 60s...", "⏳")
+                stats.failed += 1
+                delay = 30
+                print(f"⏰ Retrying in {delay}s...")
             
             # Show stats every 5 attempts
-            if stats.total_attempts % 5 == 0:
-                stats.display()
+            if stats.total % 5 == 0:
+                stats.show()
             
-            print(Fore.MAGENTA + "─" * 60 + Style.RESET_ALL)
-            time.sleep(wait)
+            print("─" * 50)
+            time.sleep(delay)
     
     except KeyboardInterrupt:
-        print("\n")
-        kawaii_print("Shutting down gracefully...", "👋")
-        stats.display()
-        kawaii_success(f"Session ended. Collected {stats.successful} times! 💰")
-        kawaii_print("See you next time! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧", "🌸")
+        print("\n\n🌸 Shutting down...")
+        stats.show()
+        print(f"✅ Total collected: {stats.success} times!")
+        print("🌸 Thanks for using Mayiro! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧\n")
         
-        # Save session report
-        report = f"""
-🌸 Mayiro Beefaucet Session Report
-{'='*40}
-Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Runtime: {datetime.now() - stats.start_time}
-Total Attempts: {stats.total_attempts}
-Successful: {stats.successful}
-Failed: {stats.failed}
-Success Rate: {((stats.successful/stats.total_attempts)*100 if stats.total_attempts > 0 else 0):.1f}%
-
-🌸 Thanks for using Mayiro Fairy!
-"""
+        # Save report
         with open("session_report.txt", "w") as f:
-            f.write(report)
+            f.write(f"""
+Mayiro Beefaucet Report
+{'='*30}
+Date: {datetime.now()}
+Runtime: {datetime.now() - stats.start_time}
+Attempts: {stats.total}
+Success: {stats.success}
+Failed: {stats.failed}
+""")
 
 if __name__ == "__main__":
     main()
