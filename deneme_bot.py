@@ -4,30 +4,41 @@ from telethon import TelegramClient, errors
 from telethon.tl.functions.messages import SetTypingRequest
 from telethon.tl.types import SendMessageTypingAction, ChannelParticipantsAdmins
 
-# ⚙️ SENİN BİLGİLERİN (TAMAMEN HAZIR)
+# ⚙️ BİLGİLERİN (ELLEME)
 API_ID = 26025122
 API_HASH = "9c832a240c0ba7cd4b01189ee35a6c59"
-PHONE = "+905518951725"           # Başı +90 olarak düzeltildi
-GRUP = "@premierdeneme"           # Hedef grup
-LINK = "https://t.me/UltimateDeneme"  # Paylaşılacak link
+PHONE = "+905518951725"
+GRUP = "@premierdeneme"
+LINK = "https://t.me/+hY2_f2VzD0w1ZWZk"
 
-# 📝 5 FARKLI VARYASYON MESAJ (İstersen değiştir)
-MESAJLAR = [
-    "Merhaba {isim}, TYT-AYT denemeleri için UltimateDeneme kanalına bekleriz: {link}",
-    "Selam {isim}! YKS hazırlığında en güncel denemeler burada: {link}",
-    "{isim} merhaba, deneme sınavlarına birlikte çalışalım mı? {link}",
-    "Hey {isim}, bu kanalda her gün yeni denemeler paylaşılıyor: {link}",
-    "Merhaba {isim}, sınav maratonunda sana destek olacak bir kanal: {link}"
+# 🔗 GİZLİ LİNK METİNLERİ (Her mesajda rastgele biri seçilir)
+LINK_METINLER = [
+    "👉 Buraya tıkla",
+    "🔗 Kanalı ziyaret et",
+    "📌 Hemen katıl",
+    "🚀 Denemelere ulaş",
+    "💡 Göz atmak için tıkla",
+    "⭐ Gruba gel"
 ]
 
-# 🛡️ SPAM KORUMA (ASLA BAN YEMEZSİN)
-GUNLUK_LIMIT = 100         # Günde en fazla 100 kişi
-MIN_BEKLEME = 30           # İki mesaj arası min 30 saniye
-MAX_BEKLEME = 60           # İki mesaj arası max 60 saniye
-TARAMA_MESAJ_SAYISI = 3000 # Son 3000 mesajdaki yazarları tara
+# 📝 MESAJLAR ({isim} ve {link_metin} ile birlikte gizli link)
+MESAJLAR = [
+    "Merhaba {isim}, TYT-AYT denemeleri için {link_metin}",
+    "Selam {isim}! YKS hazırlığında en güncel denemeler {link_metin}",
+    "{isim} merhaba, denemelere birlikte çalışalım mı? {link_metin}",
+    "Hey {isim}, her gün yeni denemeler burada {link_metin}",
+    "Merhaba {isim}, sınav maratonunda sana destek olacak kanal {link_metin}"
+]
+
+# 🛡️ SPAM KORUMA
+GUNLUK_LIMIT = 100
+MIN_BEKLEME = 30
+MAX_BEKLEME = 60
+TARAMA_MESAJ_SAYISI = 3000
 
 GONDERILEN_DOSYASI = "gonderilen.txt"
 
+# ----------------- FONKSİYONLAR -----------------
 async def gonderilenleri_takip_et(kullanici_id):
     with open(GONDERILEN_DOSYASI, "a", encoding="utf-8") as f:
         f.write(str(kullanici_id) + "\n")
@@ -41,10 +52,7 @@ async def daha_once_gonderilmis(kullanici_id):
 
 async def insan_gibi_yaz(client, entity):
     try:
-        await client(SetTypingRequest(
-            peer=entity,
-            action=SendMessageTypingAction()
-        ))
+        await client(SetTypingRequest(peer=entity, action=SendMessageTypingAction()))
         await asyncio.sleep(random.uniform(2, 4))
     except:
         pass
@@ -52,22 +60,21 @@ async def insan_gibi_yaz(client, entity):
 async def mesaj_hazirla(uye):
     ham = random.choice(MESAJLAR)
     isim = uye.first_name or "kullanıcı"
-    return ham.replace("{isim}", isim).replace("{link}", LINK)
+    link_metin = random.choice(LINK_METINLER)
+    return f"{ham.replace('{isim}', isim).replace('{link_metin}', '')}[{link_metin}]({LINK})"
 
 async def ana_dongu():
-    client = TelegramClient("oturum", API_ID, API_HASH)
+    client = TelegramClient("oturum_gizli", API_ID, API_HASH)
     await client.start(PHONE)
     print("✅ Bağlantı kuruldu.")
 
     grup = await client.get_entity(GRUP)
     print(f"📢 Grup: {grup.title}")
 
-    # Yöneticileri al (onlara mesaj yok)
     adminler = await client.get_participants(grup, filter=ChannelParticipantsAdmins)
     admin_ids = set(admin.id for admin in adminler)
     print(f"👑 {len(admin_ids)} yönetici atlanacak.")
 
-    # Son mesajlarda yazan aktif yazarları bul
     print(f"📜 Son {TARAMA_MESAJ_SAYISI} mesaj taranıyor...")
     yazar_ids = set()
     async for mesaj in client.iter_messages(grup, limit=TARAMA_MESAJ_SAYISI):
@@ -79,7 +86,6 @@ async def ana_dongu():
     bugun = datetime.now().date()
 
     for yazar_id in yazar_ids:
-        # Gün değiştiyse sayaç sıfırla
         if datetime.now().date() > bugun:
             bugun = datetime.now().date()
             gunluk_gonderilen = 0
@@ -88,7 +94,7 @@ async def ana_dongu():
             print("📆 Yeni gün, sayaç sıfırlandı.")
 
         if gunluk_gonderilen >= GUNLUK_LIMIT:
-            print(f"⛔ Günlük limit ({GUNLUK_LIMIT}) doldu. Durduruluyor.")
+            print(f"⛔ Günlük limit ({GUNLUK_LIMIT}) doldu.")
             break
 
         if yazar_id in admin_ids:
@@ -110,19 +116,19 @@ async def ana_dongu():
         basarili = False
         try:
             await insan_gibi_yaz(client, uye)
-            await client.send_message(uye, mesaj)
+            await client.send_message(uye, mesaj, link_preview=False)
             basarili = True
         except errors.FloodWaitError as e:
-            print(f"⏳ FloodWait: {e.seconds} sn bekleniyor...")
+            print(f"⏳ FloodWait: {e.seconds} sn")
             await asyncio.sleep(e.seconds)
             try:
                 await insan_gibi_yaz(client, uye)
-                await client.send_message(uye, mesaj)
+                await client.send_message(uye, mesaj, link_preview=False)
                 basarili = True
             except Exception as ex:
-                print(f"❌ İkinci deneme hatası ({uye.first_name}): {ex}")
+                print(f"❌ {uye.first_name}: {ex}")
         except Exception as ex:
-            print(f"❌ Hata ({uye.first_name}): {ex}")
+            print(f"❌ {uye.first_name}: {ex}")
 
         if basarili:
             gunluk_gonderilen += 1
@@ -134,19 +140,18 @@ async def ana_dongu():
         else:
             await asyncio.sleep(random.randint(5, 10))
 
-    print("\n🏁 Görev tamamlandı.")
+    print("\n🏁 Bitti.")
     await client.disconnect()
 
-# Botu başlat
 if __name__ == "__main__":
     try:
         import telethon
     except ImportError:
-        print("Telethon yüklü değil. Lütfen yükleyin: pip install telethon")
+        print("Telethon yüklü değil: pip install telethon")
         sys.exit(1)
     try:
         asyncio.run(ana_dongu())
     except KeyboardInterrupt:
-        print("\n⚠️ Kullanıcı tarafından durduruldu.")
+        print("\n⚠️ Durduruldu.")
     except Exception as e:
         print(f"\n💥 Hata: {e}")
