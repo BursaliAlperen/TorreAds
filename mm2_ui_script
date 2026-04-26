@@ -1,0 +1,479 @@
+--[[
+    ███████╗ ██████╗██████╗ ██╗██████╗ ██╗████████╗ ██████╗ ██████╗ ██╗ █████╗
+    ██╔════╝██╔════╝██╔══██╗██║██╔══██╗██║╚══██╔══╝██╔═══██╗██╔══██╗██║██╔══██╗
+    ███████╗██║     ██████╔╝██║██████╔╝██║   ██║   ██║   ██║██████╔╝██║███████║
+    ╚════██║██║     ██╔══██╗██║██╔═══╝ ██║   ██║   ██║   ██║██╔══██╗██║██╔══██║
+    ███████║╚██████╗██║  ██║██║██║     ██║   ██║   ╚██████╔╝██║  ██║██║██║  ██║
+    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝     ╚═╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+
+    SCRIPTORIA MM2 KEYLESS – ANTI-CHEAT BYPASS EDITION
+    Gelişmiş Smooth Tween, ESP, Auto-Farm, Silent Aim
+    Modern UI (Scriptoria Hub Style)
+]]--
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+-- // DYNAMIC REMOTE DETECTION
+local Remotes = {
+    Coin = nil,
+    Knife = nil,
+    Gun = nil
+}
+
+local function scanRemotes()
+    for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            local name = v.Name:lower()
+            if (name:find("coin") or name:find("collect")) and not Remotes.Coin then
+                Remotes.Coin = v
+            elseif (name:find("knife") or name:find("murder") or name:find("slash")) and not Remotes.Knife then
+                Remotes.Knife = v
+            elseif (name:find("shoot") or name:find("gun") or name:find("fire")) and not Remotes.Gun then
+                Remotes.Gun = v
+            end
+        end
+    end
+    -- Fallbacks if not found
+    Remotes.Coin = Remotes.Coin or ReplicatedStorage:FindFirstChild("PickupCoin")
+    Remotes.Knife = Remotes.Knife or ReplicatedStorage:FindFirstChild("KnifeHit")
+    Remotes.Gun = Remotes.Gun or ReplicatedStorage:FindFirstChild("ShootGun")
+end
+scanRemotes()
+
+-- // GLOBAL STATE
+local scriptVars = {
+    autoFarm = false,
+    autoKill = false,
+    esp = false,
+    godMode = false,
+    silentAim = false,
+    minimized = false
+}
+
+-- // LOADING SCREEN
+local function showLoading()
+    local loadingGui = Instance.new("ScreenGui")
+    loadingGui.Name = "ScriptoriaLoading"
+    loadingGui.IgnoreGuiInset = true
+    loadingGui.Parent = CoreGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    frame.Parent = loadingGui
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 600, 0, 100)
+    title.Position = UDim2.new(0.5, -300, 0.4, -50)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextColor3 = Color3.fromRGB(255, 50, 50)
+    title.TextSize = 60
+    title.Text = "SCRIPTORIA MM2"
+    title.Parent = frame
+
+    local barBg = Instance.new("Frame")
+    barBg.Size = UDim2.new(0, 400, 0, 10)
+    barBg.Position = UDim2.new(0.5, -200, 0.6, 0)
+    barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    barBg.BorderSizePixel = 0
+    barBg.Parent = frame
+    Instance.new("UICorner", barBg)
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    barFill.BorderSizePixel = 0
+    barFill.Parent = barBg
+    Instance.new("UICorner", barFill)
+
+    TweenService:Create(barFill, TweenInfo.new(2.5), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    task.wait(3)
+    loadingGui:Destroy()
+end
+
+-- // MODERN UI (Scriptoria Hub Style)
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "ScriptoriaHub"
+mainGui.ResetOnSpawn = false
+mainGui.Parent = CoreGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 600, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = mainGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 30)
+topBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local hubTitle = Instance.new("TextLabel")
+hubTitle.Size = UDim2.new(0, 200, 1, 0)
+hubTitle.Position = UDim2.new(0, 10, 0, 0)
+hubTitle.BackgroundTransparency = 1
+hubTitle.Font = Enum.Font.GothamBold
+hubTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+hubTitle.TextSize = 16
+hubTitle.Text = "Scriptoria Hub"
+hubTitle.TextXAlignment = Enum.TextXAlignment.Left
+hubTitle.Parent = topBar
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 1, 0)
+closeButton.Position = UDim2.new(1, -30, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = topBar
+closeButton.MouseButton1Click:Connect(function()
+    mainGui:Destroy()
+end)
+
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 1, 0)
+minimizeButton.Position = UDim2.new(1, -60, 0, 0)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+minimizeButton.Text = "—"
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.Parent = topBar
+minimizeButton.MouseButton1Click:Connect(function()
+    scriptVars.minimized = not scriptVars.minimized
+    if scriptVars.minimized then
+        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 200, 0, 30)}):Play()
+        sidebar.Visible = false
+        contentPanel.Visible = false
+    else
+        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 600, 0, 400)}):Play()
+        sidebar.Visible = true
+        contentPanel.Visible = true
+    end
+end)
+
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0, 150, 1, -30)
+sidebar.Position = UDim2.new(0, 0, 0, 30)
+sidebar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+sidebar.BorderSizePixel = 0
+sidebar.Parent = mainFrame
+
+local sidebarLayout = Instance.new("UIListLayout")
+sidbarLayout.Padding = UDim.new(0, 5)
+sidbarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sidbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+sidbarLayout.Parent = sidebar
+
+local contentPanel = Instance.new("Frame")
+contentPanel.Size = UDim2.new(1, -150, 1, -30)
+contentPanel.Position = UDim2.new(0, 150, 0, 30)
+contentPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+contentPanel.BorderSizePixel = 0
+contentPanel.Parent = mainFrame
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Padding = UDim.new(0, 10)
+contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.Parent = contentPanel
+
+local function clearContentPanel()
+    for _, child in ipairs(contentPanel:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
+end
+
+local function createToggle(name, varName, description)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 0, 60)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.Parent = contentPanel
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0.7, 0, 0.5, 0)
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 16
+    title.Text = name
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = frame
+
+    local desc = Instance.new("TextLabel")
+    desc.Size = UDim2.new(0.7, 0, 0.5, 0)
+    desc.Position = UDim2.new(0, 10, 0.5, 5)
+    desc.BackgroundTransparency = 1
+    desc.Font = Enum.Font.Gotham
+    desc.TextColor3 = Color3.fromRGB(180, 180, 180)
+    desc.TextSize = 12
+    desc.Text = description
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.Parent = frame
+
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 50, 0, 30)
+    toggleButton.Position = UDim2.new(1, -60, 0.5, -15)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80) -- Off color
+    toggleButton.Text = ""
+    toggleButton.Parent = frame
+    Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(1, 0)
+
+    local toggleCircle = Instance.new("Frame")
+    toggleCircle.Size = UDim2.new(0, 26, 0, 26)
+    toggleCircle.Position = UDim2.new(0, 2, 0, 2)
+    toggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleCircle.Parent = toggleButton
+    Instance.new("UICorner", toggleCircle).CornerRadius = UDim.new(1, 0)
+
+    local function updateToggleUI()
+        if scriptVars[varName] then
+            TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 50, 150)}):Play() -- On color (pink)
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(1, -28, 0, 2)}):Play()
+        else
+            TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play() -- Off color
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        end
+    end
+
+    toggleButton.MouseButton1Click:Connect(function()
+        scriptVars[varName] = not scriptVars[varName]
+        updateToggleUI()
+        -- Add specific feature logic here if needed
+    end)
+    updateToggleUI() -- Initial state
+end
+
+local function showCategory(categoryName)
+    clearContentPanel()
+    if categoryName == "Main" then
+        createToggle("Auto Farm", "autoFarm", "Automatically farm coins")
+        createToggle("Kill All", "autoKill", "Kill all players in the server")
+        -- Teleport will be a separate button/feature, not a toggle
+    elseif categoryName == "Player" then
+        createToggle("God Mode", "godMode", "Invincibility and noclip")
+        createToggle("Silent Aim", "silentAim", "Automatically aim at murderer (Sheriff only)")
+    elseif categoryName == "Visuals" then
+        createToggle("ESP Players", "esp", "See players through walls")
+    elseif categoryName == "Teleport" then
+        -- Add teleport options here
+        local teleportButton = Instance.new("TextButton")
+        teleportButton.Size = UDim2.new(1, -20, 0, 40)
+        teleportButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        teleportButton.Font = Enum.Font.GothamBold
+        teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        teleportButton.TextSize = 16
+        teleportButton.Text = "Teleport to Nearest Player"
+        teleportButton.Parent = contentPanel
+        Instance.new("UICorner", teleportButton).CornerRadius = UDim.new(0, 6)
+        teleportButton.MouseButton1Click:Connect(function()
+            local target = nil
+            local minDist = math.huge
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = (hrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                        if dist < minDist then
+                            minDist = dist
+                            target = plr
+                        end
+                    end
+                end
+            end
+            if target then
+                smoothMove(target.Character.HumanoidRootPart.Position)
+            end
+        end)
+    elseif categoryName == "Misc" then
+        -- Add miscellaneous options here
+    elseif categoryName == "Settings" then
+        -- Add settings options here
+    end
+end
+
+local function createSidebarButton(text, icon, categoryName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 140, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.Font = Enum.Font.Gotham
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 14
+    btn.Text = text
+    btn.Parent = sidebar
+    Instance.new("UICorner", btn)
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 20, 1, 0)
+    iconLabel.Position = UDim2.new(0, 5, 0, 0)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Font = Enum.Font.GothamBold -- Using GothamBold for now, FontAwesome requires special setup
+    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    iconLabel.TextSize = 20
+    iconLabel.Text = icon -- Needs actual FontAwesome support or image
+    iconLabel.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        showCategory(categoryName)
+    end)
+    return btn
+end
+
+createSidebarButton("Main", "🏠", "Main") -- Home icon
+createSidebarButton("Player", "👤", "Player") -- User icon
+createSidebarButton("Visuals", "👁️", "Visuals") -- Eye icon
+createSidebarButton("Teleport", "✈️", "Teleport") -- Plane icon
+createSidebarButton("Misc", "⚙️", "Misc") -- Cog icon
+createSidebarButton("Settings", "🔧", "Settings") -- Gear icon
+
+-- Status bar at the bottom
+local statusBar = Instance.new("Frame")
+statusBar.Size = UDim2.new(1, 0, 0, 20)
+statusBar.Position = UDim2.new(0, 0, 1, -20)
+statusBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+statusBar.BorderSizePixel = 0
+statusBar.Parent = mainFrame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 1, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.TextSize = 12
+statusLabel.Text = "Scriptoria Hub | Made for MM2   Status: Updated"
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+statusLabel.Parent = statusBar
+
+-- // UTILS
+local function getRole(plr)
+    if not plr or not plr.Character then return "innocent" end
+    if plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife")) then return "murderer" end
+    if plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun")) then return "sheriff" end
+    return "innocent"
+end
+
+local function smoothMove(targetPos)
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local distance = (hrp.Position - targetPos).Magnitude
+    local speed = 25 -- Studs per second
+    local duration = distance / speed
+    local tween = TweenService:Create(hrp, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)})
+    tween:Play()
+    return tween
+end
+
+-- // LOOPS (Existing logic, will be integrated with new UI toggles)
+task.spawn(function()
+    while task.wait(0.5) do
+        if scriptVars.autoFarm then
+            local coins = {}
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v.Name == "Coin" or v.Name == "CoinContainer" then
+                    table.insert(coins, v)
+                end
+            end
+            
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp and #coins > 0 then
+                table.sort(coins, function(a, b)
+                    return (hrp.Position - a:GetPivot().Position).Magnitude < (hrp.Position - b:GetPivot().Position).Magnitude
+                end)
+                
+                local target = coins[1]
+                local tween = smoothMove(target:GetPivot().Position)
+                if tween then
+                    tween.Completed:Wait()
+                    if Remotes.Coin then Remotes.Coin:FireServer() end
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if scriptVars.autoKill and getRole(LocalPlayer) == "murderer" then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = plr.Character.HumanoidRootPart
+                    local dist = (LocalPlayer.Character.HumanoidRootPart.Position - targetHRP.Position).Magnitude
+                    if dist < 15 then
+                        if Remotes.Knife then Remotes.Knife:FireServer(plr.Character) end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local highlights = {}
+RunService.RenderStepped:Connect(function()
+    if scriptVars.esp then
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                if not highlights[plr] then
+                    local hl = Instance.new("Highlight")
+                    hl.Parent = plr.Character
+                    highlights[plr] = hl
+                end
+                local role = getRole(plr)
+                if role == "murderer" then
+                    highlights[plr].FillColor = Color3.fromRGB(255, 0, 0)
+                elseif role == "sheriff" then
+                    highlights[plr].FillColor = Color3.fromRGB(0, 0, 255)
+                else
+                    highlights[plr].FillColor = Color3.fromRGB(0, 255, 0)
+                end
+            end
+        end
+    else
+        for plr, hl in pairs(highlights) do
+            hl:Destroy()
+            highlights[plr] = nil
+        end
+    end
+
+    if scriptVars.godMode and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.Health = 100 end
+        for _, v in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+
+    if scriptVars.silentAim and getRole(LocalPlayer) == "sheriff" then
+        local target = nil
+        local minDist = 100
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if getRole(plr) == "murderer" and plr.Character and plr.Character:FindFirstChild("Head") then
+                local dist = (LocalPlayer.Character.Head.Position - plr.Character.Head.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    target = plr
+                end
+            end
+        end
+        if target and Remotes.Gun then
+            Remotes.Gun:FireServer(target.Character.Head.Position)
+        end
+    end
+end)
+
+-- Start
+showLoading()
+showCategory("Main") -- Show Main category by default
