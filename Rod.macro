@@ -1,0 +1,157 @@
+{
+  "macros": [
+    {
+      "name": "Oyun Botu",
+      "description": "Reklam kapatmalı otomatik oyun döngüsü",
+      "isFavourite": false,
+      "trigger": {
+        "type": "EmptyTrigger"
+      },
+      "constraints": [],
+      "actions": [
+        {
+          "type": "Loop",
+          "loopTimes": 99999,
+          "actions": [
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.pixel.adventure",
+              "activityName": "com.app.pixel.adventure.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.gold.magic.reward",
+              "activityName": "com.app.gold.magic.reward.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.magnificent.pets.adventure",
+              "activityName": "com.app.magnificent.pets.adventure.ui.user.SplashActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.greedy.scratch.fun",
+              "activityName": "com.greedy.scratch.ui.activity.InitialActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.cyberlooters.game",
+              "activityName": "com.app.cyberlooters.game.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.nordic.conquest.adventure",
+              "activityName": "com.app.nordic.conquest.adventure.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.lost.train.quest",
+              "activityName": "com.app.lost.train.quest.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            },
+            {
+              "type": "LaunchActivity",
+              "packageName": "com.app.illusion.show.magic",
+              "activityName": "com.app.illusion.show.magic.ui.home.HomeActivity"
+            },
+            {
+              "type": "Loop",
+              "loopTimes": 19,
+              "actions": [
+                { "type": "Click", "x": 540, "y": 1100 },
+                { "type": "Wait", "seconds": 2 },
+                { "type": "Click", "x": 1000, "y": 50 },
+                { "type": "Wait", "seconds": 1 },
+                { "type": "Click", "x": 50, "y": 50 },
+                { "type": "Wait", "seconds": 30 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
