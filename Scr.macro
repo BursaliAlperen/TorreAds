@@ -1,0 +1,114 @@
+{
+  "macro": {
+    "m_name": "Oyun Botu",
+    "m_description": "8 Uygulama için Reklam Kapatmalı Otomatik Döngü",
+    "m_isFavourite": false,
+    "m_enabled": true,
+    "m_triggerList": [
+      {
+        "m_classType": "EmptyTrigger",
+        "m_SIGUID": -100
+      }
+    ],
+    "m_actionList": [
+      {
+        "m_classType": "LoopAction",
+        "m_fixedOptionCount": 99999,
+        "m_option": 0,
+        "m_SIGUID": -200
+      },
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.pixel.adventure",
+        "m_className": "com.app.pixel.adventure.ui.home.HomeActivity",
+        "m_SIGUID": -301
+      },
+      {
+        "m_classType": "LoopAction",
+        "m_fixedOptionCount": 19,
+        "m_option": 0,
+        "m_SIGUID": -401
+      },
+      { "m_classType": "UIInteractionAction", "uiInteractionConfiguration": { "xyPoint": { "x": 540, "y": 1100 }, "type": "Click" }, "m_SIGUID": -501 },
+      { "m_classType": "PauseAction", "m_delayInSeconds": 2, "m_SIGUID": -601 },
+      { "m_classType": "UIInteractionAction", "uiInteractionConfiguration": { "xyPoint": { "x": 1000, "y": 50 }, "type": "Click" }, "m_SIGUID": -502 },
+      { "m_classType": "PauseAction", "m_delayInSeconds": 1, "m_SIGUID": -602 },
+      { "m_classType": "UIInteractionAction", "uiInteractionConfiguration": { "xyPoint": { "x": 50, "y": 50 }, "type": "Click" }, "m_SIGUID": -503 },
+      { "m_classType": "PauseAction", "m_delayInSeconds": 30, "m_SIGUID": -603 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -701 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.gold.magic.reward",
+        "m_className": "com.app.gold.magic.reward.ui.home.HomeActivity",
+        "m_SIGUID": -302
+      },
+      {
+        "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -402
+      },
+      { "m_classType": "UIInteractionAction", "uiInteractionConfiguration": { "xyPoint": { "x": 540, "y": 1100 }, "type": "Click" }, "m_SIGUID": -504 },
+      { "m_classType": "PauseAction", "m_delayInSeconds": 2, "m_SIGUID": -604 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -702 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.magnificent.pets.adventure",
+        "m_className": "com.app.magnificent.pets.adventure.ui.user.SplashActivity",
+        "m_SIGUID": -303
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -403 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -703 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.greedy.scratch.fun",
+        "m_className": "com.greedy.scratch.ui.activity.InitialActivity",
+        "m_SIGUID": -304
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -404 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -704 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.cyberlooters.game",
+        "m_className": "com.app.cyberlooters.game.ui.home.HomeActivity",
+        "m_SIGUID": -305
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -405 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -705 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.nordic.conquest.adventure",
+        "m_className": "com.app.nordic.conquest.adventure.ui.home.HomeActivity",
+        "m_SIGUID": -306
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -406 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -706 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.lost.train.quest",
+        "m_className": "com.app.lost.train.quest.ui.home.HomeActivity",
+        "m_SIGUID": -307
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -407 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -707 },
+
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.illusion.show.magic",
+        "m_className": "com.app.illusion.show.magic.ui.home.HomeActivity",
+        "m_SIGUID": -308
+      },
+      { "m_classType": "LoopAction", "m_fixedOptionCount": 19, "m_option": 0, "m_SIGUID": -408 },
+      { "m_classType": "EndLoopAction", "m_SIGUID": -708 },
+
+      {
+        "m_classType": "EndLoopAction",
+        "m_SIGUID": -700
+      }
+    ],
+    "m_constraintList": []
+  }
+}
