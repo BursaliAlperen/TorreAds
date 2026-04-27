@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<macros>
+  <macro name="Oyun Botu" description="Reklam kapatmalı otomatik oyun döngüsü" isFavourite="false">
+    <trigger type="EmptyTrigger" />
+    <constraints/>
+    <actions>
+      <action type="Loop" options="NumberOfTimes,99999">
+        
+        <action type="LaunchActivity" options="com.app.pixel.adventure/com.app.pixel.adventure.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.gold.magic.reward/com.app.gold.magic.reward.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.magnificent.pets.adventure/com.app.magnificent.pets.adventure.ui.user.SplashActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.greedy.scratch.fun/com.greedy.scratch.ui.activity.InitialActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.cyberlooters.game/com.app.cyberlooters.game.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.nordic.conquest.adventure/com.app.nordic.conquest.adventure.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.lost.train.quest/com.app.lost.train.quest.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+        <action type="LaunchActivity" options="com.app.illusion.show.magic/com.app.illusion.show.magic.ui.home.HomeActivity"/>
+        <action type="Loop" options="NumberOfTimes,19">
+          <action type="UIInteraction" options="Click,540,1100"/>
+          <action type="Wait" options="2"/>
+          <action type="UIInteraction" options="Click,1000,50"/>
+          <action type="Wait" options="1"/>
+          <action type="UIInteraction" options="Click,50,50"/>
+          <action type="Wait" options="30"/>
+        </action>
+        
+      </action>
+    </actions>
+  </macro>
+</macros>
