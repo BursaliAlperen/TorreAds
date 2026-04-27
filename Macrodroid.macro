@@ -1,0 +1,55 @@
+import os
+import time
+
+# --- AYARLAR ---
+WAIT_TOTAL = 600  # Her oyun için toplam süre (10 dakika = 600 saniye)
+CLICK_INTERVAL = 30  # Kaç saniyede bir reklam kapatma/ekran tıklama yapılsın?
+
+# Reklam kapatma ve oyun içi tıklama koordinatları (Kendi ekranına göre güncelle!)
+# Bunları bulmak için: Geliştirici Seçenekleri > İşaretçi Konumu'nu aç.
+X_KAPAT_SAG = "1000 50"   # Sağ üst köşe "X" konumu
+X_KAPAT_SOL = "50 50"     # Sol üst köşe "X" konumu
+OYUN_ORTA = "540 1100"    # Oyunun ana tıklama alanı
+
+games = [
+    ("com.app.pixel.adventure", "com.app.pixel.adventure.ui.home.HomeActivity"),
+    ("com.app.gold.magic.reward", "com.app.gold.magic.reward.ui.home.HomeActivity"),
+    ("com.app.magnificent.pets.adventure", "com.app.magnificent.pets.adventure.ui.user.SplashActivity"),
+    ("com.app.greedy.scratch.fun", "com.greedy.scratch.ui.activity.InitialActivity"),
+    ("com.app.cyberlooters.game", "com.app.cyberlooters.game.ui.home.HomeActivity"),
+    ("com.app.nordic.conquest.adventure", "com.app.nordic.conquest.adventure.ui.home.HomeActivity"),
+    ("com.app.lost.train.quest", "com.app.lost.train.quest.ui.home.HomeActivity"),
+    ("com.app.illusion.show.magic", "com.app.illusion.show.magic.ui.home.HomeActivity")
+]
+
+def adb_click(coord):
+    os.system(f"adb shell input tap {coord}")
+
+def adb_start(pkg, act):
+    os.system(f"adb shell am start -n {pkg}/{act}")
+
+print("Makro başlatılıyor... Durdurmak için CTRL+C")
+
+while True:
+    for pkg, act in games:
+        print(f"\n>>> Uygulama Başlatılıyor: {pkg}")
+        adb_start(pkg, act)
+        
+        elapsed = 0
+        while elapsed < WAIT_TOTAL:
+            # Oyun içine tıkla (Oynamaya devam etmesi için)
+            print(f"[{elapsed}s] Oyun içine tıklanıyor...")
+            adb_click(OYUN_ORTA)
+            time.sleep(2)
+            
+            # Reklam çıkmış olabilir diye köşeleri temizle (X butonlarına bas)
+            print("Reklam kapatma noktalarına tıklanıyor...")
+            adb_click(X_KAPAT_SAG)
+            time.sleep(1)
+            adb_click(X_KAPAT_SOL)
+            
+            # Bekleme süresi
+            time.sleep(CLICK_INTERVAL)
+            elapsed += (CLICK_INTERVAL + 3)
+
+    print("\n--- Tüm liste bitti, baştan başlanıyor ---")
