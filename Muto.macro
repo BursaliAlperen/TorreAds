@@ -1,0 +1,143 @@
+{
+  "macro": {
+    "m_name": "Oyun Botu",
+    "m_description": "Reklam kapatmalı otomatik oyun döngüsü",
+    "m_isFavourite": false,
+    "m_enabled": true,
+    "m_triggerList": [
+      {
+        "m_classType": "EmptyTrigger",
+        "m_SIGUID": -1001
+      }
+    ],
+    "m_actionList": [
+      {
+        "m_classType": "LoopAction",
+        "m_fixedOptionCount": 99999,
+        "m_option": 0,
+        "m_SIGUID": -2001
+      },
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.pixel.adventure",
+        "m_className": "com.app.pixel.adventure.ui.home.HomeActivity",
+        "m_SIGUID": -3001
+      },
+      {
+        "m_classType": "LoopAction",
+        "m_fixedOptionCount": 19,
+        "m_option": 0,
+        "m_SIGUID": -4001
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 540, "y": 1100 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5001
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 2,
+        "m_SIGUID": -6001
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 1000, "y": 50 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5002
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 1,
+        "m_SIGUID": -6002
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 50, "y": 50 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5003
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 30,
+        "m_SIGUID": -6003
+      },
+      {
+        "m_classType": "EndLoopAction",
+        "m_SIGUID": -7001
+      },
+      {
+        "m_classType": "LaunchActivityAction",
+        "m_packageToLaunch": "com.app.gold.magic.reward",
+        "m_className": "com.app.gold.magic.reward.ui.home.HomeActivity",
+        "m_SIGUID": -3002
+      },
+      {
+        "m_classType": "LoopAction",
+        "m_fixedOptionCount": 19,
+        "m_option": 0,
+        "m_SIGUID": -4002
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 540, "y": 1100 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5004
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 2,
+        "m_SIGUID": -6004
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 1000, "y": 50 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5005
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 1,
+        "m_SIGUID": -6005
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "xyPoint": { "x": 50, "y": 50 },
+          "type": "Click",
+          "xyPercentages": false
+        },
+        "m_SIGUID": -5006
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 30,
+        "m_SIGUID": -6006
+      },
+      {
+        "m_classType": "EndLoopAction",
+        "m_SIGUID": -7002
+      },
+      {
+        "m_classType": "EndLoopAction",
+        "m_SIGUID": -7000
+      }
+    ],
+    "m_constraintList": []
+  }
+}
